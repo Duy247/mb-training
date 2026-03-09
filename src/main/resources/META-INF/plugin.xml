@@ -1,0 +1,29 @@
+<idea-plugin>
+    <id>com.mb.training.karate</id>
+    <name>MB Training for Karate Framework</name>
+    <vendor email="support@mb-training.com">MB Training</vendor>
+    <description>
+        Interactive Karate Framework training plugin with guided exercises, missions, tasks, and homework from basic to advanced.
+    </description>
+
+    <depends>com.intellij.modules.platform</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.mb.training.karate.startup.OnboardingStartupActivity"/>
+        <toolWindow
+                id="MB Training"
+                anchor="right"
+                factoryClass="com.mb.training.karate.ui.TrainingToolWindowFactory"
+                canCloseContents="false"/>
+    </extensions>
+
+    <actions>
+        <action
+                id="com.mb.training.karate.OpenTrainingAction"
+                class="com.mb.training.karate.actions.OpenTrainingAction"
+                text="Open MB Training for Karate"
+                description="Open interactive MB Training for Karate Framework">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+    </actions>
+</idea-plugin>

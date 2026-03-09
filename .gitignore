@@ -1,0 +1,11 @@
+.gradle/
+build/
+.idea/
+out/
+
+# IntelliJ Platform cache
+.intellijPlatform/
+
+# Kotlin cache
+.kotlin/
+bin/
