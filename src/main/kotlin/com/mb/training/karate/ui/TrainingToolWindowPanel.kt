@@ -1,29 +1,36 @@
 package com.mb.training.karate.ui
 
+import com.intellij.openapi.project.Project
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBList
 import com.intellij.ui.components.JBScrollPane
 import com.intellij.ui.components.JBTextArea
 import com.mb.training.karate.model.TrainingItem
-import com.mb.training.karate.services.TrainingProgressService
+import com.mb.training.karate.services.TrainingProgressSnapshot
+import com.mb.training.karate.services.TrainingProjectProgressStore
 import com.mb.training.karate.training.TrainingCurriculumRepository
 import java.awt.BorderLayout
 import java.awt.Component
+import java.nio.file.Path
 import javax.swing.DefaultListCellRenderer
 import javax.swing.DefaultListModel
 import javax.swing.JButton
 import javax.swing.JPanel
 import javax.swing.ListSelectionModel
 
-class TrainingToolWindowPanel : JPanel(BorderLayout()) {
-    private val progressService = TrainingProgressService.getInstance()
+class TrainingToolWindowPanel(
+    project: Project
+) : JPanel(BorderLayout()) {
+    private val projectRoot = project.basePath?.let { Path.of(it) }
     private val listModel = DefaultListModel<TrainingItem>()
     private val list = JBList(listModel)
     private val details = JBTextArea()
     private val progressLabel = JBLabel()
     private val completeButton = JButton("Mark Completed")
     private val resetButton = JButton("Reset Progress")
+    private val fallbackCurrentId = TrainingCurriculumRepository.items.firstOrNull()?.id.orEmpty()
+    private var snapshot = loadInitialSnapshot()
 
     init {
         populateList()
@@ -31,7 +38,13 @@ class TrainingToolWindowPanel : JPanel(BorderLayout()) {
         configureDetails()
         configureLayout()
         bindActions()
+        applyCurrentSelectionFromSnapshot()
         refreshProgress()
+    }
+
+    private fun loadInitialSnapshot(): TrainingProgressSnapshot {
+        val root = projectRoot ?: return TrainingProgressSnapshot(fallbackCurrentId, emptySet())
+        return TrainingProjectProgressStore.load(root) ?: TrainingProgressSnapshot(fallbackCurrentId, emptySet())
     }
 
     private fun populateList() {
@@ -51,7 +64,7 @@ class TrainingToolWindowPanel : JPanel(BorderLayout()) {
                 val component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
                 val item = value as? TrainingItem
                 if (item != null) {
-                    val donePrefix = if (progressService.isCompleted(item.id)) "[Done] " else "[Todo] "
+                    val donePrefix = if (isCompleted(item.id)) "[Done] " else "[Todo] "
                     text = "$donePrefix${item.title} (${item.level} / ${item.type})"
                 }
                 return component
@@ -97,7 +110,9 @@ class TrainingToolWindowPanel : JPanel(BorderLayout()) {
             if (!it.valueIsAdjusting) {
                 val item = list.selectedValue ?: return@addListSelectionListener
                 details.text = buildDetailsText(item)
-                completeButton.text = if (progressService.isCompleted(item.id)) {
+                snapshot = snapshot.copy(currentItemId = item.id)
+                persistSnapshot()
+                completeButton.text = if (isCompleted(item.id)) {
                     "Mark Incomplete"
                 } else {
                     "Mark Completed"
@@ -107,25 +122,52 @@ class TrainingToolWindowPanel : JPanel(BorderLayout()) {
 
         completeButton.addActionListener {
             val item = list.selectedValue ?: return@addActionListener
-            val next = !progressService.isCompleted(item.id)
-            progressService.setCompleted(item.id, next)
+            val next = !isCompleted(item.id)
+            val updatedCompleted = snapshot.completedIds.toMutableSet()
+            if (next) {
+                updatedCompleted.add(item.id)
+            } else {
+                updatedCompleted.remove(item.id)
+            }
+            snapshot = snapshot.copy(completedIds = updatedCompleted, currentItemId = item.id)
+            persistSnapshot()
             completeButton.text = if (next) "Mark Incomplete" else "Mark Completed"
             refreshProgress()
             list.repaint()
         }
 
         resetButton.addActionListener {
-            TrainingCurriculumRepository.items.forEach { progressService.setCompleted(it.id, false) }
+            snapshot = TrainingProgressSnapshot(fallbackCurrentId, emptySet())
+            persistSnapshot()
             refreshProgress()
             list.repaint()
+            applyCurrentSelectionFromSnapshot()
             completeButton.text = "Mark Completed"
         }
     }
 
     private fun refreshProgress() {
         val total = TrainingCurriculumRepository.items.size
-        val completed = TrainingCurriculumRepository.items.count { progressService.isCompleted(it.id) }
+        val completed = TrainingCurriculumRepository.items.count { isCompleted(it.id) }
         progressLabel.text = "Progress: $completed/$total"
+    }
+
+    private fun applyCurrentSelectionFromSnapshot() {
+        val targetId = snapshot.currentItemId.ifEmpty { fallbackCurrentId }
+        val idx = TrainingCurriculumRepository.items.indexOfFirst { it.id == targetId }.takeIf { it >= 0 } ?: 0
+        if (listModel.size() > 0) {
+            list.selectedIndex = idx
+            list.ensureIndexIsVisible(idx)
+        }
+    }
+
+    private fun isCompleted(itemId: String): Boolean {
+        return snapshot.completedIds.contains(itemId)
+    }
+
+    private fun persistSnapshot() {
+        val root = projectRoot ?: return
+        TrainingProjectProgressStore.save(root, snapshot)
     }
 
     private fun buildDetailsText(item: TrainingItem): String {

@@ -1,7 +1,12 @@
 package com.mb.training.karate.ui
 
+import com.intellij.ide.impl.OpenProjectTask
+import com.intellij.ide.impl.ProjectUtil
+import com.intellij.openapi.fileChooser.FileChooser
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.DialogWrapper
+import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBCheckBox
@@ -10,24 +15,35 @@ import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.mb.training.karate.MbTrainingConstants
 import com.mb.training.karate.services.OnboardingSettingsService
+import com.mb.training.karate.services.TrainingFolderType
+import com.mb.training.karate.services.TrainingProjectProgressStore
 import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.Font
+import java.nio.file.Path
 import javax.swing.Action
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
+import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JEditorPane
 import javax.swing.JPanel
 import javax.swing.SwingConstants
 
 class OnboardingDialog(
-    project: Project,
+    private val currentProject: Project,
     private val settingsService: OnboardingSettingsService
-) : DialogWrapper(project) {
+) : DialogWrapper(currentProject) {
 
     private val doNotShowAgainCheckBox = JBCheckBox("Do not show this again")
+    private val startAction = object : DialogWrapperAction(MbTrainingConstants.ONBOARDING_START_BUTTON) {
+        override fun doAction(e: java.awt.event.ActionEvent?) {
+            persistPreference()
+            close(OK_EXIT_CODE)
+            runFirstOnboardingTask()
+        }
+    }
 
     init {
         title = MbTrainingConstants.ONBOARDING_TITLE
@@ -150,11 +166,74 @@ class OnboardingDialog(
 
     override fun createActions(): Array<Action> {
         cancelAction.putValue(Action.NAME, "Close")
-        return arrayOf(cancelAction)
+        return arrayOf(startAction, cancelAction)
+    }
+
+    override fun createJButtonForAction(action: Action): JButton {
+        val button = super.createJButtonForAction(action)
+        if (action === startAction) {
+            button.text = MbTrainingConstants.ONBOARDING_START_BUTTON
+            button.foreground = JBColor(0x2EA043, 0x56D364)
+            button.font = JBFont.label().deriveFont(Font.BOLD)
+            button.border = BorderFactory.createLineBorder(JBColor(0x2EA043, 0x56D364), 2, true)
+            button.isOpaque = false
+            button.isContentAreaFilled = false
+            button.isBorderPainted = true
+            button.isFocusPainted = false
+            button.isEnabled = true
+        }
+        return button
     }
 
     override fun doCancelAction() {
-        settingsService.setDoNotShowAgain(doNotShowAgainCheckBox.isSelected)
+        persistPreference()
         super.doCancelAction()
+    }
+
+    private fun persistPreference() {
+        settingsService.setDoNotShowAgain(doNotShowAgainCheckBox.isSelected)
+    }
+
+    private fun runFirstOnboardingTask() {
+        Messages.showInfoMessage(
+            currentProject,
+            MbTrainingConstants.FIRST_TASK_MESSAGE,
+            MbTrainingConstants.FIRST_TASK_TITLE
+        )
+
+        val descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor().apply {
+            title = MbTrainingConstants.PICK_FOLDER_TITLE
+            description = MbTrainingConstants.PICK_FOLDER_DESCRIPTION
+        }
+
+        while (true) {
+            val selectedFolder = FileChooser.chooseFile(descriptor, currentProject, null) ?: return
+            val selectedPath = Path.of(selectedFolder.path)
+            when (TrainingProjectProgressStore.classifyFolder(selectedPath)) {
+                TrainingFolderType.EXISTING_TRAINING_PROJECT -> {
+                    openProjectInNewWindow(selectedPath)
+                    return
+                }
+                TrainingFolderType.EMPTY_FOLDER -> {
+                    TrainingProjectProgressStore.initializeNewTrainingProject(selectedPath)
+                    openProjectInNewWindow(selectedPath)
+                    return
+                }
+                TrainingFolderType.INVALID_FOLDER -> {
+                    Messages.showWarningDialog(
+                        currentProject,
+                        "Đây không phải là một folder trống hay project luyện tập",
+                        MbTrainingConstants.ONBOARDING_TITLE
+                    )
+                }
+            }
+        }
+    }
+
+    private fun openProjectInNewWindow(projectPath: Path) {
+        ProjectUtil.openOrImport(
+            projectPath,
+            OpenProjectTask(forceOpenInNewFrame = true)
+        )
     }
 }

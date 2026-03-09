@@ -8,7 +8,7 @@ import com.intellij.ui.content.ContentFactory
 
 class TrainingToolWindowFactory : ToolWindowFactory, DumbAware {
     override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
-        val panel = TrainingToolWindowPanel()
+        val panel = TrainingToolWindowPanel(project)
         val content = ContentFactory.getInstance().createContent(panel, "", false)
         toolWindow.contentManager.addContent(content)
     }

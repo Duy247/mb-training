@@ -15,6 +15,9 @@ repositories {
 }
 
 dependencies {
+    testImplementation(kotlin("test"))
+    testImplementation("junit:junit:4.13.2")
+
     intellijPlatform {
         create("IC", "2025.1.4.1")
     }
@@ -32,6 +35,10 @@ tasks {
     withType<JavaCompile> {
         sourceCompatibility = "21"
         targetCompatibility = "21"
+    }
+
+    test {
+        useJUnitPlatform()
     }
 
     register("openTestIde") {
