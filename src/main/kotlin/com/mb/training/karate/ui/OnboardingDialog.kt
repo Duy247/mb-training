@@ -21,6 +21,7 @@ import java.awt.BorderLayout
 import java.awt.FlowLayout
 import java.awt.Font
 import java.nio.file.Path
+import kotlin.io.path.pathString
 import javax.swing.Action
 import javax.swing.BorderFactory
 import javax.swing.Box
@@ -231,6 +232,17 @@ class OnboardingDialog(
     }
 
     private fun openProjectInNewWindow(projectPath: Path) {
+        val currentBasePath = currentProject.basePath?.let { Path.of(it).normalize().pathString }
+        val selectedPath = projectPath.normalize().pathString
+        if (currentBasePath != null && currentBasePath == selectedPath) {
+            Messages.showInfoMessage(
+                currentProject,
+                "Project này đang được mở sẵn. Tiếp tục training tại cửa sổ hiện tại.",
+                MbTrainingConstants.ONBOARDING_TITLE
+            )
+            return
+        }
+
         ProjectUtil.openOrImport(
             projectPath,
             OpenProjectTask(forceOpenInNewFrame = true)

@@ -11,7 +11,8 @@ import kotlin.io.path.isDirectory
 
 data class TrainingProgressSnapshot(
     val currentItemId: String,
-    val completedIds: Set<String>
+    val completedIds: Set<String>,
+    val completedStepIds: Set<String> = emptySet()
 )
 
 enum class TrainingFolderType {
@@ -24,6 +25,7 @@ object TrainingProjectProgressStore {
     private const val PROGRESS_FILE_NAME = "mb-training-progress.properties"
     private const val CURRENT_ITEM_KEY = "current.item.id"
     private const val COMPLETED_IDS_KEY = "completed.ids"
+    private const val COMPLETED_STEP_IDS_KEY = "completed.step.ids"
     private const val ONBOARDING_INIT_KEY = "onboarding.initialized"
 
     fun hasProgressFile(projectRoot: Path): Boolean {
@@ -44,6 +46,7 @@ object TrainingProjectProgressStore {
     }
 
     fun initializeNewTrainingProject(projectRoot: Path) {
+        initializeJavaProjectSkeleton(projectRoot)
         val defaultItemId = TrainingCurriculumRepository.items.firstOrNull()?.id.orEmpty()
         save(projectRoot, TrainingProgressSnapshot(currentItemId = defaultItemId, completedIds = emptySet()))
     }
@@ -65,10 +68,17 @@ object TrainingProjectProgressStore {
             ?.filter { it.isNotEmpty() }
             ?.toSet()
             ?: emptySet()
+        val completedSteps = props.getProperty(COMPLETED_STEP_IDS_KEY)
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            ?: emptySet()
 
         return TrainingProgressSnapshot(
             currentItemId = currentId,
-            completedIds = completed
+            completedIds = completed,
+            completedStepIds = completedSteps
         )
     }
 
@@ -80,6 +90,7 @@ object TrainingProjectProgressStore {
             setProperty(ONBOARDING_INIT_KEY, "true")
             setProperty(CURRENT_ITEM_KEY, snapshot.currentItemId)
             setProperty(COMPLETED_IDS_KEY, snapshot.completedIds.sorted().joinToString(","))
+            setProperty(COMPLETED_STEP_IDS_KEY, snapshot.completedStepIds.sorted().joinToString(","))
         }
 
         Files.newOutputStream(progressFile(projectRoot)).use { output: OutputStream ->
@@ -89,5 +100,47 @@ object TrainingProjectProgressStore {
 
     private fun progressFile(projectRoot: Path): Path {
         return projectRoot.resolve(".idea").resolve(PROGRESS_FILE_NAME)
+    }
+
+    private fun initializeJavaProjectSkeleton(projectRoot: Path) {
+        Files.createDirectories(projectRoot)
+
+        val pom = projectRoot.resolve("pom.xml")
+        if (!Files.exists(pom)) {
+            Files.writeString(
+                pom,
+                """
+                <project xmlns="http://maven.apache.org/POM/4.0.0"
+                         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>com.mb.training</groupId>
+                  <artifactId>karate-training-playground</artifactId>
+                  <version>1.0-SNAPSHOT</version>
+                  <properties>
+                    <maven.compiler.release>17</maven.compiler.release>
+                    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                  </properties>
+                </project>
+                """.trimIndent()
+            )
+        }
+
+        val starterJava = projectRoot.resolve("src/main/java/com/mb/training/App.java")
+        if (!Files.exists(starterJava)) {
+            Files.createDirectories(starterJava.parent)
+            Files.writeString(
+                starterJava,
+                """
+                package com.mb.training;
+
+                public class App {
+                    public static void main(String[] args) {
+                        System.out.println("MB Training Karate playground");
+                    }
+                }
+                """.trimIndent()
+            )
+        }
     }
 }

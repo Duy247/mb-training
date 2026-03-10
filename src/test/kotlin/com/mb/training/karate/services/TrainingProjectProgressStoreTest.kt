@@ -29,7 +29,11 @@ class TrainingProjectProgressStoreTest {
             TrainingProjectProgressStore.initializeNewTrainingProject(root)
 
             val progressFile = root.resolve(".idea").resolve("mb-training-progress.properties")
+            val pomFile = root.resolve("pom.xml")
+            val appJava = root.resolve("src/main/java/com/mb/training/App.java")
             assertTrue(progressFile.exists())
+            assertTrue(pomFile.exists())
+            assertTrue(appJava.exists())
             assertTrue(TrainingProjectProgressStore.hasProgressFile(root))
             assertEquals(
                 TrainingFolderType.EXISTING_TRAINING_PROJECT,
@@ -43,7 +47,8 @@ class TrainingProjectProgressStoreTest {
         withTempDir { root ->
             val snapshot = TrainingProgressSnapshot(
                 currentItemId = "advanced-homework-1",
-                completedIds = setOf("basic-exercise-1", "intermediate-mission-1")
+                completedIds = setOf("basic-exercise-1", "intermediate-mission-1"),
+                completedStepIds = setOf("basic-exercise-1::step-create-feature-file")
             )
 
             TrainingProjectProgressStore.save(root, snapshot)
@@ -52,6 +57,7 @@ class TrainingProjectProgressStoreTest {
             assertNotNull(loaded)
             assertEquals(snapshot.currentItemId, loaded.currentItemId)
             assertEquals(snapshot.completedIds, loaded.completedIds)
+            assertEquals(snapshot.completedStepIds, loaded.completedStepIds)
         }
     }
 
