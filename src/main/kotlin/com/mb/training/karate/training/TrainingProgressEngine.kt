@@ -17,11 +17,25 @@ class TrainingProgressEngine(
         val completedSteps = mutableSetOf<String>()
 
         for (exercise in program.exercises) {
-            val canStart = areAllConditionsMet(exercise.startWhen, completedExercises, completedSteps)
+            val canStart = areAllConditionsMet(
+                conditions = exercise.startWhen,
+                completedExercises = completedExercises,
+                completedSteps = completedSteps,
+                passedCommands = snapshot.passedCommandIds,
+                successfulMavenSyncIds = snapshot.successfulMavenSyncIds
+            )
             if (!canStart) continue
 
             for (step in exercise.steps) {
-                if (areAllConditionsMet(step.doneWhen, completedExercises, completedSteps)) {
+                if (
+                    areAllConditionsMet(
+                        step.doneWhen,
+                        completedExercises,
+                        completedSteps,
+                        snapshot.passedCommandIds,
+                        snapshot.successfulMavenSyncIds
+                    )
+                ) {
                     completedSteps.add(stepKey(exercise.id, step.id))
                 }
             }
@@ -37,7 +51,13 @@ class TrainingProgressEngine(
             }
         }
 
-        val nextExercise = findNextExercise(completedExercises, completedSteps, snapshot.currentItemId)
+        val nextExercise = findNextExercise(
+            completedExercises = completedExercises,
+            completedSteps = completedSteps,
+            passedCommands = snapshot.passedCommandIds,
+            successfulMavenSyncIds = snapshot.successfulMavenSyncIds,
+            currentItemId = snapshot.currentItemId
+        )
         return snapshot.copy(
             currentItemId = nextExercise?.id ?: snapshot.currentItemId,
             completedIds = completedExercises,
@@ -55,6 +75,8 @@ class TrainingProgressEngine(
             is TrainingCondition.FileExists -> "File exists: ${condition.relativePath}"
             is TrainingCondition.FolderExists -> "Folder exists: ${condition.relativePath}"
             is TrainingCondition.FileContains -> "File contains '${condition.text}': ${condition.relativePath}"
+            is TrainingCondition.CommandPassed -> "Command passed: ${condition.commandId}"
+            is TrainingCondition.MavenSyncSucceeded -> "Maven sync succeeded: ${condition.syncId}"
         }
     }
 
@@ -69,6 +91,8 @@ class TrainingProgressEngine(
     private fun findNextExercise(
         completedExercises: Set<String>,
         completedSteps: Set<String>,
+        passedCommands: Set<String>,
+        successfulMavenSyncIds: Set<String>,
         currentItemId: String
     ): TrainingExercise? {
         val current = program.exercises.firstOrNull { it.id == currentItemId }
@@ -76,14 +100,22 @@ class TrainingProgressEngine(
 
         return program.exercises.firstOrNull { exercise ->
             !completedExercises.contains(exercise.id) &&
-                areAllConditionsMet(exercise.startWhen, completedExercises, completedSteps)
+                areAllConditionsMet(
+                    exercise.startWhen,
+                    completedExercises,
+                    completedSteps,
+                    passedCommands,
+                    successfulMavenSyncIds
+                )
         }
     }
 
     private fun areAllConditionsMet(
         conditions: List<TrainingCondition>,
         completedExercises: Set<String>,
-        completedSteps: Set<String>
+        completedSteps: Set<String>,
+        passedCommands: Set<String>,
+        successfulMavenSyncIds: Set<String>
     ): Boolean {
         return conditions.all { condition ->
             when (condition) {
@@ -98,6 +130,8 @@ class TrainingProgressEngine(
                     val file = projectRoot.resolve(condition.relativePath)
                     Files.exists(file) && Files.readString(file).contains(condition.text)
                 }
+                is TrainingCondition.CommandPassed -> passedCommands.contains(condition.commandId)
+                is TrainingCondition.MavenSyncSucceeded -> successfulMavenSyncIds.contains(condition.syncId)
             }
         }
     }

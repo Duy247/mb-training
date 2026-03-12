@@ -48,7 +48,9 @@ class TrainingProjectProgressStoreTest {
             val snapshot = TrainingProgressSnapshot(
                 currentItemId = "advanced-homework-1",
                 completedIds = setOf("basic-exercise-1", "intermediate-mission-1"),
-                completedStepIds = setOf("basic-exercise-1::step-create-feature-file")
+                completedStepIds = setOf("basic-exercise-1::step-create-feature-file"),
+                passedCommandIds = setOf("basic-exercise-1-mvn-test"),
+                successfulMavenSyncIds = setOf("basic-exercise-1-maven-sync")
             )
 
             TrainingProjectProgressStore.save(root, snapshot)
@@ -58,6 +60,8 @@ class TrainingProjectProgressStoreTest {
             assertEquals(snapshot.currentItemId, loaded.currentItemId)
             assertEquals(snapshot.completedIds, loaded.completedIds)
             assertEquals(snapshot.completedStepIds, loaded.completedStepIds)
+            assertEquals(snapshot.passedCommandIds, loaded.passedCommandIds)
+            assertEquals(snapshot.successfulMavenSyncIds, loaded.successfulMavenSyncIds)
         }
     }
 

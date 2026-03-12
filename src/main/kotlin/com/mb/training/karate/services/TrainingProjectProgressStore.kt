@@ -12,7 +12,9 @@ import kotlin.io.path.isDirectory
 data class TrainingProgressSnapshot(
     val currentItemId: String,
     val completedIds: Set<String>,
-    val completedStepIds: Set<String> = emptySet()
+    val completedStepIds: Set<String> = emptySet(),
+    val passedCommandIds: Set<String> = emptySet(),
+    val successfulMavenSyncIds: Set<String> = emptySet()
 )
 
 enum class TrainingFolderType {
@@ -26,6 +28,8 @@ object TrainingProjectProgressStore {
     private const val CURRENT_ITEM_KEY = "current.item.id"
     private const val COMPLETED_IDS_KEY = "completed.ids"
     private const val COMPLETED_STEP_IDS_KEY = "completed.step.ids"
+    private const val PASSED_COMMAND_IDS_KEY = "passed.command.ids"
+    private const val SUCCESSFUL_MAVEN_SYNC_IDS_KEY = "successful.maven.sync.ids"
     private const val ONBOARDING_INIT_KEY = "onboarding.initialized"
 
     fun hasProgressFile(projectRoot: Path): Boolean {
@@ -74,11 +78,25 @@ object TrainingProjectProgressStore {
             ?.filter { it.isNotEmpty() }
             ?.toSet()
             ?: emptySet()
+        val passedCommands = props.getProperty(PASSED_COMMAND_IDS_KEY)
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            ?: emptySet()
+        val successfulMavenSyncIds = props.getProperty(SUCCESSFUL_MAVEN_SYNC_IDS_KEY)
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            ?: emptySet()
 
         return TrainingProgressSnapshot(
             currentItemId = currentId,
             completedIds = completed,
-            completedStepIds = completedSteps
+            completedStepIds = completedSteps,
+            passedCommandIds = passedCommands,
+            successfulMavenSyncIds = successfulMavenSyncIds
         )
     }
 
@@ -91,6 +109,8 @@ object TrainingProjectProgressStore {
             setProperty(CURRENT_ITEM_KEY, snapshot.currentItemId)
             setProperty(COMPLETED_IDS_KEY, snapshot.completedIds.sorted().joinToString(","))
             setProperty(COMPLETED_STEP_IDS_KEY, snapshot.completedStepIds.sorted().joinToString(","))
+            setProperty(PASSED_COMMAND_IDS_KEY, snapshot.passedCommandIds.sorted().joinToString(","))
+            setProperty(SUCCESSFUL_MAVEN_SYNC_IDS_KEY, snapshot.successfulMavenSyncIds.sorted().joinToString(","))
         }
 
         Files.newOutputStream(progressFile(projectRoot)).use { output: OutputStream ->

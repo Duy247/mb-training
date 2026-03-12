@@ -1,5 +1,7 @@
 package com.mb.training.karate.ui
 
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.EditorCustomElementRenderer
 import com.intellij.openapi.editor.Inlay
@@ -80,27 +82,35 @@ class StepHintPresenter(
             return
         }
 
-        val file = root.resolve(hint.filePath).toFile()
-        if (!file.exists()) {
+        val nioPath = root.resolve(hint.filePath)
+        if (!nioPath.toFile().exists()) {
             showHudBalloon("Chưa tìm thấy file <code>${hint.filePath}</code> để hiển thị gợi ý inline.", anchor)
             return
         }
 
-        val vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)
-        if (vFile == null) {
-            showHudBalloon("Không mở được file <code>${hint.filePath}</code>.", anchor)
-            return
-        }
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(nioPath)
+            ApplicationManager.getApplication().invokeLater(
+                {
+                    if (project.isDisposed) return@invokeLater
+                    if (vFile == null) {
+                        showHudBalloon("Không mở được file <code>${hint.filePath}</code>.", anchor)
+                        return@invokeLater
+                    }
 
-        FileEditorManager.getInstance(project).openFile(vFile, true)
-        val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        if (editor == null) {
-            showHudBalloon("Không tìm thấy editor đang mở để chèn gợi ý inline.", anchor)
-            return
-        }
+                    FileEditorManager.getInstance(project).openFile(vFile, true)
+                    val editor = FileEditorManager.getInstance(project).selectedTextEditor
+                    if (editor == null) {
+                        showHudBalloon("Không tìm thấy editor đang mở để chèn gợi ý inline.", anchor)
+                        return@invokeLater
+                    }
 
-        renderInlineSuggestion(editor, hint)
-        showHudBalloon("Đã chèn gợi ý inline vào file <code>${hint.filePath}</code>.", anchor)
+                    renderInlineSuggestion(editor, hint)
+                    showHudBalloon("Đã chèn gợi ý inline vào file <code>${hint.filePath}</code>.", anchor)
+                },
+                ModalityState.NON_MODAL
+            )
+        }
     }
 
     private fun renderInlineSuggestion(editor: Editor, hint: TrainingHint.ContentHint) {

@@ -25,14 +25,26 @@ sealed interface TrainingCondition {
     data class FileExists(val relativePath: String) : TrainingCondition
     data class FolderExists(val relativePath: String) : TrainingCondition
     data class FileContains(val relativePath: String, val text: String) : TrainingCondition
+    data class CommandPassed(val commandId: String) : TrainingCondition
+    data class MavenSyncSucceeded(val syncId: String) : TrainingCondition
 }
 
 sealed interface TrainingActivity {
     data class CreateFolder(val relativePath: String) : TrainingActivity
     data class CreateFile(val relativePath: String, val template: String) : TrainingActivity
     data class CodeTask(val instruction: String) : TrainingActivity
-    data class CompileTask(val commandHint: String) : TrainingActivity
-    data class RunTestTask(val commandHint: String) : TrainingActivity
+    data class OpenMavenSettings(val buttonLabel: String = "Open settings.xml") : TrainingActivity
+    data class RunCommandTask(
+        val instruction: String,
+        val commandHint: String,
+        val commandId: String = commandHint
+    ) : TrainingActivity
+    data class RefreshMavenProjects(
+        val syncId: String,
+        val actionLabel: String = "Maven: Refresh All Projects"
+    ) : TrainingActivity
+    data class CompileTask(val commandHint: String, val commandId: String = commandHint) : TrainingActivity
+    data class RunTestTask(val commandHint: String, val commandId: String = commandHint) : TrainingActivity
 }
 
 sealed interface TrainingHint {
@@ -91,7 +103,8 @@ data class TrainingExercise(
     val startWhen: List<TrainingCondition>,
     val steps: List<TrainingStep>,
     val expectedOutcome: String,
-    val completionPolicy: CompletionPolicy = CompletionPolicy.ALL_STEPS_DONE
+    val completionPolicy: CompletionPolicy = CompletionPolicy.ALL_STEPS_DONE,
+    val knowledgeSummary: TrainingKnowledgeSummary? = null
 )
 
 data class TrainingProgram(
@@ -108,4 +121,11 @@ data class TrainingItem(
     val objective: String,
     val steps: List<String>,
     val expectedOutcome: String
+)
+
+data class TrainingKnowledgeSummary(
+    val title: String,
+    val subtitle: String? = null,
+    val labels: List<String> = emptyList(),
+    val content: String
 )

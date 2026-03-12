@@ -49,6 +49,7 @@ class OnboardingDialog(
     init {
         title = MbTrainingConstants.ONBOARDING_TITLE
         setResizable(false)
+        doNotShowAgainCheckBox.isSelected = settingsService.isDoNotShowAgainEnabled()
         init()
     }
 
@@ -110,7 +111,12 @@ class OnboardingDialog(
         val footer = JPanel(BorderLayout()).apply {
             isOpaque = false
             border = JBUI.Borders.emptyTop(8)
-            add(doNotShowAgainCheckBox, BorderLayout.WEST)
+            val footerChecks = JPanel().apply {
+                layout = BoxLayout(this, BoxLayout.Y_AXIS)
+                isOpaque = false
+                add(doNotShowAgainCheckBox)
+            }
+            add(footerChecks, BorderLayout.WEST)
         }
 
         content.add(titleLabel)

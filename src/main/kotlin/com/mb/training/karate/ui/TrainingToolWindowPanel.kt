@@ -1,9 +1,21 @@
 package com.mb.training.karate.ui
 
+import com.intellij.execution.RunContentExecutor
+import com.intellij.execution.configurations.GeneralCommandLine
+import com.intellij.execution.process.KillableColoredProcessHandler
+import com.intellij.execution.process.ProcessAdapter
+import com.intellij.execution.process.ProcessEvent
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.fileEditor.OpenFileDescriptor
+import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
+import com.intellij.openapi.util.Key
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
@@ -19,10 +31,15 @@ import com.mb.training.karate.services.TrainingProgressSnapshot
 import com.mb.training.karate.services.TrainingProjectProgressStore
 import com.mb.training.karate.training.TrainingCurriculumRepository
 import com.mb.training.karate.training.TrainingProgressEngine
+import org.jetbrains.idea.maven.project.MavenProject
+import org.jetbrains.idea.maven.project.MavenProjectsManager
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.Dimension
+import java.awt.FlowLayout
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
@@ -50,12 +67,15 @@ class TrainingToolWindowPanel(
     private val detailsScroll = JBScrollPane()
     private val progressLabel = JBLabel()
     private val validateButton = JButton("Cập nhật tiến độ")
+    private val resetButton = JButton("Đặt lại")
     private val fallbackCurrentId = TrainingCurriculumRepository.items.firstOrNull()?.id.orEmpty()
     private var snapshot = runEngine(loadInitialSnapshot())
     private var introShownInSession = false
     private val projectRootPathString = projectRoot?.normalize()?.toString()
     private var currentDetailsExerciseId: String? = null
     private val stepStatusLabels = linkedMapOf<String, JBLabel>()
+    private val mavenSyncIds = collectMavenSyncIds()
+    private val shownKnowledgeSummaryIds = mutableSetOf<String>()
     private val autoRefreshTimer = Timer(AUTO_REFRESH_MS) {
         if (!isShowing) return@Timer
         refreshProgressFromEngine()
@@ -71,6 +91,7 @@ class TrainingToolWindowPanel(
         bindActions()
         bindAutoDetection()
         bindAutoRefreshPolling()
+        bindMavenSyncDetection()
         applyCurrentSelectionFromSnapshot()
         maybeShowBasicExerciseIntro()
         refreshProgress()
@@ -133,6 +154,7 @@ class TrainingToolWindowPanel(
         val actions = JPanel().apply {
             add(progressLabel)
             add(validateButton)
+            add(resetButton)
         }
 
         add(splitter, BorderLayout.CENTER)
@@ -153,6 +175,30 @@ class TrainingToolWindowPanel(
             refreshProgressFromEngine()
             list.repaint()
             refreshStepStatusesOnly()
+        }
+
+        resetButton.addActionListener {
+            val confirmed = Messages.showYesNoDialog(
+                project,
+                "Đặt lại sẽ xóa tiến độ đã lưu của bài hiện tại (bao gồm trạng thái run/sync). Tiếp tục?",
+                "Xác nhận đặt lại",
+                "Đặt lại",
+                "Hủy",
+                null
+            )
+            if (confirmed != Messages.YES) return@addActionListener
+
+            snapshot = TrainingProgressSnapshot(
+                currentItemId = snapshot.currentItemId,
+                completedIds = emptySet(),
+                completedStepIds = emptySet(),
+                passedCommandIds = emptySet(),
+                successfulMavenSyncIds = emptySet()
+            )
+            refreshProgressFromEngine()
+            persistSnapshot()
+            list.repaint()
+            refreshDetailsFromSelection()
         }
     }
 
@@ -175,6 +221,7 @@ class TrainingToolWindowPanel(
     }
 
     private fun refreshProgressFromEngine() {
+        val previous = snapshot
         val updated = runEngine(snapshot)
         if (updated != snapshot) {
             snapshot = updated
@@ -182,6 +229,10 @@ class TrainingToolWindowPanel(
         }
         refreshProgress()
         applyCurrentSelectionFromSnapshot()
+        val newlyCompleted = updated.completedIds - previous.completedIds
+        newlyCompleted.forEach { exerciseId ->
+            maybeShowKnowledgeSummary(exerciseId)
+        }
     }
 
     private fun refreshProgress() {
@@ -272,6 +323,18 @@ class TrainingToolWindowPanel(
         panel.add(sectionTitle("Kết quả kỳ vọng"))
         panel.add(Box.createVerticalStrut(4))
         panel.add(wrappedText(exercise.expectedOutcome))
+        val summary = exercise.knowledgeSummary
+        if (summary != null) {
+            panel.add(Box.createVerticalStrut(10))
+            panel.add(sectionTitle("Tóm tắt"))
+            panel.add(Box.createVerticalStrut(4))
+            panel.add(
+                JButton("Mở tóm tắt kiến thức").apply {
+                    alignmentX = Component.LEFT_ALIGNMENT
+                    addActionListener { showKnowledgeSummary(summary) }
+                }
+            )
+        }
         panel.add(Box.createVerticalGlue())
         return panel
     }
@@ -313,13 +376,52 @@ class TrainingToolWindowPanel(
         card.add(Box.createVerticalStrut(4))
         card.add(wrappedText("Hướng dẫn: ${step.guidance}", italic = true))
         card.add(Box.createVerticalStrut(6))
-        val hintButton = JButton("Hint").apply {
+        val actionRow = JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(6), 0)).apply {
+            isOpaque = false
             alignmentX = Component.LEFT_ALIGNMENT
+            maximumSize = Dimension(Int.MAX_VALUE, Int.MAX_VALUE)
+        }
+        val hintButton = JButton("Hint").apply {
             isEnabled = step.hints.isNotEmpty()
             toolTipText = if (step.hints.isNotEmpty()) "Hiển thị gợi ý HUD cho bước này" else "Bước này chưa có gợi ý"
             addActionListener { hintPresenter.showHints(step.hints, this) }
         }
-        card.add(hintButton)
+        actionRow.add(hintButton)
+        extractRunnableActions(step.activities).forEach { runnableAction ->
+            val actionButton = JButton(runnableActionLabel(runnableAction)).apply {
+                toolTipText = runnableActionTooltip(runnableAction)
+                addActionListener {
+                    when (runnableAction) {
+                        is RunnableStepAction.Command -> runStepCommand(
+                            exerciseId = exerciseId,
+                            stepId = step.id,
+                            commandId = runnableAction.commandId,
+                            command = runnableAction.commandHint,
+                            button = this
+                        )
+                        is RunnableStepAction.MavenSync -> runMavenSync(
+                            exerciseId = exerciseId,
+                            stepId = step.id,
+                            syncId = runnableAction.syncId,
+                            button = this
+                        )
+                    }
+                }
+            }
+            actionRow.add(actionButton)
+        }
+
+        val openSettingsActivity = step.activities
+            .filterIsInstance<TrainingActivity.OpenMavenSettings>()
+            .firstOrNull()
+        if (openSettingsActivity != null) {
+            val openSettingsButton = JButton(openSettingsActivity.buttonLabel).apply {
+                toolTipText = "Mở file settings.xml Maven hiệu lực trong IntelliJ"
+                addActionListener { openEffectiveMavenSettings() }
+            }
+            actionRow.add(openSettingsButton)
+        }
+        card.add(actionRow)
         card.add(Box.createVerticalStrut(6))
         card.add(JBLabel("Việc cần làm").apply { font = JBFont.label().asBold() })
         card.add(Box.createVerticalStrut(4))
@@ -392,6 +494,19 @@ class TrainingToolWindowPanel(
         BasicExerciseIntroDialog(project).show()
     }
 
+    private fun maybeShowKnowledgeSummary(exerciseId: String) {
+        if (!shownKnowledgeSummaryIds.add(exerciseId)) return
+        val summary = TrainingCurriculumRepository.program.exercises
+            .firstOrNull { it.id == exerciseId }
+            ?.knowledgeSummary ?: return
+        showKnowledgeSummary(summary)
+    }
+
+    private fun showKnowledgeSummary(summary: com.mb.training.karate.model.TrainingKnowledgeSummary) {
+        if (project.isDisposed) return
+        KnowledgeSummaryDialog(project, summary).show()
+    }
+
     private fun isCompleted(itemId: String): Boolean = snapshot.completedIds.contains(itemId)
 
     private fun isStepCompleted(exerciseId: String, stepId: String): Boolean {
@@ -440,10 +555,407 @@ class TrainingToolWindowPanel(
         return when (activity) {
             is TrainingActivity.CreateFolder -> "Tạo thư mục ${activity.relativePath}"
             is TrainingActivity.CreateFile -> "Tạo file ${activity.relativePath} từ mẫu"
-            is TrainingActivity.CodeTask -> "Thực hiện coding: ${activity.instruction}"
+            is TrainingActivity.CodeTask -> "Thực hiện coding: ${activity.instruction} Ctrl + S (Save) để ghi nhận tiến độ code"
+            is TrainingActivity.OpenMavenSettings -> "Mở file Maven settings đang được IntelliJ sử dụng"
+            is TrainingActivity.RunCommandTask -> "${activity.instruction} (${activity.commandHint})"
+            is TrainingActivity.RefreshMavenProjects -> activity.actionLabel
             is TrainingActivity.CompileTask -> "Lệnh biên dịch gợi ý: ${activity.commandHint}"
             is TrainingActivity.RunTestTask -> "Lệnh chạy test gợi ý: ${activity.commandHint}"
         }
+    }
+
+    private fun extractRunnableActions(activities: List<TrainingActivity>): List<RunnableStepAction> {
+        return activities.mapNotNull { activity ->
+            when (activity) {
+                is TrainingActivity.RunCommandTask -> RunnableStepAction.Command(activity.commandId, activity.commandHint)
+                is TrainingActivity.RunTestTask -> RunnableStepAction.Command(activity.commandId, activity.commandHint)
+                is TrainingActivity.CompileTask -> RunnableStepAction.Command(activity.commandId, activity.commandHint)
+                is TrainingActivity.RefreshMavenProjects -> RunnableStepAction.MavenSync(activity.syncId, activity.actionLabel)
+                else -> null
+            }
+        }
+    }
+
+    private fun runnableActionLabel(action: RunnableStepAction): String {
+        return when (action) {
+            is RunnableStepAction.Command -> "Run"
+            is RunnableStepAction.MavenSync -> "Run"
+        }
+    }
+
+    private fun runnableActionTooltip(action: RunnableStepAction): String {
+        return when (action) {
+            is RunnableStepAction.Command -> "Chạy: ${action.commandHint}"
+            is RunnableStepAction.MavenSync -> action.actionLabel
+        }
+    }
+
+    private fun runStepCommand(
+        exerciseId: String,
+        stepId: String,
+        commandId: String,
+        command: String,
+        button: JButton
+    ) {
+        val root = projectRoot ?: run {
+            Messages.showErrorDialog(project, "Không tìm thấy project root để chạy lệnh.", "MB Training")
+            return
+        }
+        val originalText = button.text
+        button.isEnabled = false
+        button.text = "Running..."
+
+        try {
+            val effectiveCommand = toInteractiveCommand(command)
+            val commandLine = buildCommandLine(root, effectiveCommand)
+            val processHandler = KillableColoredProcessHandler(commandLine)
+            val outputBuffer = StringBuilder()
+
+            processHandler.addProcessListener(object : ProcessAdapter() {
+                override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
+                    outputBuffer.append(event.text)
+                }
+
+                override fun processTerminated(event: ProcessEvent) {
+                    SwingUtilities.invokeLater {
+                        button.isEnabled = true
+                        button.text = originalText
+
+                        val fullOutput = outputBuffer.toString()
+                        val evaluation = evaluateCommandResult(
+                            commandId = commandId,
+                            command = effectiveCommand,
+                            exitCode = event.exitCode,
+                            output = fullOutput,
+                            root = root
+                        )
+                        val result = CommandRunResult(event.exitCode, summarizeOutput(fullOutput), evaluation.passed)
+
+                        if (result.passed) {
+                            snapshot = snapshot.copy(passedCommandIds = snapshot.passedCommandIds + commandId)
+                            persistSnapshot()
+                            refreshProgressFromEngine()
+                            list.repaint()
+                            updateStepStatus(exerciseId, stepId)
+                            showRunSuccessDialog(effectiveCommand)
+                        } else {
+                            Messages.showErrorDialog(
+                                project,
+                                evaluation.message ?: (
+                                    "Lệnh đã chạy nhưng chưa đạt điều kiện pass.\n" +
+                                        "Yêu cầu: exit code = 0 và có BUILD SUCCESS/BUILD PASSED trong log.\n\n${result.summary}"
+                                    ),
+                                "Run chưa đạt"
+                            )
+                        }
+                    }
+                }
+            })
+
+            RunContentExecutor(project, processHandler)
+                .withTitle("MB Training: $effectiveCommand")
+                .run()
+        } catch (e: Exception) {
+            button.isEnabled = true
+            button.text = originalText
+            Messages.showErrorDialog(project, "Không thể khởi chạy lệnh.\n${e.message}", "MB Training")
+        }
+    }
+
+    private fun toInteractiveCommand(command: String): String {
+        val normalized = command.trim()
+        return if (Regex("""\bmvn(\.cmd)?\s+-q\s+test\b""", RegexOption.IGNORE_CASE).containsMatchIn(normalized)) {
+            normalized.replace(Regex("""\s+-q\b""", RegexOption.IGNORE_CASE), "")
+        } else {
+            normalized
+        }
+    }
+
+    private fun buildCommandLine(root: Path, command: String): GeneralCommandLine {
+        val os = System.getProperty("os.name").lowercase()
+        val parts = if (os.contains("win")) {
+            listOf("cmd.exe", "/c", command)
+        } else {
+            listOf("sh", "-lc", command)
+        }
+        return GeneralCommandLine(parts).withWorkDirectory(root.toFile())
+    }
+
+    private fun evaluateCommandResult(
+        commandId: String,
+        command: String,
+        exitCode: Int,
+        output: String,
+        root: Path
+    ): CommandEvaluation {
+        if (commandId == "basic-exercise-1-maven-repo-check") {
+            if (exitCode != 0) {
+                return CommandEvaluation(
+                    passed = false,
+                    message = "Không thể kiểm tra nguồn repository (exit code != 0). " +
+                        "Hãy kiểm tra Maven và chạy lại.\n\n${summarizeOutput(output)}"
+                )
+            }
+            val effectiveSettings = root.resolve("target").resolve("effective-settings.xml")
+            if (!Files.exists(effectiveSettings)) {
+                return CommandEvaluation(
+                    passed = false,
+                    message = "Không tìm thấy file target/effective-settings.xml. " +
+                        "Hãy chạy lại bước kiểm tra."
+                )
+            }
+            val content = Files.readString(effectiveSettings)
+            val usesMavenCentral = content.contains("repo.maven.apache.org", ignoreCase = true) ||
+                content.contains("repo1.maven.org", ignoreCase = true) ||
+                content.contains("repo.maven.apache.org/maven2", ignoreCase = true)
+            if (usesMavenCentral) {
+                return CommandEvaluation(
+                    passed = false,
+                    message = "Phát hiện Maven đang pull từ Maven Central.\n\n" +
+                        "Vui lòng cập nhật ~/.m2/settings.xml để dùng Nexus nội bộ, sau đó chạy lại bước này."
+                )
+            }
+            return CommandEvaluation(
+                passed = true,
+                message = null
+            )
+        }
+
+        if (exitCode != 0) return CommandEvaluation(false, null)
+        if (!command.contains("mvn", ignoreCase = true)) return CommandEvaluation(true, null)
+        val normalized = output.uppercase()
+        if (normalized.contains("BUILD SUCCESS") || normalized.contains("BUILD PASSED")) {
+            return CommandEvaluation(true, null)
+        }
+        val surefireReports = root.resolve("target").resolve("surefire-reports")
+        if (!Files.isDirectory(surefireReports)) {
+            return CommandEvaluation(false, null)
+        }
+        val hasReports = Files.list(surefireReports).use { stream -> stream.findAny().isPresent }
+        return CommandEvaluation(hasReports, null)
+    }
+
+    private fun openEffectiveMavenSettings() {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val manager = MavenProjectsManager.getInstance(project)
+            val settingsPath = resolveMavenSettingsPath(manager)
+            if (settingsPath == null) {
+                ApplicationManager.getApplication().invokeLater(
+                    {
+                        if (project.isDisposed) return@invokeLater
+                        Messages.showErrorDialog(
+                            project,
+                            "Không xác định được Maven settings.xml đang dùng.",
+                            "Open settings.xml"
+                        )
+                    },
+                    ModalityState.NON_MODAL
+                )
+                return@executeOnPooledThread
+            }
+            try {
+                val parent = settingsPath.parent
+                if (parent != null) {
+                    Files.createDirectories(parent)
+                }
+                if (!Files.exists(settingsPath)) {
+                    Files.writeString(settingsPath, "<settings>\n</settings>\n")
+                }
+            } catch (e: Exception) {
+                ApplicationManager.getApplication().invokeLater(
+                    {
+                        if (project.isDisposed) return@invokeLater
+                        Messages.showErrorDialog(
+                            project,
+                            "Không thể chuẩn bị file settings.xml: ${e.message}",
+                            "Open settings.xml"
+                        )
+                    },
+                    ModalityState.NON_MODAL
+                )
+                return@executeOnPooledThread
+            }
+
+            ApplicationManager.getApplication().invokeLater(
+                {
+                    if (project.isDisposed) return@invokeLater
+                    val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(settingsPath)
+                    if (vFile == null) {
+                        Messages.showErrorDialog(
+                            project,
+                            "Không mở được file: $settingsPath",
+                            "Open settings.xml"
+                        )
+                        return@invokeLater
+                    }
+                    OpenFileDescriptor(project, vFile).navigate(true)
+                },
+                ModalityState.NON_MODAL
+            )
+        }
+    }
+
+    private fun resolveMavenSettingsPath(manager: MavenProjectsManager): Path? {
+        val configured = manager.generalSettings.userSettingsFile?.trim().orEmpty()
+        val pathText = if (configured.isNotEmpty()) {
+            if (configured.startsWith("~")) {
+                System.getProperty("user.home") + configured.removePrefix("~")
+            } else {
+                configured
+            }
+        } else {
+            Paths.get(System.getProperty("user.home"), ".m2", "settings.xml").toString()
+        }
+        return try {
+            Paths.get(pathText).toAbsolutePath().normalize()
+        } catch (_: Exception) {
+            null
+        }
+    }
+
+    private fun runMavenSync(exerciseId: String, stepId: String, syncId: String, button: JButton) {
+        val manager = MavenProjectsManager.getInstance(project)
+        val originalText = button.text
+        button.isEnabled = false
+        button.text = "Syncing..."
+        manager.forceUpdateAllProjectsOrFindAllAvailablePomFiles()
+        Timer(2500) { _ ->
+            if (!button.isDisplayable) return@Timer
+            checkMavenSyncHealthyAsync { healthy ->
+                button.isEnabled = true
+                button.text = originalText
+                if (healthy) {
+                    updateMavenSyncState(syncId = syncId, synced = true)
+                    updateStepStatus(exerciseId, stepId)
+                    Messages.showInfoMessage(project, "Maven sync đã thành công.", "Sync thành công")
+                } else {
+                    Messages.showWarningDialog(
+                        project,
+                        "Maven sync đã được trigger. Nếu chưa đạt, vui lòng chờ kết thúc hoặc xem tab Build/Sync.",
+                        "Đang đồng bộ Maven"
+                    )
+                }
+            }
+        }.apply {
+            isRepeats = false
+            start()
+        }
+    }
+
+    private fun bindMavenSyncDetection() {
+        val listener = object : MavenProjectsManager.Listener {
+            override fun projectImportCompleted() {
+                checkMavenSyncHealthyAsync { healthy ->
+                    updateMavenSyncStateForAll(healthy)
+                    refreshProgressFromEngine()
+                    list.repaint()
+                    refreshStepStatusesOnly()
+                }
+            }
+        }
+        MavenProjectsManager.getInstance(project).addManagerListener(listener, project)
+    }
+
+    private fun checkMavenSyncHealthyAsync(onResult: (Boolean) -> Unit) {
+        ApplicationManager.getApplication().executeOnPooledThread {
+            val healthy = try {
+                val projects = MavenProjectsManager.getInstance(project).projects
+                isMavenSyncHealthy(projects)
+            } catch (_: Exception) {
+                false
+            }
+            ApplicationManager.getApplication().invokeLater(
+                {
+                    if (project.isDisposed) return@invokeLater
+                    onResult(healthy)
+                },
+                ModalityState.NON_MODAL
+            )
+        }
+    }
+
+    private fun updateMavenSyncState(syncId: String, synced: Boolean) {
+        val updated = if (synced) {
+            snapshot.copy(successfulMavenSyncIds = snapshot.successfulMavenSyncIds + syncId)
+        } else {
+            snapshot.copy(successfulMavenSyncIds = snapshot.successfulMavenSyncIds - syncId)
+        }
+        if (updated != snapshot) {
+            snapshot = updated
+            persistSnapshot()
+            refreshProgressFromEngine()
+            list.repaint()
+            refreshStepStatusesOnly()
+        }
+    }
+
+    private fun updateMavenSyncStateForAll(synced: Boolean) {
+        val updatedIds = if (synced) snapshot.successfulMavenSyncIds + mavenSyncIds else snapshot.successfulMavenSyncIds - mavenSyncIds
+        if (updatedIds == snapshot.successfulMavenSyncIds) return
+        snapshot = snapshot.copy(successfulMavenSyncIds = updatedIds)
+        persistSnapshot()
+    }
+
+    private fun collectMavenSyncIds(): Set<String> {
+        return TrainingCurriculumRepository.program.exercises
+            .flatMap { it.steps }
+            .flatMap { step -> step.activities.filterIsInstance<TrainingActivity.RefreshMavenProjects>() }
+            .map { it.syncId }
+            .toSet()
+    }
+
+    private fun isMavenSyncHealthy(projects: List<MavenProject>): Boolean {
+        if (projects.isEmpty()) return false
+        return projects.none { it.hasReadingErrors() || it.hasUnresolvedArtifacts() || it.hasUnresolvedPlugins() }
+    }
+
+    private fun summarizeOutput(raw: String): String {
+        val lines = raw.lines().filter { it.isNotBlank() }
+        if (lines.isEmpty()) return "Không có output."
+        return lines.takeLast(12).joinToString("\n")
+    }
+
+    private fun showRunSuccessDialog(command: String) {
+        val body = """
+            <html>
+            <b>Đã hoàn thành bước chạy test</b><br/><br/>
+            Lệnh <code>$command</code> đã chạy thành công.<br/>
+            Điều kiện bài tập đã được cập nhật.<br/><br/>
+            <font color='#7a7a7a'>Chi tiết log xem trong tab Run.</font>
+            </html>
+        """.trimIndent()
+        Messages.showInfoMessage(project, body, "Run thành công")
+    }
+
+    private fun updateStepStatus(exerciseId: String, stepId: String) {
+        val label = stepStatusLabels[stepStatusKey(exerciseId, stepId)] ?: return
+        val done = isStepCompleted(exerciseId, stepId)
+        label.text = if (done) "Đã hoàn thành" else "Chưa hoàn thành"
+        label.foreground = if (done) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
+        detailsScroll.viewport.repaint()
+    }
+
+    private data class CommandRunResult(
+        val exitCode: Int,
+        val summary: String,
+        val passed: Boolean
+    )
+
+    private data class CommandEvaluation(
+        val passed: Boolean,
+        val message: String?
+    )
+
+    private sealed interface RunnableStepAction {
+        data class Command(
+            val commandId: String,
+            val commandHint: String
+        ) : RunnableStepAction
+
+        data class MavenSync(
+            val syncId: String,
+            val actionLabel: String
+        ) : RunnableStepAction
     }
 
     private fun toVietnameseLevel(level: String): String {

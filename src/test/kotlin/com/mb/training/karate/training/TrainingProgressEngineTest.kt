@@ -57,6 +57,55 @@ class TrainingProgressEngineTest {
         }
     }
 
+    @Test
+    fun `engine marks command step done only after command is recorded as passed`() {
+        withTempDir { root ->
+            val program = TrainingProgram(
+                id = "cmd-program",
+                title = "Command Program",
+                exercises = listOf(
+                    TrainingExercise(
+                        id = "exercise-cmd",
+                        title = "Exercise Cmd",
+                        level = TrainingLevel.BASIC,
+                        type = TrainingType.EXERCISE,
+                        objective = "Run test command",
+                        startWhen = listOf(TrainingCondition.Always),
+                        steps = listOf(
+                            TrainingStep(
+                                id = "step-run-test",
+                                title = "Run test",
+                                guidance = "Run mvn -q test",
+                                activities = listOf(
+                                    TrainingActivity.RunTestTask(
+                                        commandHint = "mvn -q test",
+                                        commandId = "cmd-mvn-test"
+                                    )
+                                ),
+                                doneWhen = listOf(TrainingCondition.CommandPassed("cmd-mvn-test"))
+                            )
+                        ),
+                        expectedOutcome = "Command passed"
+                    )
+                )
+            )
+            val engine = TrainingProgressEngine(root, program)
+
+            var snapshot = TrainingProgressSnapshot(
+                currentItemId = "exercise-cmd",
+                completedIds = emptySet()
+            )
+            snapshot = engine.sync(snapshot)
+            assertTrue(!snapshot.completedStepIds.contains("exercise-cmd::step-run-test"))
+            assertTrue(!snapshot.completedIds.contains("exercise-cmd"))
+
+            snapshot = snapshot.copy(passedCommandIds = setOf("cmd-mvn-test"))
+            snapshot = engine.sync(snapshot)
+            assertTrue(snapshot.completedStepIds.contains("exercise-cmd::step-run-test"))
+            assertTrue(snapshot.completedIds.contains("exercise-cmd"))
+        }
+    }
+
     private fun buildProgram(): TrainingProgram {
         return TrainingProgram(
             id = "test-program",

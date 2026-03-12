@@ -14,10 +14,10 @@ class OnboardingStartupActivity : StartupActivity, DumbAware {
         val application = ApplicationManager.getApplication()
         if (application.isHeadlessEnvironment) return
 
+        val settingsService = OnboardingSettingsService.getInstance()
+
         val basePath = project.basePath ?: return
         if (TrainingProjectProgressStore.hasProgressFile(Path.of(basePath))) return
-
-        val settingsService = OnboardingSettingsService.getInstance()
         if (!settingsService.canShowThisSession()) return
 
         settingsService.markShownThisSession()

@@ -10,6 +10,7 @@ import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.mb.training.karate.MbTrainingConstants
 import java.awt.BorderLayout
+import java.awt.Component
 import java.awt.FlowLayout
 import java.awt.Font
 import javax.swing.Action
@@ -29,9 +30,9 @@ class BasicExerciseIntroDialog(project: Project) : DialogWrapper(project) {
     }
 
     override fun createCenterPanel(): JComponent {
-        val panel = JPanel(BorderLayout(JBUI.scale(16), JBUI.scale(16))).apply {
-            border = JBUI.Borders.empty(18)
-            preferredSize = JBUI.size(390, 200)
+        val panel = JPanel(BorderLayout(JBUI.scale(20), 0)).apply {
+            border = JBUI.Borders.empty(10)
+            preferredSize = JBUI.size(760, 500)
         }
 
         panel.add(createLogoCard(), BorderLayout.WEST)
@@ -49,9 +50,9 @@ class BasicExerciseIntroDialog(project: Project) : DialogWrapper(project) {
         return JPanel(BorderLayout()).apply {
             border = JBUI.Borders.customLine(JBColor(0xD9DDE6, 0x3D4350), 1, 1, 1, 1)
             background = JBColor(0xF7F9FC, 0x2E3440)
-            preferredSize = JBUI.size(200, 250)
-            minimumSize = JBUI.size(200, 250)
-            maximumSize = JBUI.size(200, 250)
+            preferredSize = JBUI.size(260, 420)
+            minimumSize = JBUI.size(260, 420)
+            maximumSize = JBUI.size(260, 420)
             add(
                 JBLabel().apply {
                     icon = rawIcon
@@ -65,9 +66,18 @@ class BasicExerciseIntroDialog(project: Project) : DialogWrapper(project) {
     }
 
     private fun createContentPanel(): JComponent {
-        val content = JPanel().apply {
+        val content = JPanel(BorderLayout(0, JBUI.scale(10))).apply {
+            isOpaque = false
+        }
+        val header = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
             isOpaque = false
+            alignmentX = Component.LEFT_ALIGNMENT
+        }
+        val body = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+            isOpaque = false
+            alignmentX = Component.LEFT_ALIGNMENT
         }
 
         val titleLabel = JBLabel("Khởi tạo sân chơi Karate Framework").apply {
@@ -82,6 +92,7 @@ class BasicExerciseIntroDialog(project: Project) : DialogWrapper(project) {
 
         val chipRow = JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(8), 0)).apply {
             isOpaque = false
+            alignmentX = Component.LEFT_ALIGNMENT
             listOf("Maven", "Karate", "pom.xml", "Folder Structure").forEach { label ->
                 add(
                     JBLabel(label).apply {
@@ -106,6 +117,7 @@ class BasicExerciseIntroDialog(project: Project) : DialogWrapper(project) {
             preferredSize = JBUI.size(300, 160)
             minimumSize = JBUI.size(300, 160)
             maximumSize = JBUI.size(300, 160)
+            alignmentX = Component.LEFT_ALIGNMENT
         }
 
         val tasks = JBTextArea(MbTrainingConstants.BASIC_EXERCISE_1_TASKS).apply {
@@ -116,21 +128,35 @@ class BasicExerciseIntroDialog(project: Project) : DialogWrapper(project) {
             isOpaque = false
             font = JBFont.label().deriveFont(JBFont.label().size + 1f)
             maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
+            alignmentX = Component.LEFT_ALIGNMENT
         }
 
-        content.add(titleLabel)
-        content.add(Box.createVerticalStrut(JBUI.scale(8)))
-        content.add(subtitleLabel)
-        content.add(Box.createVerticalStrut(JBUI.scale(14)))
-        content.add(chipRow)
-        content.add(Box.createVerticalStrut(JBUI.scale(14)))
-        content.add(JBLabel("Cấu trúc cần tạo:").apply { font = JBFont.label().deriveFont(Font.BOLD) })
-        content.add(Box.createVerticalStrut(JBUI.scale(6)))
-        content.add(structureBox)
-        content.add(Box.createVerticalStrut(JBUI.scale(12)))
-        content.add(JBLabel("Yêu cầu bài tập:").apply { font = JBFont.label().deriveFont(Font.BOLD) })
-        content.add(Box.createVerticalStrut(JBUI.scale(6)))
-        content.add(tasks)
+        header.add(titleLabel)
+        header.add(Box.createVerticalStrut(JBUI.scale(8)))
+        header.add(subtitleLabel)
+        header.add(Box.createVerticalStrut(JBUI.scale(14)))
+        header.add(chipRow)
+
+        body.add(
+            JBLabel("Cấu trúc cần tạo:").apply {
+                font = JBFont.label().deriveFont(Font.BOLD)
+                alignmentX = Component.LEFT_ALIGNMENT
+            }
+        )
+        body.add(Box.createVerticalStrut(JBUI.scale(6)))
+        body.add(structureBox)
+        body.add(Box.createVerticalStrut(JBUI.scale(12)))
+        body.add(
+            JBLabel("Yêu cầu bài tập:").apply {
+                font = JBFont.label().deriveFont(Font.BOLD)
+                alignmentX = Component.LEFT_ALIGNMENT
+            }
+        )
+        body.add(Box.createVerticalStrut(JBUI.scale(6)))
+        body.add(tasks)
+
+        content.add(header, BorderLayout.NORTH)
+        content.add(body, BorderLayout.CENTER)
 
         return content
     }
