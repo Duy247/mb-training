@@ -4,6 +4,7 @@ import com.mb.training.karate.model.CompletionPolicy
 import com.mb.training.karate.model.TrainingActivity
 import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingExercise
+import com.mb.training.karate.model.TrainingExerciseIntro
 import com.mb.training.karate.model.TrainingHint
 import com.mb.training.karate.model.TrainingLevel
 import com.mb.training.karate.model.TrainingStep
@@ -67,6 +68,26 @@ Feature: Basic Exercise 2
             )
         ),
         expectedOutcome = "Bạn tạo được feature file Karate cơ bản và sẵn sàng viết test flow.",
-        completionPolicy = CompletionPolicy.ALL_STEPS_DONE
+        completionPolicy = CompletionPolicy.ALL_STEPS_DONE,
+        intro = TrainingExerciseIntro(
+            dialogTitle = "Basic Exercise 2: Feature file cơ bản",
+            heading = "Tạo feature file Karate đầu tiên",
+            subtitle = "Mục tiêu: làm quen cấu trúc Feature/Background/Scenario",
+            chips = listOf("Feature", "Background", "Scenario", "Print"),
+            structureTitle = "Vị trí file cần tạo:",
+            structureTree = """
+src
+└─ test
+   └─ resources
+      └─ features
+         └─ basic-exercise-2.feature
+            """.trimIndent(),
+            tasksTitle = "Yêu cầu bài tập:",
+            tasks = """
+1) Tạo file `basic-exercise-2.feature` trong `src/test/resources/features`.
+2) Trong file có đủ: `Feature`, `Background`, `Scenario`.
+3) Dùng ít nhất một lệnh `print` để kiểm tra chạy flow cơ bản.
+            """.trimIndent()
+        )
     )
 }

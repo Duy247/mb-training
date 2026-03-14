@@ -70,12 +70,12 @@ class TrainingToolWindowPanel(
     private val resetButton = JButton("Đặt lại")
     private val fallbackCurrentId = TrainingCurriculumRepository.items.firstOrNull()?.id.orEmpty()
     private var snapshot = runEngine(loadInitialSnapshot())
-    private var introShownInSession = false
+    private val shownExerciseIntroIds = mutableSetOf<String>()
     private val projectRootPathString = projectRoot?.normalize()?.toString()
     private var currentDetailsExerciseId: String? = null
     private val stepStatusLabels = linkedMapOf<String, JBLabel>()
     private val mavenSyncIds = collectMavenSyncIds()
-    private val shownKnowledgeSummaryIds = mutableSetOf<String>()
+    private var suppressProgressDialogs = false
     private val autoRefreshTimer = Timer(AUTO_REFRESH_MS) {
         if (!isShowing) return@Timer
         refreshProgressFromEngine()
@@ -93,7 +93,7 @@ class TrainingToolWindowPanel(
         bindAutoRefreshPolling()
         bindMavenSyncDetection()
         applyCurrentSelectionFromSnapshot()
-        maybeShowBasicExerciseIntro()
+        maybeShowCurrentExerciseIntro()
         refreshProgress()
         refreshDetailsFromSelection()
     }
@@ -221,17 +221,17 @@ class TrainingToolWindowPanel(
     }
 
     private fun refreshProgressFromEngine() {
-        val previous = snapshot
         val updated = runEngine(snapshot)
         if (updated != snapshot) {
             snapshot = updated
             persistSnapshot()
         }
         refreshProgress()
-        applyCurrentSelectionFromSnapshot()
-        val newlyCompleted = updated.completedIds - previous.completedIds
-        newlyCompleted.forEach { exerciseId ->
-            maybeShowKnowledgeSummary(exerciseId)
+        if (!suppressProgressDialogs) {
+            maybeShowCurrentExerciseIntro()
+        }
+        if (list.selectedIndex < 0) {
+            applyCurrentSelectionFromSnapshot()
         }
     }
 
@@ -486,20 +486,15 @@ class TrainingToolWindowPanel(
         detailsScroll.viewport.repaint()
     }
 
-    private fun maybeShowBasicExerciseIntro() {
-        if (introShownInSession) return
-        if (snapshot.currentItemId != "basic-exercise-1") return
-        if (snapshot.completedIds.contains("basic-exercise-1")) return
-        introShownInSession = true
-        BasicExerciseIntroDialog(project).show()
-    }
-
-    private fun maybeShowKnowledgeSummary(exerciseId: String) {
-        if (!shownKnowledgeSummaryIds.add(exerciseId)) return
-        val summary = TrainingCurriculumRepository.program.exercises
-            .firstOrNull { it.id == exerciseId }
-            ?.knowledgeSummary ?: return
-        showKnowledgeSummary(summary)
+    private fun maybeShowCurrentExerciseIntro() {
+        val currentExerciseId = snapshot.currentItemId.ifEmpty { fallbackCurrentId }
+        if (currentExerciseId.isBlank()) return
+        if (snapshot.completedIds.contains(currentExerciseId)) return
+        val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == currentExerciseId } ?: return
+        val intro = exercise.intro ?: return
+        val dialog = BasicExerciseIntroDialog(project, intro)
+        if (!shownExerciseIntroIds.add(currentExerciseId)) return
+        dialog.show()
     }
 
     private fun showKnowledgeSummary(summary: com.mb.training.karate.model.TrainingKnowledgeSummary) {
@@ -634,10 +629,15 @@ class TrainingToolWindowPanel(
                         if (result.passed) {
                             snapshot = snapshot.copy(passedCommandIds = snapshot.passedCommandIds + commandId)
                             persistSnapshot()
-                            refreshProgressFromEngine()
                             list.repaint()
                             updateStepStatus(exerciseId, stepId)
-                            showRunSuccessDialog(effectiveCommand)
+                            suppressProgressDialogs = true
+                            try {
+                                showRunSuccessDialog(effectiveCommand)
+                            } finally {
+                                suppressProgressDialogs = false
+                            }
+                            refreshProgressFromEngine()
                         } else {
                             Messages.showErrorDialog(
                                 project,

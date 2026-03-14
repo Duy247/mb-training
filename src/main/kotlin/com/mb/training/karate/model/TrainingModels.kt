@@ -104,6 +104,7 @@ data class TrainingExercise(
     val steps: List<TrainingStep>,
     val expectedOutcome: String,
     val completionPolicy: CompletionPolicy = CompletionPolicy.ALL_STEPS_DONE,
+    val intro: TrainingExerciseIntro? = null,
     val knowledgeSummary: TrainingKnowledgeSummary? = null
 )
 
@@ -127,5 +128,22 @@ data class TrainingKnowledgeSummary(
     val title: String,
     val subtitle: String? = null,
     val labels: List<String> = emptyList(),
-    val content: String
+    val cards: List<TrainingKnowledgeCard>
+)
+
+data class TrainingKnowledgeCard(
+    val title: String,
+    val content: String,
+    val imagePath: String? = null
+)
+
+data class TrainingExerciseIntro(
+    val dialogTitle: String,
+    val heading: String,
+    val subtitle: String,
+    val chips: List<String>,
+    val structureTitle: String,
+    val structureTree: String,
+    val tasksTitle: String,
+    val tasks: String
 )

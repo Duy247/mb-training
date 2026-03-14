@@ -10,19 +10,4 @@ object MbTrainingConstants {
     const val FIRST_TASK_MESSAGE = "Đây sẽ là một project trống, chúng ta sẽ bắt đầu từ đây"
     const val PICK_FOLDER_TITLE = "Chọn nơi lưu project training"
     const val PICK_FOLDER_DESCRIPTION = "Chọn thư mục để bắt đầu luyện tập Karate Framework."
-    const val BASIC_EXERCISE_1_TITLE = "Basic Exercise 1: Cấu trúc project Karate"
-    const val BASIC_EXERCISE_1_STRUCTURE_TREE = """
-.
-├─ pom.xml
-└─ src
-   └─ test
-      ├─ java
-      └─ resources
-         └─ features
-"""
-    const val BASIC_EXERCISE_1_TASKS = """
-1) Tạo đúng cấu trúc thư mục Maven như bên trên.
-2) Tạo `pom.xml` có dependency Karate: `com.intuit.karate:karate-junit5`.
-3) Cấu hình `maven-surefire-plugin` trong phần build để sẵn sàng chạy test.
-"""
 }

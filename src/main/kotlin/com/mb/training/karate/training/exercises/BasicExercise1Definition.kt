@@ -5,6 +5,8 @@ import com.mb.training.karate.model.TrainingActivity
 import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingExercise
 import com.mb.training.karate.model.TrainingHint
+import com.mb.training.karate.model.TrainingExerciseIntro
+import com.mb.training.karate.model.TrainingKnowledgeCard
 import com.mb.training.karate.model.TrainingKnowledgeSummary
 import com.mb.training.karate.model.TrainingLevel
 import com.mb.training.karate.model.TrainingStep
@@ -183,411 +185,111 @@ object BasicExercise1Definition {
         ),
         expectedOutcome = "Bạn có một Maven project tối thiểu dùng Karate Framework và sẵn sàng sang bài tiếp theo.",
         completionPolicy = CompletionPolicy.ALL_STEPS_DONE,
+        intro = TrainingExerciseIntro(
+            dialogTitle = "Basic Exercise 1: Cấu trúc project Karate",
+            heading = "Khởi tạo sân chơi Karate Framework",
+            subtitle = "Mục tiêu: tạo project Maven chuẩn để bắt đầu luyện tập",
+            chips = listOf("Maven", "Karate", "pom.xml", "Folder Structure"),
+            structureTitle = "Cấu trúc cần tạo:",
+            structureTree = """
+.
+├─ pom.xml
+└─ src
+   └─ test
+      ├─ java
+      └─ resources
+         └─ features
+            """.trimIndent(),
+            tasksTitle = "Yêu cầu bài tập:",
+            tasks = """
+1) Tạo đúng cấu trúc thư mục Maven như bên trên.
+2) Tạo `pom.xml` có dependency Karate: `com.intuit.karate:karate-junit5`.
+3) Cấu hình `maven-surefire-plugin` trong phần build để sẵn sàng chạy test.
+            """.trimIndent()
+        ),
         knowledgeSummary = TrainingKnowledgeSummary(
             title = "Tổng kết kiến thức: Maven + Karate nền tảng",
             subtitle = "Sau bài này, bạn cần nắm chắc các điểm cốt lõi dưới đây",
             labels = listOf("Maven", "Dependency", "Sync", "Test"),
-            content = """
-1) Cấu trúc project test với Karate
-
-Cấu trúc chuẩn của một project Maven dùng cho automation test thường như sau:
-
+            cards = listOf(
+                card(
+                    "Cấu trúc project test với Karate",
+                    """
+Cấu trúc chuẩn của project Maven test:
+```text
 project-root/
  ├─ pom.xml
- └─ src
-     └─ test
-         ├─ java
-         │    └─ runners / helper classes / test utilities
-         └─ resources
-              └─ features / test data / payload / config
-
-Ví dụ cụ thể:
-
-src
- └─ test
-     ├─ java
-     │    └─ runners
-     │         └─ ApiTestRunner.java
-     │
-     └─ resources
-          ├─ features
-          │     ├─ login.feature
-          │     ├─ payment.feature
-          │     └─ card.feature
-          │
-          ├─ payload
-          │     └─ create-user.json
-          │
-          └─ config
-                └─ karate-config.js
-
-
-Vì sao phải theo chuẩn này?
-
-Maven có một build lifecycle mặc định và nó "hiểu" cấu trúc project theo convention. Khi Maven build project:
-
-- src/main/java      -> compile thành code chính của application
-- src/main/resources -> resource của application
-- src/test/java      -> compile thành test classes
-- src/test/resources -> resource phục vụ test
-
-Điều này có nghĩa:
-
-1. Maven tự động add src/test/resources vào test classpath.
-2. Test có thể load file rất đơn giản.
-
-Ví dụ trong Karate:
-
-read('classpath:features/login.feature')
-read('classpath:payload/create-user.json')
-
-Classpath này chính là src/test/resources.
-
-Nếu không theo chuẩn này thì:
-- Maven sẽ không tìm thấy file
-- phải cấu hình thủ công
-- CI/CD pipeline dễ lỗi
-
-Vì vậy gần như mọi project automation Maven đều dùng cấu trúc này.
-
-
-------------------------------------------------------------
-
-
-2) Vai trò của pom.xml
-
-pom.xml là file trung tâm của toàn bộ project Maven.
-
-POM = Project Object Model
-
-Nó định nghĩa:
-
-- Project là gì
-- Dependency nào cần dùng
-- Plugin nào chạy khi build
-- Lifecycle của project
-
-
-Ví dụ pom.xml cơ bản cho Karate:
-
-<project>
-  <modelVersion>4.0.0</modelVersion>
-
-  <groupId>com.company</groupId>
-  <artifactId>karate-tests</artifactId>
-  <version>1.0.0</version>
-
-  <dependencies>
-
-    <dependency>
-      <groupId>com.intuit.karate</groupId>
-      <artifactId>karate-junit5</artifactId>
-      <version>1.4.1</version>
-      <scope>test</scope>
-    </dependency>
-
-  </dependencies>
-
-</project>
-
-
-Vai trò chính của pom.xml:
-
-1. Quản lý dependency
-
-Ví dụ Karate cần các thư viện:
-
-- Karate core
-- HTTP client
-- JSON parsing
-- JUnit integration
-
-Ta chỉ cần khai báo:
-
-karate-junit5
-
-Maven sẽ tự động tải tất cả dependency con.
-
-
-2. Định nghĩa plugin build
-
-Ví dụ plugin quan trọng nhất cho test:
-
-maven-surefire-plugin
-
-Plugin này có nhiệm vụ:
-
-- tìm test class
-- chạy test bằng JUnit
-- generate report
-
-Ví dụ:
-
-<plugin>
-  <groupId>org.apache.maven.plugins</groupId>
-  <artifactId>maven-surefire-plugin</artifactId>
-  <version>3.1.2</version>
-</plugin>
-
-
-3. Điều khiển lifecycle
-
-Khi chạy:
-
-mvn test
-
-Maven sẽ chạy chuỗi lifecycle:
-
-validate
-compile
-test-compile
-test
-
-Trong pha test, plugin surefire sẽ được gọi để chạy test.
-
-
-------------------------------------------------------------
-
-
-3) Maven Central là gì?
-
-Maven Central là repository package lớn nhất của hệ sinh thái Java.
-
-Có thể hiểu đơn giản:
-
-Nó giống như "npm registry" của NodeJS hoặc "pip repository" của Python.
-
-Địa chỉ:
-
-https://repo.maven.apache.org/maven2
-
-
-Trong Maven Central có hàng triệu package như:
-
-- Selenium
-- Karate
-- Spring Boot
-- Jackson
-- Apache Commons
-- JUnit
-- Log4j
-
-
-Ví dụ khi pom.xml khai báo:
-
-<dependency>
-  <groupId>com.intuit.karate</groupId>
-  <artifactId>karate-junit5</artifactId>
-  <version>1.4.1</version>
-</dependency>
-
-Maven sẽ:
-
-1. kết nối internet
-2. download package từ Maven Central
-3. lưu vào local cache
-
-Local cache nằm ở:
-
-~/.m2/repository
-
-Từ lần sau build sẽ dùng lại local cache nên rất nhanh.
-
-
-------------------------------------------------------------
-
-
-4) Vì sao môi trường doanh nghiệp thường chặn Maven Central
-
-Trong môi trường corporate (bank, fintech, enterprise), việc truy cập trực tiếp internet thường bị hạn chế.
-
-Có 3 lý do chính.
-
-
-Lý do 1: Security
-
-Nếu developer có thể tải dependency trực tiếp từ internet:
-
-- có thể tải package chứa malware
-- có thể dùng version không được kiểm soát
-- khó audit security
-
-Trong ngân hàng, điều này là rủi ro lớn.
-
-
-Lý do 2: Dependency control
-
-Doanh nghiệp thường muốn kiểm soát:
-
-- version nào được phép dùng
-- thư viện nào bị cấm
-- library nào có vulnerability
-
-Vì vậy họ dùng repository nội bộ.
-
-
-Lý do 3: Network stability
-
-Nếu 1000 developer cùng download dependency từ internet:
-
-- tốn bandwidth
-- build chậm
-- phụ thuộc external service
-
-
-------------------------------------------------------------
-
-
-5) Nexus / Artifactory nội bộ
-
-Để giải quyết vấn đề này, công ty thường dùng:
-
-- Nexus Repository
-- JFrog Artifactory
-
-Đây là repository nội bộ.
-
-
-Luồng hoạt động sẽ là:
-
-Developer Maven
-        |
-        v
-Corporate Nexus
-        |
-        v
-Maven Central
-
-
-Nexus sẽ:
-
-1. download dependency từ Maven Central lần đầu
-2. cache lại trong server nội bộ
-3. các developer sau tải từ Nexus
-
-Ưu điểm:
-
-- build nhanh hơn
-- kiểm soát security
-- có thể chặn dependency nguy hiểm
-
-
-------------------------------------------------------------
-
-
-6) Maven settings.xml dùng để cấu hình repository
-
-File:
-
-~/.m2/settings.xml
-
-Ví dụ:
-
-<settings>
-
-  <mirrors>
-
-    <mirror>
-      <id>company-nexus</id>
-      <mirrorOf>*</mirrorOf>
-      <url>https://nexus.company.com/repository/maven-public/</url>
-    </mirror>
-
-  </mirrors>
-
-</settings>
-
-
-mirrorOf="*"
-
-có nghĩa:
-
-Mọi request dependency của Maven sẽ được redirect qua Nexus nội bộ thay vì Maven Central.
-
-
-------------------------------------------------------------
-
-
-7) Vì sao cần Maven Sync trong IntelliJ
-
-Khi mở project Maven trong IntelliJ, IDE phải:
-
-1. đọc pom.xml
-2. resolve dependency
-3. download library
-4. build dependency graph
-
-
-Nếu pom.xml thay đổi (ví dụ thêm dependency mới):
-
-IDE chưa tự hiểu ngay.
-
-
-Do đó cần:
-
-Reload Maven Project
-hoặc
-Maven Sync
-
-
-Sync sẽ:
-
-- re-read pom.xml
-- download dependency mới
-- update classpath
-- rebuild project structure
-
-
-Nếu không sync có thể xảy ra lỗi:
-
-- class not found
-- dependency missing
-- compile error dù pom.xml đúng
-
-
-------------------------------------------------------------
-
-
-8) Xác nhận project ready bằng mvn test
-
-Sau khi:
-
-- cấu trúc project đúng
-- pom.xml đúng
-- dependency resolve thành công
-
-ta chạy:
-
-mvn test
-
-
-Maven sẽ thực hiện:
-
-validate
-compile
-test-compile
-test
-
-
-Trong pha test:
-
-maven-surefire-plugin sẽ:
-
-1. scan test class
-2. chạy JUnit runner
-3. execute Karate feature
-4. generate report
-
-
-Nếu mọi thứ pass, điều đó chứng minh:
-
-- dependency đã tải đúng
-- plugin hoạt động
-- test runtime hoạt động
-- project đã sẵn sàng cho bước tiếp theo
-
-Đây thường là bước xác nhận "environment ready" trong automation project setup.
-            """.trimIndent()
+ └─ src/test
+    ├─ java
+    └─ resources/features
+```
+
+Maven mặc định map `src/test/resources` vào classpath test.
+Vì vậy Karate đọc file qua `classpath:` rất ổn định.
+                    """.trimIndent()
+                ),
+                card(
+                    "Vai trò của pom.xml",
+                    """
+`pom.xml` là trung tâm của Maven:
+- Khai báo dependency (ví dụ `karate-junit5`)
+- Khai báo plugin build (ví dụ `maven-surefire-plugin`)
+- Điều khiển lifecycle khi chạy `mvn test`
+
+Nếu pom đúng, Maven sẽ resolve dependency và chạy test theo chuẩn.
+                    """.trimIndent()
+                ),
+                card(
+                    "Maven Central và local cache",
+                    """
+Maven Central là kho package chính của hệ Java.
+Khi khai báo dependency, Maven tải về và cache tại:
+`~/.m2/repository`
+
+Lần build sau dùng lại cache nên nhanh hơn.
+                    """.trimIndent()
+                ),
+                card(
+                    "Môi trường doanh nghiệp và Nexus",
+                    """
+Trong môi trường corporate, truy cập internet thường bị hạn chế.
+Thực tế sẽ dùng Nexus/Artifactory nội bộ để:
+- kiểm soát bảo mật dependency
+- chuẩn hóa version
+- tăng ổn định tốc độ tải
+                    """.trimIndent()
+                ),
+                card(
+                    "settings.xml và Maven Sync",
+                    """
+`~/.m2/settings.xml` quyết định mirror/repository Maven dùng.
+Sau khi đổi `pom.xml`, cần bấm Maven Sync (Reload All) để IDEA:
+- đọc lại pom
+- tải dependency
+- cập nhật classpath và project model
+
+{{image}}
+
+Sau khi bấm reload, theo dõi tab Maven/Build để chắc chắn sync chạy thành công.
+                    """.trimIndent(),
+                    imagePath = "/summary-img/reload_maven.png"
+                ),
+                card(
+                    "Xác nhận readiness bằng mvn test",
+                    """
+Khi chạy `mvn test` pass, nghĩa là:
+- dependency tải đúng
+- plugin surefire hoạt động
+- runtime test sẵn sàng
+
+Đây là checkpoint chuẩn trước khi sang bài tiếp theo.
+                    """.trimIndent()
+                )
+            )
         )
     )
+
+    private fun card(title: String, content: String, imagePath: String? = null): TrainingKnowledgeCard {
+        return TrainingKnowledgeCard(title = title, content = content, imagePath = imagePath)
+    }
 }
