@@ -1,11 +1,53 @@
+# =========================
+# Build / cache outputs
+# =========================
 .gradle/
-build/
-.idea/
-out/
-
-# IntelliJ Platform cache
-.intellijPlatform/
-
-# Kotlin cache
 .kotlin/
+.intellijPlatform/
+build/
+out/
 bin/
+target/
+
+# =========================
+# IntelliJ / JetBrains IDE
+# =========================
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# =========================
+# VS Code (local workspace)
+# =========================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+
+# =========================
+# OS / crash / temp files
+# =========================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+hs_err_pid*
+replay_pid*
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# Gradle wrapper (must keep)
+# =========================
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
