@@ -5,7 +5,7 @@ object MbTrainingConstants {
     const val ONBOARDING_TITLE = "Welcome to MB Training for Karate Framework"
     const val ONBOARDING_MESSAGE = """
     Đây là một plugin IntelliJ IDEA được thiết kế dành riêng cho các anh/chị/em manual test thuộc TTĐBCL Khối CNTT MBBank. 
-    Với plugin này, anh chị em sẽ được thực hiện training một cách rất chủ động thông qua các bài tập với hướng dẫn ngay ở bên trong trình code IDEA.\n
+    Với plugin này, anh chị em sẽ được thực hiện training một cách rất chủ động thông qua các bài tập với hướng dẫn ngay ở bên trong trình code IDEA.
     Các nội dung sẽ bao gồm:
     - Bài tập hướng dẫn
     - Lý giải về nguyên lý và lý thuyết liên quan
