@@ -13,14 +13,14 @@ object MbTrainingConstants {
     - Tip & trick để làm việc hiệu quả
     - Mock project và lý giải các phương án xử lý khi gặp lỗi
     Sản phẩm được làm bởi team automation test APP: 
-    | user MB    | Tên thành viên   |
-    |------------|------------------|
-    | duyvt2     | Văn Thành Duy    | 
-    | chungnt4   | Nguyễn Thị Chung |
-    | lamnt26    | Nguyễn Thanh Lâm |
-    | dungvtt.os | Vũ Thị Thuỳ Dung |
-    | longnd4.os | Nguyễn Đức Long  |
-    | binhtt4.os | Trần Thanh Bình  |
+    | Tên thành viên                | Role      |
+    |-------------------------------|-----------|
+    | Văn Thành Duy - duyvt2        | Dev chính | 
+    | Nguyễn Thị Chung - chungnt4   | Test      |
+    | Nguyễn Thanh Lâm - lamnt26    | Test      |
+    | Vũ Thị Thuỳ Dung - dungvtt.os | Test      |
+    | Nguyễn Đức Long - longnd4.os  | Test      |
+    | Trần Thanh Bình - binhtt4.os  | Test      |
     """
     const val COMPANY_LOGO_PATH = "/icons/company-logo.svg"
     const val ONBOARDING_START_BUTTON = "Bắt đầu"

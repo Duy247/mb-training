@@ -184,14 +184,19 @@ class OnboardingDialog(
         val content = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
             isOpaque = false
+            alignmentX = java.awt.Component.LEFT_ALIGNMENT
         }
 
         val titleLabel = JBLabel("Học cấp tốc Karate Framework").apply {
             font = JBFont.label().deriveFont(Font.BOLD, JBFont.label().size + 8f)
+            alignmentX = java.awt.Component.LEFT_ALIGNMENT
+            maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
         }
         val subtitleLabel = JBLabel("Từ cơ bản đến nâng cao").apply {
             font = JBFont.label().deriveFont(JBFont.label().size + 1f)
             foreground = JBColor.GRAY
+            alignmentX = java.awt.Component.LEFT_ALIGNMENT
+            maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
         }
 
         content.add(titleLabel)
@@ -224,6 +229,8 @@ class OnboardingDialog(
         val panel = JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(8), 0)).apply {
             isOpaque = false
             border = JBUI.Borders.emptyBottom(4)
+            alignmentX = java.awt.Component.LEFT_ALIGNMENT
+            maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
         }
 
         listOf("Hướng dẫn", "Lý giải", "Bài tập", "Project").forEachIndexed { index, label ->
@@ -250,18 +257,16 @@ class OnboardingDialog(
     }
 
     private fun createFooter(dialog: JDialog): JComponent {
-        val startButton = JButton(MbTrainingConstants.ONBOARDING_START_BUTTON).apply {
-            foreground = JBColor(0xEAF7EE, 0xEAF7EE)
+        val startButton = HoverPaintButton(
+            text = MbTrainingConstants.ONBOARDING_START_BUTTON,
+            baseBg = JBColor(0x2F8D5A, 0x2F8D5A),
+            hoverBg = JBColor(0x39A266, 0x39A266),
+            pressedBg = JBColor(0x26764B, 0x26764B),
+            baseBorder = JBColor(0x69C58E, 0x69C58E),
+            hoverBorder = JBColor(0xA3F0C1, 0xA3F0C1),
+            textColor = JBColor(0xFFFFFF, 0xFFFFFF)
+        ).apply {
             font = JBFont.label().deriveFont(Font.BOLD)
-            background = JBColor(0x3F9E69, 0x3F9E69)
-            border = BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JBColor(0x74C48F, 0x74C48F), 1, true),
-                JBUI.Borders.empty(4, 18)
-            )
-            isOpaque = true
-            isContentAreaFilled = true
-            isBorderPainted = true
-            isFocusPainted = false
             addActionListener {
                 persistPreference()
                 dialog.dispose()
@@ -269,18 +274,16 @@ class OnboardingDialog(
             }
         }
 
-        val closeButton = JButton("Đóng").apply {
-            foreground = JBColor(0xE4E7EF, 0xE4E7EF)
+        val closeButton = HoverPaintButton(
+            text = "Đóng",
+            baseBg = JBColor(0x3A3D45, 0x3A3D45),
+            hoverBg = JBColor(0x4E5360, 0x4E5360),
+            pressedBg = JBColor(0x31343B, 0x31343B),
+            baseBorder = JBColor(0x676D7A, 0x676D7A),
+            hoverBorder = JBColor(0xA6AFBF, 0xA6AFBF),
+            textColor = JBColor(0xFFFFFF, 0xFFFFFF)
+        ).apply {
             font = JBFont.label().deriveFont(Font.PLAIN)
-            background = JBColor(0x45414D, 0x45414D)
-            border = BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(JBColor(0x696577, 0x696577), 1, true),
-                JBUI.Borders.empty(4, 18)
-            )
-            isOpaque = true
-            isContentAreaFilled = true
-            isBorderPainted = true
-            isFocusPainted = false
             addActionListener {
                 persistPreference()
                 dialog.dispose()
@@ -305,6 +308,45 @@ class OnboardingDialog(
                 }
             )
             add(buttonRow)
+        }
+    }
+
+    private class HoverPaintButton(
+        text: String,
+        private val baseBg: Color,
+        private val hoverBg: Color,
+        private val pressedBg: Color,
+        private val baseBorder: Color,
+        private val hoverBorder: Color,
+        textColor: Color
+    ) : JButton(text) {
+        init {
+            foreground = textColor
+            isOpaque = false
+            isContentAreaFilled = false
+            isBorderPainted = false
+            isFocusPainted = false
+            margin = JBUI.insets(3, 14, 3, 14)
+            preferredSize = JBUI.size(128, 36)
+            cursor = java.awt.Cursor.getPredefinedCursor(java.awt.Cursor.HAND_CURSOR)
+        }
+
+        override fun paintComponent(g: Graphics) {
+            val g2 = g.create() as Graphics2D
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+            val bg = when {
+                model.isPressed -> pressedBg
+                model.isRollover -> hoverBg
+                else -> baseBg
+            }
+            val border = if (model.isRollover) hoverBorder else baseBorder
+            val arc = JBUI.scale(12)
+            g2.color = bg
+            g2.fillRoundRect(0, 0, width - 1, height - 1, arc, arc)
+            g2.color = border
+            g2.drawRoundRect(0, 0, width - 1, height - 1, arc, arc)
+            g2.dispose()
+            super.paintComponent(g)
         }
     }
 
