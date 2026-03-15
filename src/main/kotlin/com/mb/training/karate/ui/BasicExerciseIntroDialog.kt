@@ -208,16 +208,11 @@ class BasicExerciseIntroDialog(
     }
 
     private fun createParagraph(text: String): JComponent {
-        return JBTextArea(text).apply {
-            isEditable = false
-            lineWrap = true
-            wrapStyleWord = true
-            border = null
-            isOpaque = false
-            font = JBFont.label().deriveFont(JBFont.label().size + 1f)
-            alignmentX = Component.LEFT_ALIGNMENT
-            columns = 56
-        }
+        return MarkdownTableSupport.createBlocksPanel(
+            text = text,
+            paragraphFont = JBFont.label().deriveFont(JBFont.label().size + 1f),
+            paragraphColumns = 56
+        )
     }
 
     private fun createCodeBlock(code: String): JComponent {

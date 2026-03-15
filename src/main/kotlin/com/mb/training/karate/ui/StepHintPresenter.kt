@@ -108,7 +108,7 @@ class StepHintPresenter(
                     renderInlineSuggestion(editor, hint)
                     showHudBalloon("Đã chèn gợi ý inline vào file <code>${hint.filePath}</code>.", anchor)
                 },
-                ModalityState.NON_MODAL
+                ModalityState.defaultModalityState()
             )
         }
     }
