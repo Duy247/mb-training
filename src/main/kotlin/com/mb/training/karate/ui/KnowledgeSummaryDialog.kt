@@ -255,7 +255,7 @@ class KnowledgeSummaryDialog(
         var cursor = 0
         val matches = codeBlockRegex.findAll(content).toList()
         if (matches.isEmpty()) {
-            container.add(createCardText(content))
+            addCardTextWithTables(container, content)
             return
         }
 
@@ -265,7 +265,7 @@ class KnowledgeSummaryDialog(
             if (start > cursor) {
                 val textPart = content.substring(cursor, start).trim()
                 if (textPart.isNotBlank()) {
-                    container.add(createCardText(textPart))
+                    addCardTextWithTables(container, textPart)
                     container.add(Box.createVerticalStrut(4))
                 }
             }
@@ -281,9 +281,19 @@ class KnowledgeSummaryDialog(
         if (cursor < content.length) {
             val tail = content.substring(cursor).trim()
             if (tail.isNotBlank()) {
-                container.add(createCardText(tail))
+                addCardTextWithTables(container, tail)
             }
         }
+    }
+
+    private fun addCardTextWithTables(container: JPanel, text: String) {
+        val panel = MarkdownTableSupport.createBlocksPanel(
+            text = text,
+            paragraphFont = JBFont.label(),
+            paragraphColumns = 56
+        )
+        panel.alignmentX = Component.LEFT_ALIGNMENT
+        container.add(panel)
     }
 
     private fun createCardText(text: String): JComponent {

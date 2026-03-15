@@ -749,7 +749,7 @@ class TrainingToolWindowPanel(
                             "Open settings.xml"
                         )
                     },
-                    ModalityState.NON_MODAL
+                    ModalityState.defaultModalityState()
                 )
                 return@executeOnPooledThread
             }
@@ -771,7 +771,7 @@ class TrainingToolWindowPanel(
                             "Open settings.xml"
                         )
                     },
-                    ModalityState.NON_MODAL
+                    ModalityState.defaultModalityState()
                 )
                 return@executeOnPooledThread
             }
@@ -790,7 +790,7 @@ class TrainingToolWindowPanel(
                     }
                     OpenFileDescriptor(project, vFile).navigate(true)
                 },
-                ModalityState.NON_MODAL
+                ModalityState.defaultModalityState()
             )
         }
     }
@@ -869,7 +869,7 @@ class TrainingToolWindowPanel(
                     if (project.isDisposed) return@invokeLater
                     onResult(healthy)
                 },
-                ModalityState.NON_MODAL
+                ModalityState.defaultModalityState()
             )
         }
     }
