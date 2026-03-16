@@ -11,18 +11,26 @@ import com.intellij.openapi.ui.popup.Balloon
 import com.intellij.openapi.ui.popup.JBPopupFactory
 import com.intellij.openapi.util.Key
 import com.intellij.openapi.vfs.LocalFileSystem
+import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
+import com.intellij.ui.components.JBLabel
+import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.mb.training.karate.model.TrainingHint
+import java.awt.BorderLayout
 import java.awt.Color
+import java.awt.Component
 import java.awt.Font
 import java.awt.Graphics
 import java.awt.Point
 import java.awt.Rectangle
 import java.nio.file.Path
+import javax.swing.BorderFactory
 import javax.swing.JComponent
+import javax.swing.JList
 import javax.swing.JLabel
 import javax.swing.JPanel
+import javax.swing.DefaultListCellRenderer
 
 class StepHintPresenter(
     private val project: Project,
@@ -35,12 +43,12 @@ class StepHintPresenter(
             return
         }
 
-        val labels = hints.mapIndexed { index, hint -> "${index + 1}. ${labelFor(hint)}" }
-        JBPopupFactory.getInstance().createPopupChooserBuilder(labels).apply {
+        val options = hints.mapIndexed { index, hint -> HintOption(index, hint) }
+        JBPopupFactory.getInstance().createPopupChooserBuilder(options).apply {
             setTitle("Chọn gợi ý")
+            setRenderer(HintOptionCellRenderer())
             setItemChosenCallback {
-                val idx = labels.indexOf(it)
-                if (idx >= 0) showHint(hints[idx], anchor)
+                showHint(it.hint, anchor)
             }
         }.createPopup().showUnderneathOf(anchor)
     }
@@ -156,6 +164,64 @@ class StepHintPresenter(
             is TrainingHint.LocationHint -> "${hint.title} (${hint.targetType})"
             is TrainingHint.RenameHint -> "${hint.title}: ${hint.fromName} -> ${hint.toName}"
             is TrainingHint.ContentHint -> "${hint.title} (${hint.filePath})"
+        }
+    }
+
+    private data class HintOption(val index: Int, val hint: TrainingHint)
+
+    private inner class HintOptionCellRenderer : DefaultListCellRenderer() {
+        override fun getListCellRendererComponent(
+            list: JList<*>?,
+            value: Any?,
+            index: Int,
+            isSelected: Boolean,
+            cellHasFocus: Boolean
+        ): Component {
+            val option = value as? HintOption ?: return super.getListCellRendererComponent(
+                list,
+                value,
+                index,
+                isSelected,
+                cellHasFocus
+            )
+
+            val badge = JBLabel("${option.index + 1}").apply {
+                font = JBFont.small().deriveFont(Font.BOLD)
+                foreground = JBColor(0x8AF7C9, 0x8AF7C9)
+                background = JBColor(0x1D4F44, 0x1D4F44)
+                isOpaque = true
+                border = BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(JBColor(0x27B082, 0x27B082), 1, true),
+                    BorderFactory.createEmptyBorder(2, 7, 2, 7)
+                )
+            }
+
+            val title = JBLabel(labelFor(option.hint)).apply {
+                foreground = JBColor(0xE6EDF7, 0xE6EDF7)
+                font = JBFont.label().deriveFont(JBFont.label().size + 0.5f)
+            }
+
+            val row = JPanel(BorderLayout(JBUI.scale(8), 0)).apply {
+                isOpaque = true
+                background = if (isSelected) JBColor(0x2A3F5B, 0x2A3F5B) else JBColor(0x202733, 0x202733)
+                border = BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(
+                        if (isSelected) JBColor(0x4FA0FF, 0x4FA0FF) else JBColor(0x3D4350, 0x3D4350),
+                        1,
+                        true
+                    ),
+                    BorderFactory.createEmptyBorder(7, 10, 7, 10)
+                )
+                add(badge, BorderLayout.WEST)
+                add(title, BorderLayout.CENTER)
+            }
+
+            return JPanel(BorderLayout()).apply {
+                isOpaque = true
+                background = JBColor(0x1F242D, 0x1F242D)
+                border = BorderFactory.createEmptyBorder(2, 2, 2, 2)
+                add(row, BorderLayout.CENTER)
+            }
         }
     }
 

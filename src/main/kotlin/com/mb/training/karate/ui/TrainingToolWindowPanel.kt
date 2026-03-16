@@ -43,14 +43,12 @@ import java.awt.GradientPaint
 import java.awt.Graphics
 import java.awt.Graphics2D
 import java.awt.RenderingHints
-import java.awt.Insets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import javax.swing.BorderFactory
 import javax.swing.Box
 import javax.swing.BoxLayout
-import javax.swing.DefaultListCellRenderer
 import javax.swing.DefaultListModel
 import javax.swing.JButton
 import javax.swing.JComponent
@@ -96,11 +94,26 @@ class TrainingToolWindowPanel(
     private val stepStatusLabels = linkedMapOf<String, JBLabel>()
     private val mavenSyncIds = collectMavenSyncIds()
     private var suppressProgressDialogs = false
-    private val autoRefreshTimer = Timer(AUTO_REFRESH_MS) {
+    private var pendingRefresh = false
+    private var pendingSnapshotSave = false
+    private val refreshDebounceTimer = Timer(350) {
+        if (!pendingRefresh) return@Timer
+        pendingRefresh = false
         if (!isShowing) return@Timer
         refreshProgressFromEngine()
         list.repaint()
         refreshStepStatusesOnly()
+    }.apply {
+        isRepeats = false
+    }
+    private val snapshotSaveDebounceTimer = Timer(350) {
+        flushSnapshotSave()
+    }.apply {
+        isRepeats = false
+    }
+    private val autoRefreshTimer = Timer(AUTO_REFRESH_MS) {
+        if (!isShowing) return@Timer
+        requestProgressRefresh()
     }
 
     init {
@@ -154,57 +167,68 @@ class TrainingToolWindowPanel(
         list.fixedCellHeight = JBUI.scale(44)
         list.border = JBUI.Borders.empty(6, 6, 6, 6)
         list.selectionMode = ListSelectionModel.SINGLE_SELECTION
-        list.cellRenderer = object : javax.swing.ListCellRenderer<TrainingItem> {
-            override fun getListCellRendererComponent(
-                list: javax.swing.JList<out TrainingItem>?,
-                value: TrainingItem?,
-                index: Int,
-                isSelected: Boolean,
-                cellHasFocus: Boolean
-            ): Component {
-                val item = value ?: return JBLabel("")
-                val done = isCompleted(item.id)
-                val badge = JBLabel(if (done) "DONE" else "TODO").apply {
-                    font = JBFont.small().deriveFont(Font.BOLD)
-                    foreground = if (done) LIST_DONE_FG else LIST_TODO_FG
-                    background = if (done) LIST_DONE_BG else LIST_TODO_BG
-                    isOpaque = true
-                    border = BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                            if (done) JBColor(0x27B082, 0x27B082) else JBColor(0x677184, 0x677184),
-                            1,
-                            true
-                        ),
-                        BorderFactory.createEmptyBorder(2, 8, 2, 8)
-                    )
-                }
-                val title = JBLabel(item.title).apply {
-                    font = JBFont.label().deriveFont(Font.PLAIN, JBFont.label().size + 1f)
-                    foreground = TITLE_COLOR
-                }
+        list.cellRenderer = TrainingItemCellRenderer()
+    }
 
-                val row = JPanel(BorderLayout(JBUI.scale(8), 0)).apply {
-                    isOpaque = true
-                    background = if (isSelected) LIST_SELECTED_BG else LIST_CARD_BG
-                    border = BorderFactory.createCompoundBorder(
-                        BorderFactory.createLineBorder(
-                            if (isSelected) JBColor(0x4FA0FF, 0x4FA0FF) else BORDER_COLOR,
-                            1,
-                            true
-                        ),
-                        BorderFactory.createEmptyBorder(8, 10, 8, 10)
-                    )
-                    add(badge, BorderLayout.WEST)
-                    add(title, BorderLayout.CENTER)
-                }
+    private inner class TrainingItemCellRenderer : JPanel(BorderLayout()), javax.swing.ListCellRenderer<TrainingItem> {
+        private val badgeLabel = JBLabel()
+        private val titleLabel = JBLabel().apply {
+            font = JBFont.label().deriveFont(Font.PLAIN, JBFont.label().size + 1f)
+            foreground = TITLE_COLOR
+        }
+        private val row = JPanel(BorderLayout(JBUI.scale(8), 0)).apply {
+            isOpaque = true
+            add(badgeLabel, BorderLayout.WEST)
+            add(titleLabel, BorderLayout.CENTER)
+        }
 
-                return JPanel(BorderLayout()).apply {
-                    isOpaque = true
-                    background = PANEL_BG
-                    border = BorderFactory.createEmptyBorder(2, 0, 2, 0)
-                    add(row, BorderLayout.CENTER)
-                }
+        init {
+            isOpaque = true
+            background = PANEL_BG
+            border = BorderFactory.createEmptyBorder(2, 0, 2, 0)
+            add(row, BorderLayout.CENTER)
+        }
+
+        override fun getListCellRendererComponent(
+            list: javax.swing.JList<out TrainingItem>?,
+            value: TrainingItem?,
+            index: Int,
+            isSelected: Boolean,
+            cellHasFocus: Boolean
+        ): Component {
+            val item = value
+            if (item == null) {
+                titleLabel.text = ""
+                badgeLabel.text = ""
+                return this
             }
+
+            val done = isCompleted(item.id)
+            badgeLabel.text = if (done) "DONE" else "TODO"
+            badgeLabel.font = JBFont.small().deriveFont(Font.BOLD)
+            badgeLabel.foreground = if (done) LIST_DONE_FG else LIST_TODO_FG
+            badgeLabel.background = if (done) LIST_DONE_BG else LIST_TODO_BG
+            badgeLabel.isOpaque = true
+            badgeLabel.border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(
+                    if (done) JBColor(0x27B082, 0x27B082) else JBColor(0x677184, 0x677184),
+                    1,
+                    true
+                ),
+                BorderFactory.createEmptyBorder(2, 8, 2, 8)
+            )
+
+            titleLabel.text = item.title
+            row.background = if (isSelected) LIST_SELECTED_BG else LIST_CARD_BG
+            row.border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(
+                    if (isSelected) JBColor(0x4FA0FF, 0x4FA0FF) else BORDER_COLOR,
+                    1,
+                    true
+                ),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+            )
+            return this
         }
     }
 
@@ -279,9 +303,7 @@ class TrainingToolWindowPanel(
         }
 
         validateButton.addActionListener {
-            refreshProgressFromEngine()
-            list.repaint()
-            refreshStepStatusesOnly()
+            requestProgressRefresh()
         }
 
         resetButton.addActionListener {
@@ -317,13 +339,20 @@ class TrainingToolWindowPanel(
                 override fun after(events: MutableList<out VFileEvent>) {
                     val hasProjectFileChanges = events.any { it.path.startsWith(rootPath, ignoreCase = true) }
                     if (!hasProjectFileChanges) return
-                    SwingUtilities.invokeLater {
-                        refreshProgressFromEngine()
-                        list.repaint()
-                        refreshStepStatusesOnly()
-                    }
+                    requestProgressRefresh()
                 }
             }
+        )
+    }
+
+    private fun requestProgressRefresh() {
+        ApplicationManager.getApplication().invokeLater(
+            {
+                if (project.isDisposed) return@invokeLater
+                pendingRefresh = true
+                refreshDebounceTimer.restart()
+            },
+            ModalityState.defaultModalityState()
         )
     }
 
@@ -630,6 +659,13 @@ class TrainingToolWindowPanel(
     }
 
     private fun persistSnapshot() {
+        pendingSnapshotSave = true
+        snapshotSaveDebounceTimer.restart()
+    }
+
+    private fun flushSnapshotSave() {
+        if (!pendingSnapshotSave) return
+        pendingSnapshotSave = false
         val root = projectRoot ?: return
         TrainingProjectProgressStore.save(root, snapshot)
     }
@@ -646,6 +682,9 @@ class TrainingToolWindowPanel(
 
     override fun removeNotify() {
         autoRefreshTimer.stop()
+        refreshDebounceTimer.stop()
+        snapshotSaveDebounceTimer.stop()
+        flushSnapshotSave()
         super.removeNotify()
     }
 
