@@ -12,6 +12,10 @@ class TrainingProgressEngine(
     private val projectRoot: Path,
     private val program: TrainingProgram
 ) {
+    private data class FileContainsCacheKey(val file: Path, val text: String)
+    private data class FileContainsCacheEntry(val lastModifiedMillis: Long, val contains: Boolean)
+    private val fileContainsCache = mutableMapOf<FileContainsCacheKey, FileContainsCacheEntry>()
+
     fun sync(snapshot: TrainingProgressSnapshot): TrainingProgressSnapshot {
         val completedExercises = mutableSetOf<String>()
         val completedSteps = mutableSetOf<String>()
@@ -128,11 +132,24 @@ class TrainingProgressEngine(
                 is TrainingCondition.FolderExists -> Files.isDirectory(projectRoot.resolve(condition.relativePath))
                 is TrainingCondition.FileContains -> {
                     val file = projectRoot.resolve(condition.relativePath)
-                    Files.exists(file) && Files.readString(file).contains(condition.text)
+                    evalFileContains(file, condition.text)
                 }
                 is TrainingCondition.CommandPassed -> passedCommands.contains(condition.commandId)
                 is TrainingCondition.MavenSyncSucceeded -> successfulMavenSyncIds.contains(condition.syncId)
             }
         }
+    }
+
+    private fun evalFileContains(file: Path, text: String): Boolean {
+        if (!Files.exists(file)) return false
+        val key = FileContainsCacheKey(file.normalize(), text)
+        val modified = runCatching { Files.getLastModifiedTime(file).toMillis() }.getOrNull() ?: return false
+        val cached = fileContainsCache[key]
+        if (cached != null && cached.lastModifiedMillis == modified) {
+            return cached.contains
+        }
+        val contains = runCatching { Files.readString(file).contains(text) }.getOrElse { false }
+        fileContainsCache[key] = FileContainsCacheEntry(modified, contains)
+        return contains
     }
 }
