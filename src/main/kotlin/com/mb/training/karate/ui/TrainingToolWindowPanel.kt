@@ -34,9 +34,16 @@ import com.mb.training.karate.training.TrainingProgressEngine
 import org.jetbrains.idea.maven.project.MavenProject
 import org.jetbrains.idea.maven.project.MavenProjectsManager
 import java.awt.BorderLayout
+import java.awt.Color
 import java.awt.Component
 import java.awt.Dimension
 import java.awt.FlowLayout
+import java.awt.Font
+import java.awt.GradientPaint
+import java.awt.Graphics
+import java.awt.Graphics2D
+import java.awt.RenderingHints
+import java.awt.Insets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -57,6 +64,19 @@ class TrainingToolWindowPanel(
 ) : JPanel(BorderLayout()) {
     companion object {
         private const val AUTO_REFRESH_MS = 3_000
+        private val BG_START = JBColor(Color(34, 41, 61), Color(34, 41, 61))
+        private val BG_END = JBColor(Color(55, 45, 60), Color(55, 45, 60))
+        private val PANEL_BG = JBColor(0x1F242D, 0x1F242D)
+        private val BORDER_COLOR = JBColor(0x3D4350, 0x3D4350)
+        private val TITLE_COLOR = JBColor(0xDDE7FF, 0xDDE7FF)
+        private val SUBTITLE_COLOR = JBColor(0xA9B4CA, 0xA9B4CA)
+        private val LIST_SELECTED_BG = JBColor(0x2A3F5B, 0x2A3F5B)
+        private val LIST_HOVER_BG = JBColor(0x242B36, 0x242B36)
+        private val LIST_CARD_BG = JBColor(0x202733, 0x202733)
+        private val LIST_DONE_BG = JBColor(0x1F5A43, 0x1F5A43)
+        private val LIST_DONE_FG = JBColor(0x8AF7C9, 0x8AF7C9)
+        private val LIST_TODO_BG = JBColor(0x3A4250, 0x3A4250)
+        private val LIST_TODO_FG = JBColor(0xD5DCEB, 0xD5DCEB)
     }
 
     private val projectRoot = project.basePath?.let { Path.of(it) }
@@ -70,7 +90,7 @@ class TrainingToolWindowPanel(
     private val resetButton = JButton("Đặt lại")
     private val fallbackCurrentId = TrainingCurriculumRepository.items.firstOrNull()?.id.orEmpty()
     private var snapshot = runEngine(loadInitialSnapshot())
-    private val shownExerciseIntroIds = mutableSetOf<String>()
+    private var introPopupEnabled = false
     private val projectRootPathString = projectRoot?.normalize()?.toString()
     private var currentDetailsExerciseId: String? = null
     private val stepStatusLabels = linkedMapOf<String, JBLabel>()
@@ -84,6 +104,8 @@ class TrainingToolWindowPanel(
     }
 
     init {
+        isOpaque = false
+        border = JBUI.Borders.empty(8)
         populateList()
         configureList()
         configureDetails()
@@ -93,9 +115,25 @@ class TrainingToolWindowPanel(
         bindAutoRefreshPolling()
         bindMavenSyncDetection()
         applyCurrentSelectionFromSnapshot()
-        maybeShowCurrentExerciseIntro()
         refreshProgress()
         refreshDetailsFromSelection()
+        introPopupEnabled = true
+    }
+
+    override fun paintComponent(g: Graphics) {
+        super.paintComponent(g)
+        val g2 = g as Graphics2D
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON)
+        val base = GradientPaint(
+            0f, 0f, BG_START,
+            width.toFloat(), height.toFloat(), BG_END
+        )
+        g2.paint = base
+        g2.fillRect(0, 0, width, height)
+        g2.color = JBColor(Color(70, 104, 178, 22), Color(70, 104, 178, 22))
+        g2.fillOval(-width / 4, -height / 4, width / 2, height / 2)
+        g2.color = JBColor(Color(140, 102, 67, 20), Color(140, 102, 67, 20))
+        g2.fillOval(width / 2, height / 4, width / 2, height / 2)
     }
 
     private fun loadInitialSnapshot(): TrainingProgressSnapshot {
@@ -108,41 +146,95 @@ class TrainingToolWindowPanel(
     }
 
     private fun configureList() {
+        list.background = PANEL_BG
+        list.foreground = TITLE_COLOR
+        list.font = JBFont.label().deriveFont(Font.PLAIN, JBFont.label().size + 1f)
+        list.selectionBackground = LIST_SELECTED_BG
+        list.selectionForeground = TITLE_COLOR
+        list.fixedCellHeight = JBUI.scale(44)
+        list.border = JBUI.Borders.empty(6, 6, 6, 6)
         list.selectionMode = ListSelectionModel.SINGLE_SELECTION
-        list.cellRenderer = object : DefaultListCellRenderer() {
+        list.cellRenderer = object : javax.swing.ListCellRenderer<TrainingItem> {
             override fun getListCellRendererComponent(
-                list: javax.swing.JList<*>?,
-                value: Any?,
+                list: javax.swing.JList<out TrainingItem>?,
+                value: TrainingItem?,
                 index: Int,
                 isSelected: Boolean,
                 cellHasFocus: Boolean
             ): Component {
-                val component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus)
-                val item = value as? TrainingItem
-                if (item != null) {
-                    val donePrefix = if (isCompleted(item.id)) "[X]" else "[ ]"
-                    text = "$donePrefix ${item.title}"
+                val item = value ?: return JBLabel("")
+                val done = isCompleted(item.id)
+                val badge = JBLabel(if (done) "DONE" else "TODO").apply {
+                    font = JBFont.small().deriveFont(Font.BOLD)
+                    foreground = if (done) LIST_DONE_FG else LIST_TODO_FG
+                    background = if (done) LIST_DONE_BG else LIST_TODO_BG
+                    isOpaque = true
+                    border = BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                            if (done) JBColor(0x27B082, 0x27B082) else JBColor(0x677184, 0x677184),
+                            1,
+                            true
+                        ),
+                        BorderFactory.createEmptyBorder(2, 8, 2, 8)
+                    )
                 }
-                return component
+                val title = JBLabel(item.title).apply {
+                    font = JBFont.label().deriveFont(Font.PLAIN, JBFont.label().size + 1f)
+                    foreground = TITLE_COLOR
+                }
+
+                val row = JPanel(BorderLayout(JBUI.scale(8), 0)).apply {
+                    isOpaque = true
+                    background = if (isSelected) LIST_SELECTED_BG else LIST_CARD_BG
+                    border = BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(
+                            if (isSelected) JBColor(0x4FA0FF, 0x4FA0FF) else BORDER_COLOR,
+                            1,
+                            true
+                        ),
+                        BorderFactory.createEmptyBorder(8, 10, 8, 10)
+                    )
+                    add(badge, BorderLayout.WEST)
+                    add(title, BorderLayout.CENTER)
+                }
+
+                return JPanel(BorderLayout()).apply {
+                    isOpaque = true
+                    background = PANEL_BG
+                    border = BorderFactory.createEmptyBorder(2, 0, 2, 0)
+                    add(row, BorderLayout.CENTER)
+                }
             }
         }
     }
 
     private fun configureDetails() {
-        detailsScroll.border = JBUI.Borders.empty()
+        detailsScroll.border = BorderFactory.createLineBorder(BORDER_COLOR, 1, true)
         detailsScroll.horizontalScrollBarPolicy = JBScrollPane.HORIZONTAL_SCROLLBAR_NEVER
         detailsScroll.verticalScrollBarPolicy = JBScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED
+        detailsScroll.viewport.background = PANEL_BG
+        detailsScroll.background = PANEL_BG
         setDetailsView(createEmptyDetailsPanel())
     }
 
     private fun configureLayout() {
         val left = JPanel(BorderLayout()).apply {
-            add(JBLabel("Lộ trình"), BorderLayout.NORTH)
+            isOpaque = false
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+                JBUI.Borders.empty(8)
+            )
+            add(sectionHeaderLabel("Lộ trình"), BorderLayout.NORTH)
             add(JBScrollPane(list), BorderLayout.CENTER)
         }
 
         val right = JPanel(BorderLayout()).apply {
-            add(JBLabel("Chi tiết"), BorderLayout.NORTH)
+            isOpaque = false
+            border = BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
+                JBUI.Borders.empty(8)
+            )
+            add(sectionHeaderLabel("Chi tiết"), BorderLayout.NORTH)
             add(detailsScroll, BorderLayout.CENTER)
         }
 
@@ -152,6 +244,10 @@ class TrainingToolWindowPanel(
         }
 
         val actions = JPanel().apply {
+            isOpaque = false
+            border = JBUI.Borders.emptyTop(8)
+            progressLabel.font = JBFont.label().deriveFont(Font.PLAIN, JBFont.label().size + 1f)
+            progressLabel.foreground = SUBTITLE_COLOR
             add(progressLabel)
             add(validateButton)
             add(resetButton)
@@ -161,12 +257,23 @@ class TrainingToolWindowPanel(
         add(actions, BorderLayout.SOUTH)
     }
 
+    private fun sectionHeaderLabel(text: String): JComponent {
+        return JBLabel(text).apply {
+            font = JBFont.label().deriveFont(Font.BOLD, JBFont.label().size + 2f)
+            foreground = TITLE_COLOR
+            border = JBUI.Borders.emptyBottom(6)
+        }
+    }
+
     private fun bindActions() {
         list.addListSelectionListener {
             if (!it.valueIsAdjusting) {
                 val item = list.selectedValue ?: return@addListSelectionListener
                 snapshot = snapshot.copy(currentItemId = item.id)
                 persistSnapshot()
+                if (introPopupEnabled) {
+                    maybeShowCurrentExerciseIntro()
+                }
                 refreshDetailsFromSelection()
             }
         }
@@ -227,9 +334,6 @@ class TrainingToolWindowPanel(
             persistSnapshot()
         }
         refreshProgress()
-        if (!suppressProgressDialogs) {
-            maybeShowCurrentExerciseIntro()
-        }
         if (list.selectedIndex < 0) {
             applyCurrentSelectionFromSnapshot()
         }
@@ -493,7 +597,6 @@ class TrainingToolWindowPanel(
         val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == currentExerciseId } ?: return
         val intro = exercise.intro ?: return
         val dialog = BasicExerciseIntroDialog(project, intro)
-        if (!shownExerciseIntroIds.add(currentExerciseId)) return
         dialog.show()
     }
 
