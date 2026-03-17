@@ -160,6 +160,7 @@ data class TrainingTheoryQuiz(
 data class TrainingQuizQuestion(
     val id: String,
     val prompt: String,
+    val promptRich: String = prompt,
     val options: List<TrainingQuizOption>,
     val correctOptionId: String,
     val hint: String? = null

@@ -125,6 +125,15 @@ src
                 quizQuestion(
                     id = "ex2-q3",
                     prompt = "Lệnh nào phù hợp để in log trong feature file?",
+                    promptRich = """
+Trong Karate, với đoạn scenario sau:
+```gherkin
+Scenario: demo
+  * def value = 1
+  * ??? 'hello'
+```
+Keyword nào thay `???` để in log ra console?
+                    """.trimIndent(),
                     options = listOf(
                         quizOption("A", "echo"),
                         quizOption("B", "print"),
@@ -145,6 +154,25 @@ src
                     ),
                     correct = "A",
                     hint = "Bài yêu cầu rõ vị trí file trong test resources."
+                ),
+                quizQuestion(
+                    id = "ex2-q5",
+                    prompt = "Trong Maven tool window, thao tác nào dùng để đồng bộ lại dependency/model sau khi sửa pom.xml?",
+                    promptRich = """
+Quan sát ảnh và chọn thao tác đúng để đồng bộ Maven:
+
+{{image:/summary-img/reload_maven.png}}
+
+Gợi ý: Đây là thao tác bạn thường dùng sau khi update `pom.xml`.
+                    """.trimIndent(),
+                    options = listOf(
+                        quizOption("A", "Reload All Maven Projects"),
+                        quizOption("B", "Run current file"),
+                        quizOption("C", "Open terminal"),
+                        quizOption("D", "Invalidate caches")
+                    ),
+                    correct = "A",
+                    hint = "Trong Maven tool window, icon reload dùng để re-import/reload project."
                 )
             )
         )
@@ -153,6 +181,7 @@ src
     private fun quizQuestion(
         id: String,
         prompt: String,
+        promptRich: String = prompt,
         options: List<TrainingQuizOption>,
         correct: String,
         hint: String
@@ -160,6 +189,7 @@ src
         return TrainingQuizQuestion(
             id = id,
             prompt = prompt,
+            promptRich = promptRich,
             options = options,
             correctOptionId = correct,
             hint = hint

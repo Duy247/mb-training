@@ -8,7 +8,6 @@ import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.awt.RelativePoint
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBTextArea
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
@@ -68,7 +67,7 @@ class TheoryQuizDialog(
 
     private lateinit var cardTitleLabel: JBLabel
     private lateinit var indicatorLabel: JBLabel
-    private lateinit var promptArea: JBTextArea
+    private lateinit var promptContentPanel: JPanel
     private lateinit var optionsPanel: JPanel
     private lateinit var prevButton: HoverPaintButton
     private lateinit var nextButton: HoverPaintButton
@@ -217,14 +216,9 @@ class TheoryQuizDialog(
             border = JBUI.Borders.empty(10)
             alignmentX = Component.LEFT_ALIGNMENT
         }
-        promptArea = JBTextArea().apply {
-            isEditable = false
-            lineWrap = true
-            wrapStyleWord = true
-            border = null
+        promptContentPanel = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
             isOpaque = false
-            font = JBFont.label().deriveFont(JBFont.label().size + 1f)
-            foreground = JBColor(0xE6EDF7, 0xE6EDF7)
             alignmentX = Component.LEFT_ALIGNMENT
         }
         optionsPanel = JPanel().apply {
@@ -233,7 +227,7 @@ class TheoryQuizDialog(
             alignmentX = Component.LEFT_ALIGNMENT
         }
 
-        cardPanel.add(promptArea)
+        cardPanel.add(promptContentPanel)
         cardPanel.add(Box.createVerticalStrut(12))
         cardPanel.add(optionsPanel)
 
@@ -303,13 +297,38 @@ class TheoryQuizDialog(
         cardIndex = safeIndex
         val card = cards[safeIndex]
         indicatorLabel.text = "Câu ${safeIndex + 1}/$total • Cần đúng tối thiểu ${quiz.passThreshold}"
-        promptArea.text = card.question.prompt
+        promptContentPanel.removeAll()
+        RichContentRenderer.addRichContent(
+            container = promptContentPanel,
+            raw = card.question.promptRich.ifBlank { card.question.prompt },
+            hostClass = javaClass,
+            style = RichContentRenderer.Style(
+                paragraphFont = JBFont.label().deriveFont(JBFont.label().size + 1f),
+                paragraphColumns = 60,
+                codeFont = Font(Font.MONOSPACED, Font.PLAIN, JBFont.label().size),
+                codeBaseWidth = 520,
+                imageScale = 0.55,
+                imageMaxWidth = 520,
+                imageAlignmentX = Component.LEFT_ALIGNMENT,
+                segmentGapPx = 6
+            )
+        )
+        promptContentPanel.components.forEach { child ->
+            if (child is JComponent) {
+                child.alignmentX = Component.LEFT_ALIGNMENT
+            }
+        }
+        val promptPreferred = promptContentPanel.preferredSize
+        promptContentPanel.maximumSize = java.awt.Dimension(Int.MAX_VALUE, promptPreferred.height)
+        promptContentPanel.revalidate()
+        promptContentPanel.repaint()
 
         optionsPanel.removeAll()
         val selected = answers[card.question.id]
         val group = ButtonGroup()
-        card.shuffledOptions.forEach { option ->
-            val radio = JRadioButton("${option.id}. ${option.text}").apply {
+        card.shuffledOptions.forEachIndexed { index, option ->
+            val displayLetter = ('A'.code + index).toChar()
+            val radio = JRadioButton("$displayLetter. ${option.text}").apply {
                 isOpaque = false
                 foreground = JBColor(0xE6EDF7, 0xE6EDF7)
                 font = JBFont.label().deriveFont(JBFont.label().size + 1f)
@@ -445,4 +464,3 @@ class TheoryQuizDialog(
         }
     }
 }
-

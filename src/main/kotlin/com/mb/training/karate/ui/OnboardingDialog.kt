@@ -36,7 +36,6 @@ import javax.swing.BoxLayout
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JDialog
-import javax.swing.JEditorPane
 import javax.swing.JPanel
 import javax.swing.KeyStroke
 import javax.swing.SwingConstants
@@ -213,16 +212,10 @@ class OnboardingDialog(
 
     private fun createMessagePane(text: String): JComponent {
         val bodyFontSize = (JBFont.label().size - 3).coerceAtLeast(8)
-        val html = MarkdownTableSupport.toHtml(
-            input = text,
+        return RichContentRenderer.createHtmlPane(
+            text = text,
             bodyStyle = "font-family:'Montserrat',sans-serif; font-size:${bodyFontSize}px; font-weight:300; line-height:1.18;"
         )
-
-        return JEditorPane("text/html", html).apply {
-            isEditable = false
-            isOpaque = false
-            border = null
-        }
     }
 
     private fun createChipsPanel(): JComponent {

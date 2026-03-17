@@ -667,22 +667,21 @@ class TrainingToolWindowPanel(
         val currentExerciseId = snapshot.currentItemId.ifEmpty { fallbackCurrentId }
         if (currentExerciseId.isBlank()) return
         if (snapshot.completedIds.contains(currentExerciseId)) return
-        val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == currentExerciseId } ?: return
+        val program = TrainingCurriculumRepository.program
+        val exercise = program.exercises.firstOrNull { it.id == currentExerciseId } ?: return
         val intro = exercise.intro ?: return
-        val unmetDependencies = exercise.preconditionExerciseIds.filterNot { depId ->
-            snapshot.completedIds.contains(depId)
-        }
-        val dialog = if (unmetDependencies.isNotEmpty()) {
-            val dependencyTitles = unmetDependencies.joinToString(", ") { depId ->
-                TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == depId }?.title ?: depId
-            }
-            val firstDependency = unmetDependencies.first()
+        val dependencyGate = ExerciseUiFlowDecider.resolveDependencyGate(
+            program = program,
+            exercise = exercise,
+            completedExerciseIds = snapshot.completedIds
+        )
+        val dialog = if (dependencyGate != null) {
             BasicExerciseIntroDialog(
                 project = project,
                 contentModel = intro,
-                warningMessage = "Bạn chưa hoàn thành bài phụ thuộc: $dependencyTitles.\nBấm Đã hiểu để quay về bài phụ thuộc đầu tiên.",
+                warningMessage = dependencyGate.warningMessage,
                 onAcknowledge = {
-                    snapshot = snapshot.copy(currentItemId = firstDependency)
+                    snapshot = snapshot.copy(currentItemId = dependencyGate.firstUnmetDependencyId)
                     persistSnapshot()
                     applyCurrentSelectionFromSnapshot()
                     refreshDetailsFromSelection()
@@ -711,11 +710,11 @@ class TrainingToolWindowPanel(
     }
 
     private fun isExerciseStepsSatisfied(exercise: com.mb.training.karate.model.TrainingExercise): Boolean {
-        val stepKeys = exercise.steps.map { stepStatusKey(exercise.id, it.id) }
-        return when (exercise.completionPolicy.name) {
-            "ANY_STEP_DONE" -> stepKeys.any { snapshot.completedStepIds.contains(it) }
-            else -> stepKeys.all { snapshot.completedStepIds.contains(it) }
-        }
+        return ExerciseUiFlowDecider.isQuizEnabledByStepCompletion(
+            exercise = exercise,
+            completedStepIds = snapshot.completedStepIds,
+            stepKey = ::stepStatusKey
+        )
     }
 
     private fun refreshStepStatusesOnly() {
