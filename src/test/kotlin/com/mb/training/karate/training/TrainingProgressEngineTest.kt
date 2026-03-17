@@ -5,7 +5,10 @@ import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingExercise
 import com.mb.training.karate.model.TrainingLevel
 import com.mb.training.karate.model.TrainingProgram
+import com.mb.training.karate.model.TrainingQuizOption
+import com.mb.training.karate.model.TrainingQuizQuestion
 import com.mb.training.karate.model.TrainingStep
+import com.mb.training.karate.model.TrainingTheoryQuiz
 import com.mb.training.karate.model.TrainingType
 import com.mb.training.karate.services.TrainingProgressSnapshot
 import org.junit.jupiter.api.Test
@@ -103,6 +106,132 @@ class TrainingProgressEngineTest {
             snapshot = engine.sync(snapshot)
             assertTrue(snapshot.completedStepIds.contains("exercise-cmd::step-run-test"))
             assertTrue(snapshot.completedIds.contains("exercise-cmd"))
+        }
+    }
+
+    @Test
+    fun `engine requires theory quiz pass when exercise defines quiz`() {
+        withTempDir { root ->
+            val program = TrainingProgram(
+                id = "quiz-program",
+                title = "Quiz Program",
+                exercises = listOf(
+                    TrainingExercise(
+                        id = "exercise-quiz",
+                        title = "Exercise Quiz",
+                        level = TrainingLevel.BASIC,
+                        type = TrainingType.EXERCISE,
+                        objective = "Complete step + pass quiz",
+                        startWhen = listOf(TrainingCondition.Always),
+                        steps = listOf(
+                            TrainingStep(
+                                id = "step-a",
+                                title = "Step A",
+                                guidance = "Create file",
+                                activities = listOf(TrainingActivity.CreateFile("a.txt", "ready")),
+                                doneWhen = listOf(TrainingCondition.FileExists("a.txt"))
+                            )
+                        ),
+                        expectedOutcome = "Done with quiz",
+                        theoryQuiz = TrainingTheoryQuiz(
+                            title = "Quiz",
+                            questionsToAsk = 1,
+                            passThreshold = 1,
+                            questionPool = listOf(
+                                TrainingQuizQuestion(
+                                    id = "q1",
+                                    prompt = "Q1",
+                                    options = listOf(
+                                        TrainingQuizOption("A", "a"),
+                                        TrainingQuizOption("B", "b")
+                                    ),
+                                    correctOptionId = "A"
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+            val engine = TrainingProgressEngine(root, program)
+            root.resolve("a.txt").writeText("ready")
+
+            var snapshot = TrainingProgressSnapshot(
+                currentItemId = "exercise-quiz",
+                completedIds = emptySet()
+            )
+            snapshot = engine.sync(snapshot)
+            assertTrue(!snapshot.completedIds.contains("exercise-quiz"), "Should not complete without quiz pass")
+
+            snapshot = snapshot.copy(passedTheoryQuizExerciseIds = setOf("exercise-quiz"))
+            snapshot = engine.sync(snapshot)
+            assertTrue(snapshot.completedIds.contains("exercise-quiz"), "Should complete after quiz pass")
+        }
+    }
+
+    @Test
+    fun `engine blocks exercise progress until precondition exercise is completed`() {
+        withTempDir { root ->
+            val program = TrainingProgram(
+                id = "precondition-program",
+                title = "Precondition Program",
+                exercises = listOf(
+                    TrainingExercise(
+                        id = "exercise-1",
+                        title = "Exercise 1",
+                        level = TrainingLevel.BASIC,
+                        type = TrainingType.EXERCISE,
+                        objective = "Create a.txt",
+                        startWhen = listOf(TrainingCondition.Always),
+                        steps = listOf(
+                            TrainingStep(
+                                id = "step-a",
+                                title = "Step A",
+                                guidance = "Create a.txt",
+                                activities = listOf(TrainingActivity.CreateFile("a.txt", "ok")),
+                                doneWhen = listOf(TrainingCondition.FileExists("a.txt"))
+                            )
+                        ),
+                        expectedOutcome = "Exercise 1 done"
+                    ),
+                    TrainingExercise(
+                        id = "exercise-2",
+                        title = "Exercise 2",
+                        level = TrainingLevel.BASIC,
+                        type = TrainingType.EXERCISE,
+                        objective = "Create b.txt",
+                        startWhen = listOf(TrainingCondition.Always),
+                        preconditionExerciseIds = listOf("exercise-1"),
+                        steps = listOf(
+                            TrainingStep(
+                                id = "step-b",
+                                title = "Step B",
+                                guidance = "Create b.txt",
+                                activities = listOf(TrainingActivity.CreateFile("b.txt", "ok")),
+                                doneWhen = listOf(TrainingCondition.FileExists("b.txt"))
+                            )
+                        ),
+                        expectedOutcome = "Exercise 2 done"
+                    )
+                )
+            )
+            val engine = TrainingProgressEngine(root, program)
+
+            root.resolve("b.txt").writeText("ready")
+            var snapshot = TrainingProgressSnapshot(
+                currentItemId = "exercise-1",
+                completedIds = emptySet()
+            )
+            snapshot = engine.sync(snapshot)
+
+            assertTrue(!snapshot.completedIds.contains("exercise-2"))
+            assertTrue(!snapshot.completedStepIds.contains("exercise-2::step-b"))
+
+            root.resolve("a.txt").writeText("ready")
+            snapshot = engine.sync(snapshot)
+
+            assertTrue(snapshot.completedIds.contains("exercise-1"))
+            assertTrue(snapshot.completedIds.contains("exercise-2"))
+            assertTrue(snapshot.completedStepIds.contains("exercise-2::step-b"))
         }
     }
 

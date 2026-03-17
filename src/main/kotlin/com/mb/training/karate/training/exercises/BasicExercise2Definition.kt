@@ -7,7 +7,10 @@ import com.mb.training.karate.model.TrainingExercise
 import com.mb.training.karate.model.TrainingExerciseIntro
 import com.mb.training.karate.model.TrainingHint
 import com.mb.training.karate.model.TrainingLevel
+import com.mb.training.karate.model.TrainingQuizOption
+import com.mb.training.karate.model.TrainingQuizQuestion
 import com.mb.training.karate.model.TrainingStep
+import com.mb.training.karate.model.TrainingTheoryQuiz
 import com.mb.training.karate.model.TrainingType
 
 object BasicExercise2Definition {
@@ -17,6 +20,7 @@ object BasicExercise2Definition {
         level = TrainingLevel.BASIC,
         type = TrainingType.EXERCISE,
         objective = "Tạo một file feature có Feature, Background, Scenario và lệnh print đơn giản.",
+        preconditionExerciseIds = listOf("basic-exercise-1"),
         startWhen = listOf(TrainingCondition.ExerciseCompleted("basic-exercise-1")),
         steps = listOf(
             TrainingStep(
@@ -88,6 +92,81 @@ src
 2) Trong file có đủ: `Feature`, `Background`, `Scenario`.
 3) Dùng ít nhất một lệnh `print` để kiểm tra chạy flow cơ bản.
             """.trimIndent()
+        ),
+        theoryQuiz = TrainingTheoryQuiz(
+            title = "Kiểm tra lý thuyết Exercise 2",
+            questionsToAsk = 3,
+            passThreshold = 2,
+            questionPool = listOf(
+                quizQuestion(
+                    id = "ex2-q1",
+                    prompt = "Trong feature cơ bản, block nào mô tả kịch bản test chính?",
+                    options = listOf(
+                        quizOption("A", "Feature"),
+                        quizOption("B", "Background"),
+                        quizOption("C", "Scenario"),
+                        quizOption("D", "Examples")
+                    ),
+                    correct = "C",
+                    hint = "Scenario là đơn vị mô tả luồng test cụ thể."
+                ),
+                quizQuestion(
+                    id = "ex2-q2",
+                    prompt = "Background trong Karate dùng để làm gì?",
+                    options = listOf(
+                        quizOption("A", "Khai báo setup chạy trước mỗi scenario"),
+                        quizOption("B", "Định nghĩa endpoint production"),
+                        quizOption("C", "Tạo report HTML"),
+                        quizOption("D", "Build project Maven")
+                    ),
+                    correct = "A",
+                    hint = "Background thường chứa setup dùng chung."
+                ),
+                quizQuestion(
+                    id = "ex2-q3",
+                    prompt = "Lệnh nào phù hợp để in log trong feature file?",
+                    options = listOf(
+                        quizOption("A", "echo"),
+                        quizOption("B", "print"),
+                        quizOption("C", "console.log"),
+                        quizOption("D", "System.out.println")
+                    ),
+                    correct = "B",
+                    hint = "Karate hỗ trợ keyword print."
+                ),
+                quizQuestion(
+                    id = "ex2-q4",
+                    prompt = "Vị trí đúng của file basic-exercise-2.feature là?",
+                    options = listOf(
+                        quizOption("A", "src/test/resources/features"),
+                        quizOption("B", "src/main/resources/features"),
+                        quizOption("C", "src/test/java/features"),
+                        quizOption("D", "features/")
+                    ),
+                    correct = "A",
+                    hint = "Bài yêu cầu rõ vị trí file trong test resources."
+                )
+            )
         )
     )
+
+    private fun quizQuestion(
+        id: String,
+        prompt: String,
+        options: List<TrainingQuizOption>,
+        correct: String,
+        hint: String
+    ): TrainingQuizQuestion {
+        return TrainingQuizQuestion(
+            id = id,
+            prompt = prompt,
+            options = options,
+            correctOptionId = correct,
+            hint = hint
+        )
+    }
+
+    private fun quizOption(id: String, text: String): TrainingQuizOption {
+        return TrainingQuizOption(id = id, text = text)
+    }
 }

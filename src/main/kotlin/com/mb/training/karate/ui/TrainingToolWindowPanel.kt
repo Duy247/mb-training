@@ -92,6 +92,8 @@ class TrainingToolWindowPanel(
     private val projectRootPathString = projectRoot?.normalize()?.toString()
     private var currentDetailsExerciseId: String? = null
     private val stepStatusLabels = linkedMapOf<String, JBLabel>()
+    private val quizActionButtons = linkedMapOf<String, JButton>()
+    private val quizStatusLabels = linkedMapOf<String, JBLabel>()
     private val mavenSyncIds = collectMavenSyncIds()
     private var suppressProgressDialogs = false
     private var pendingRefresh = false
@@ -322,7 +324,8 @@ class TrainingToolWindowPanel(
                 completedIds = emptySet(),
                 completedStepIds = emptySet(),
                 passedCommandIds = emptySet(),
-                successfulMavenSyncIds = emptySet()
+                successfulMavenSyncIds = emptySet(),
+                passedTheoryQuizExerciseIds = emptySet()
             )
             refreshProgressFromEngine()
             persistSnapshot()
@@ -388,6 +391,8 @@ class TrainingToolWindowPanel(
         if (selected == null) {
             currentDetailsExerciseId = null
             stepStatusLabels.clear()
+            quizActionButtons.clear()
+            quizStatusLabels.clear()
             setDetailsView(createEmptyDetailsPanel())
             return
         }
@@ -417,6 +422,8 @@ class TrainingToolWindowPanel(
         val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == itemId }
             ?: return createEmptyDetailsPanel()
         stepStatusLabels.clear()
+        quizActionButtons.clear()
+        quizStatusLabels.clear()
 
         val panel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
@@ -467,6 +474,43 @@ class TrainingToolWindowPanel(
                     addActionListener { showKnowledgeSummary(summary) }
                 }
             )
+        }
+        val quiz = exercise.theoryQuiz
+        if (quiz != null) {
+            val stepsReadyForQuiz = isExerciseStepsSatisfied(exercise)
+            panel.add(Box.createVerticalStrut(10))
+            panel.add(sectionTitle("Kiểm tra lý thuyết"))
+            panel.add(Box.createVerticalStrut(4))
+            val quizStatusLabel = JBLabel(
+                if (isTheoryQuizPassed(exercise.id)) "Trạng thái: Đã pass" else "Trạng thái: Chưa pass"
+            ).apply {
+                font = JBFont.small()
+                alignmentX = Component.LEFT_ALIGNMENT
+                foreground = if (isTheoryQuizPassed(exercise.id)) {
+                    JBColor(0x1A7F37, 0x3FB950)
+                } else {
+                    JBColor(0x9A6700, 0xD29922)
+                }
+            }
+            quizStatusLabels[exercise.id] = quizStatusLabel
+            panel.add(quizStatusLabel)
+            panel.add(Box.createVerticalStrut(4))
+            val quizButton = JButton("Làm kiểm tra lý thuyết").apply {
+                alignmentX = Component.LEFT_ALIGNMENT
+                isEnabled = stepsReadyForQuiz
+                toolTipText = if (stepsReadyForQuiz) {
+                    "Mở bài kiểm tra lý thuyết"
+                } else {
+                    "Cần hoàn thành toàn bộ step trước khi làm quiz"
+                }
+                addActionListener {
+                    TheoryQuizDialog(project, quiz) {
+                        markTheoryQuizPassed(exercise.id)
+                    }.show()
+                }
+            }
+            quizActionButtons[exercise.id] = quizButton
+            panel.add(quizButton)
         }
         panel.add(Box.createVerticalGlue())
         return panel
@@ -625,7 +669,28 @@ class TrainingToolWindowPanel(
         if (snapshot.completedIds.contains(currentExerciseId)) return
         val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == currentExerciseId } ?: return
         val intro = exercise.intro ?: return
-        val dialog = BasicExerciseIntroDialog(project, intro)
+        val unmetDependencies = exercise.preconditionExerciseIds.filterNot { depId ->
+            snapshot.completedIds.contains(depId)
+        }
+        val dialog = if (unmetDependencies.isNotEmpty()) {
+            val dependencyTitles = unmetDependencies.joinToString(", ") { depId ->
+                TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == depId }?.title ?: depId
+            }
+            val firstDependency = unmetDependencies.first()
+            BasicExerciseIntroDialog(
+                project = project,
+                contentModel = intro,
+                warningMessage = "Bạn chưa hoàn thành bài phụ thuộc: $dependencyTitles.\nBấm Đã hiểu để quay về bài phụ thuộc đầu tiên.",
+                onAcknowledge = {
+                    snapshot = snapshot.copy(currentItemId = firstDependency)
+                    persistSnapshot()
+                    applyCurrentSelectionFromSnapshot()
+                    refreshDetailsFromSelection()
+                }
+            )
+        } else {
+            BasicExerciseIntroDialog(project, intro)
+        }
         dialog.show()
     }
 
@@ -641,6 +706,18 @@ class TrainingToolWindowPanel(
         return snapshot.completedStepIds.contains(key)
     }
 
+    private fun isTheoryQuizPassed(exerciseId: String): Boolean {
+        return snapshot.passedTheoryQuizExerciseIds.contains(exerciseId)
+    }
+
+    private fun isExerciseStepsSatisfied(exercise: com.mb.training.karate.model.TrainingExercise): Boolean {
+        val stepKeys = exercise.steps.map { stepStatusKey(exercise.id, it.id) }
+        return when (exercise.completionPolicy.name) {
+            "ANY_STEP_DONE" -> stepKeys.any { snapshot.completedStepIds.contains(it) }
+            else -> stepKeys.all { snapshot.completedStepIds.contains(it) }
+        }
+    }
+
     private fun refreshStepStatusesOnly() {
         val exerciseId = currentDetailsExerciseId ?: return
         val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == exerciseId } ?: return
@@ -651,7 +728,26 @@ class TrainingToolWindowPanel(
             label.text = if (done) "Đã hoàn thành" else "Chưa hoàn thành"
             label.foreground = if (done) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
         }
+        refreshQuizSectionState(exercise)
         detailsScroll.viewport.repaint()
+    }
+
+    private fun refreshQuizSectionState(exercise: com.mb.training.karate.model.TrainingExercise) {
+        if (exercise.theoryQuiz == null) return
+        val ready = isExerciseStepsSatisfied(exercise)
+        quizActionButtons[exercise.id]?.apply {
+            isEnabled = ready
+            toolTipText = if (ready) {
+                "Mở bài kiểm tra lý thuyết"
+            } else {
+                "Cần hoàn thành toàn bộ step trước khi làm quiz"
+            }
+        }
+        quizStatusLabels[exercise.id]?.apply {
+            val passed = isTheoryQuizPassed(exercise.id)
+            text = if (passed) "Trạng thái: Đã pass" else "Trạng thái: Chưa pass"
+            foreground = if (passed) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
+        }
     }
 
     private fun stepStatusKey(exerciseId: String, stepId: String): String {
@@ -1075,6 +1171,18 @@ class TrainingToolWindowPanel(
         label.text = if (done) "Đã hoàn thành" else "Chưa hoàn thành"
         label.foreground = if (done) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
         detailsScroll.viewport.repaint()
+    }
+
+    private fun markTheoryQuizPassed(exerciseId: String) {
+        if (snapshot.passedTheoryQuizExerciseIds.contains(exerciseId)) return
+        snapshot = snapshot.copy(
+            passedTheoryQuizExerciseIds = snapshot.passedTheoryQuizExerciseIds + exerciseId
+        )
+        persistSnapshot()
+        refreshProgressFromEngine()
+        list.repaint()
+        refreshDetailsFromSelection()
+        Messages.showInfoMessage(project, "Bạn đã vượt qua kiểm tra lý thuyết.", "MB Training")
     }
 
     private data class CommandRunResult(
