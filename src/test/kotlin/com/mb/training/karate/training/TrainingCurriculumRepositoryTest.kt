@@ -45,4 +45,21 @@ class TrainingCurriculumRepositoryTest {
         assertEquals("/summary-img/reload_maven.png", mavenSyncCard.imagePath)
         assertTrue(mavenSyncCard.content.contains("{{image}}"))
     }
+
+    @Test
+    fun `each exercise defines theory quiz with valid threshold and question pool`() {
+        TrainingCurriculumRepository.program.exercises.forEach { exercise ->
+            val quiz = assertNotNull(exercise.theoryQuiz, "Missing theory quiz for ${exercise.id}")
+            assertTrue(quiz.questionsToAsk > 0, "questionsToAsk must be > 0 for ${exercise.id}")
+            assertTrue(quiz.passThreshold > 0, "passThreshold must be > 0 for ${exercise.id}")
+            assertTrue(
+                quiz.passThreshold <= quiz.questionsToAsk,
+                "passThreshold must be <= questionsToAsk for ${exercise.id}"
+            )
+            assertTrue(
+                quiz.questionPool.size >= quiz.questionsToAsk,
+                "questionPool should contain at least questionsToAsk items for ${exercise.id}"
+            )
+        }
+    }
 }

@@ -103,9 +103,11 @@ data class TrainingExercise(
     val startWhen: List<TrainingCondition>,
     val steps: List<TrainingStep>,
     val expectedOutcome: String,
+    val preconditionExerciseIds: List<String> = emptyList(),
     val completionPolicy: CompletionPolicy = CompletionPolicy.ALL_STEPS_DONE,
     val intro: TrainingExerciseIntro? = null,
-    val knowledgeSummary: TrainingKnowledgeSummary? = null
+    val knowledgeSummary: TrainingKnowledgeSummary? = null,
+    val theoryQuiz: TrainingTheoryQuiz? = null
 )
 
 data class TrainingProgram(
@@ -146,4 +148,24 @@ data class TrainingExerciseIntro(
     val structureTree: String,
     val tasksTitle: String,
     val tasks: String
+)
+
+data class TrainingTheoryQuiz(
+    val title: String,
+    val questionPool: List<TrainingQuizQuestion>,
+    val questionsToAsk: Int,
+    val passThreshold: Int
+)
+
+data class TrainingQuizQuestion(
+    val id: String,
+    val prompt: String,
+    val options: List<TrainingQuizOption>,
+    val correctOptionId: String,
+    val hint: String? = null
+)
+
+data class TrainingQuizOption(
+    val id: String,
+    val text: String
 )

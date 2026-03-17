@@ -9,7 +9,10 @@ import com.mb.training.karate.model.TrainingExerciseIntro
 import com.mb.training.karate.model.TrainingKnowledgeCard
 import com.mb.training.karate.model.TrainingKnowledgeSummary
 import com.mb.training.karate.model.TrainingLevel
+import com.mb.training.karate.model.TrainingQuizOption
+import com.mb.training.karate.model.TrainingQuizQuestion
 import com.mb.training.karate.model.TrainingStep
+import com.mb.training.karate.model.TrainingTheoryQuiz
 import com.mb.training.karate.model.TrainingType
 
 object BasicExercise1Definition {
@@ -286,10 +289,109 @@ Khi chạy `mvn test` pass, nghĩa là:
                     """.trimIndent()
                 )
             )
+        ),
+        theoryQuiz = TrainingTheoryQuiz(
+            title = "Kiểm tra lý thuyết Exercise 1",
+            questionsToAsk = 5,
+            passThreshold = 3,
+            questionPool = listOf(
+                quizQuestion(
+                    id = "ex1-q1",
+                    prompt = "Trong project Karate theo Maven, thư mục nào thường chứa feature file?",
+                    options = listOf(
+                        quizOption("A", "src/main/resources/features"),
+                        quizOption("B", "src/test/resources/features"),
+                        quizOption("C", "src/test/java/features"),
+                        quizOption("D", "src/resources/test/features")
+                    ),
+                    correct = "B",
+                    hint = "Karate test thường đặt dưới scope test resources."
+                ),
+                quizQuestion(
+                    id = "ex1-q2",
+                    prompt = "Dependency đúng cho Karate JUnit5 trong bài là?",
+                    options = listOf(
+                        quizOption("A", "com.intuit.karate:karate-junit5"),
+                        quizOption("B", "org.karate:karate-core"),
+                        quizOption("C", "com.intuit.karate:karate-spring"),
+                        quizOption("D", "io.karatelabs:karate-junit5")
+                    ),
+                    correct = "A",
+                    hint = "Bài hướng dẫn đang dùng groupId com.intuit.karate."
+                ),
+                quizQuestion(
+                    id = "ex1-q3",
+                    prompt = "Plugin nào được cấu hình để Maven chạy test?",
+                    options = listOf(
+                        quizOption("A", "maven-compiler-plugin"),
+                        quizOption("B", "maven-failsafe-plugin"),
+                        quizOption("C", "maven-surefire-plugin"),
+                        quizOption("D", "maven-jar-plugin")
+                    ),
+                    correct = "C",
+                    hint = "Surefire là plugin mặc định cho unit test."
+                ),
+                quizQuestion(
+                    id = "ex1-q4",
+                    prompt = "Vì sao cần Maven Reload/Sync sau khi đổi pom.xml?",
+                    options = listOf(
+                        quizOption("A", "Để đổi theme IntelliJ"),
+                        quizOption("B", "Để IDE resolve dependency và cập nhật classpath"),
+                        quizOption("C", "Để xoá cache .m2"),
+                        quizOption("D", "Để build nhanh hơn ngay lập tức")
+                    ),
+                    correct = "B",
+                    hint = "Reload giúp IDE cập nhật model project."
+                ),
+                quizQuestion(
+                    id = "ex1-q5",
+                    prompt = "Dấu hiệu nào cho thấy bước test readiness đã đạt?",
+                    options = listOf(
+                        quizOption("A", "Có file README"),
+                        quizOption("B", "Lệnh mvn test pass"),
+                        quizOption("C", "Có folder src/main"),
+                        quizOption("D", "Đã mở Maven tool window")
+                    ),
+                    correct = "B",
+                    hint = "Step cuối yêu cầu chạy test thành công."
+                ),
+                quizQuestion(
+                    id = "ex1-q6",
+                    prompt = "Trong môi trường enterprise, lý do dùng Nexus nội bộ là gì?",
+                    options = listOf(
+                        quizOption("A", "Để bỏ qua pom.xml"),
+                        quizOption("B", "Để kiểm soát source dependency ổn định/bảo mật"),
+                        quizOption("C", "Để không cần internet trên máy dev"),
+                        quizOption("D", "Để luôn build không lỗi")
+                    ),
+                    correct = "B",
+                    hint = "Nexus giúp quản trị dependency tập trung."
+                )
+            )
         )
     )
 
     private fun card(title: String, content: String, imagePath: String? = null): TrainingKnowledgeCard {
         return TrainingKnowledgeCard(title = title, content = content, imagePath = imagePath)
+    }
+
+    private fun quizQuestion(
+        id: String,
+        prompt: String,
+        options: List<TrainingQuizOption>,
+        correct: String,
+        hint: String
+    ): TrainingQuizQuestion {
+        return TrainingQuizQuestion(
+            id = id,
+            prompt = prompt,
+            options = options,
+            correctOptionId = correct,
+            hint = hint
+        )
+    }
+
+    private fun quizOption(id: String, text: String): TrainingQuizOption {
+        return TrainingQuizOption(id = id, text = text)
     }
 }

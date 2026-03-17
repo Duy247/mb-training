@@ -50,7 +50,8 @@ class TrainingProjectProgressStoreTest {
                 completedIds = setOf("basic-exercise-1", "intermediate-mission-1"),
                 completedStepIds = setOf("basic-exercise-1::step-create-feature-file"),
                 passedCommandIds = setOf("basic-exercise-1-mvn-test"),
-                successfulMavenSyncIds = setOf("basic-exercise-1-maven-sync")
+                successfulMavenSyncIds = setOf("basic-exercise-1-maven-sync"),
+                passedTheoryQuizExerciseIds = setOf("basic-exercise-1")
             )
 
             TrainingProjectProgressStore.save(root, snapshot)
@@ -62,6 +63,7 @@ class TrainingProjectProgressStoreTest {
             assertEquals(snapshot.completedStepIds, loaded.completedStepIds)
             assertEquals(snapshot.passedCommandIds, loaded.passedCommandIds)
             assertEquals(snapshot.successfulMavenSyncIds, loaded.successfulMavenSyncIds)
+            assertEquals(snapshot.passedTheoryQuizExerciseIds, loaded.passedTheoryQuizExerciseIds)
         }
     }
 

@@ -37,7 +37,9 @@ import javax.swing.SwingConstants
 
 class BasicExerciseIntroDialog(
     private val project: Project,
-    private val contentModel: TrainingExerciseIntro
+    private val contentModel: TrainingExerciseIntro,
+    private val warningMessage: String? = null,
+    private val onAcknowledge: (() -> Unit)? = null
 ) {
     companion object {
         private const val IMAGE_MARKER_PREFIX = "{{image:"
@@ -207,6 +209,40 @@ class BasicExerciseIntroDialog(
         body.add(sectionTitle(contentModel.tasksTitle))
         body.add(Box.createVerticalStrut(JBUI.scale(6)))
         body.add(createRichSection(contentModel.tasks, boxed = false))
+        warningMessage?.takeIf { it.isNotBlank() }?.let { warning ->
+            body.add(Box.createVerticalStrut(JBUI.scale(10)))
+            body.add(
+                JPanel(BorderLayout()).apply {
+                    isOpaque = true
+                    background = JBColor(0x3A2E1E, 0x3A2E1E)
+                    border = BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(JBColor(0xD79B2F, 0xD79B2F), 1, true),
+                        JBUI.Borders.empty(8)
+                    )
+                    alignmentX = Component.LEFT_ALIGNMENT
+                    add(
+                        JBLabel("Cảnh báo phụ thuộc").apply {
+                            font = JBFont.label().deriveFont(Font.BOLD)
+                            foreground = JBColor(0xFFE7B8, 0xFFE7B8)
+                        },
+                        BorderLayout.NORTH
+                    )
+                    add(
+                        JBTextArea(warning).apply {
+                            isEditable = false
+                            isOpaque = false
+                            border = JBUI.Borders.emptyTop(4)
+                            lineWrap = true
+                            wrapStyleWord = true
+                            foreground = JBColor(0xFFE7B8, 0xFFE7B8)
+                            font = JBFont.label()
+                            alignmentX = Component.LEFT_ALIGNMENT
+                        },
+                        BorderLayout.CENTER
+                    )
+                }
+            )
+        }
         body.add(Box.createVerticalGlue())
 
         val bodyScroll = JScrollPane(body).apply {
@@ -234,7 +270,10 @@ class BasicExerciseIntroDialog(
                         textColor = JBColor(0xFFFFFF, 0xFFFFFF)
                     ).apply {
                         font = JBFont.label().deriveFont(Font.BOLD)
-                        addActionListener { dialog.dispose() }
+                        addActionListener {
+                            dialog.dispose()
+                            onAcknowledge?.invoke()
+                        }
                     }
                 )
             },
@@ -488,4 +527,3 @@ class BasicExerciseIntroDialog(
         }
     }
 }
-

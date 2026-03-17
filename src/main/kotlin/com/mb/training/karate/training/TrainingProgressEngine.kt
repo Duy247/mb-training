@@ -21,6 +21,9 @@ class TrainingProgressEngine(
         val completedSteps = mutableSetOf<String>()
 
         for (exercise in program.exercises) {
+            val preconditionsMet = areExercisePreconditionsMet(exercise, completedExercises)
+            if (!preconditionsMet) continue
+
             val canStart = areAllConditionsMet(
                 conditions = exercise.startWhen,
                 completedExercises = completedExercises,
@@ -49,8 +52,10 @@ class TrainingProgressEngine(
                 CompletionPolicy.ALL_STEPS_DONE -> stepKeys.all { completedSteps.contains(it) }
                 CompletionPolicy.ANY_STEP_DONE -> stepKeys.any { completedSteps.contains(it) }
             }
+            val quizPassed = exercise.theoryQuiz == null ||
+                snapshot.passedTheoryQuizExerciseIds.contains(exercise.id)
 
-            if (doneBySteps) {
+            if (doneBySteps && quizPassed) {
                 completedExercises.add(exercise.id)
             }
         }
@@ -104,6 +109,7 @@ class TrainingProgressEngine(
 
         return program.exercises.firstOrNull { exercise ->
             !completedExercises.contains(exercise.id) &&
+                areExercisePreconditionsMet(exercise, completedExercises) &&
                 areAllConditionsMet(
                     exercise.startWhen,
                     completedExercises,
@@ -112,6 +118,13 @@ class TrainingProgressEngine(
                     successfulMavenSyncIds
                 )
         }
+    }
+
+    private fun areExercisePreconditionsMet(
+        exercise: TrainingExercise,
+        completedExercises: Set<String>
+    ): Boolean {
+        return exercise.preconditionExerciseIds.all { completedExercises.contains(it) }
     }
 
     private fun areAllConditionsMet(
