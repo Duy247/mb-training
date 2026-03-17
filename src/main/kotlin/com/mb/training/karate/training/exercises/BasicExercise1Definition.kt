@@ -378,6 +378,7 @@ Khi chạy `mvn test` pass, nghĩa là:
     private fun quizQuestion(
         id: String,
         prompt: String,
+        promptRich: String = prompt,
         options: List<TrainingQuizOption>,
         correct: String,
         hint: String
@@ -385,6 +386,7 @@ Khi chạy `mvn test` pass, nghĩa là:
         return TrainingQuizQuestion(
             id = id,
             prompt = prompt,
+            promptRich = promptRich,
             options = options,
             correctOptionId = correct,
             hint = hint

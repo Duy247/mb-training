@@ -60,6 +60,10 @@ class TrainingCurriculumRepositoryTest {
                 quiz.questionPool.size >= quiz.questionsToAsk,
                 "questionPool should contain at least questionsToAsk items for ${exercise.id}"
             )
+            assertTrue(
+                quiz.questionPool.all { it.promptRich.isNotBlank() },
+                "All quiz questions should have non-blank rich prompt for ${exercise.id}"
+            )
         }
     }
 }

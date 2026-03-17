@@ -5,7 +5,6 @@ import com.intellij.openapi.util.IconLoader
 import com.intellij.openapi.wm.WindowManager
 import com.intellij.ui.JBColor
 import com.intellij.ui.components.JBLabel
-import com.intellij.ui.components.JBTextArea
 import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
@@ -21,7 +20,6 @@ import java.awt.Font
 import java.awt.GradientPaint
 import java.awt.Graphics
 import java.awt.Graphics2D
-import java.awt.Image
 import java.awt.RenderingHints
 import java.awt.Window
 import java.awt.event.KeyEvent
@@ -41,15 +39,12 @@ class KnowledgeSummaryDialog(
     private val summary: TrainingKnowledgeSummary
 ) {
     companion object {
-        private const val IMAGE_INLINE_MARKER = "{{image}}"
         private const val DIALOG_WIDTH = 980
         private const val DIALOG_HEIGHT = 640
         private const val HEADER_LOGO_SCALE = 0.12f
         private const val CARD_LOGO_SCALE = 0.9f
         private const val LOGO_CARD_WIDTH = 280
         private const val LOGO_CARD_HEIGHT = 420
-        private const val CARD_IMAGE_MAX_WIDTH = 520
-        private const val CODE_BLOCK_BASE_WIDTH = 440
     }
 
     private val cards: List<TrainingKnowledgeCard> = summary.cards.ifEmpty {
@@ -331,9 +326,6 @@ class KnowledgeSummaryDialog(
         cardContentPanel.removeAll()
         val cardTitle = card.title.trim()
         val cardBody = card.content.trim()
-        val cardIcon = card.imagePath?.takeIf { it.isNotBlank() }?.let { path ->
-            runCatching { IconLoader.getIcon(path, javaClass) }.getOrNull()
-        }
 
         if (cardTitle.isNotBlank()) {
             cardContentPanel.add(
@@ -346,121 +338,27 @@ class KnowledgeSummaryDialog(
             cardContentPanel.add(Box.createVerticalStrut(8))
         }
 
-        if (cardIcon != null && cardBody.contains(IMAGE_INLINE_MARKER)) {
-            val parts = cardBody.split(IMAGE_INLINE_MARKER, limit = 2)
-            val before = parts.getOrElse(0) { "" }.trim()
-            val after = parts.getOrElse(1) { "" }.trim()
-            if (before.isNotBlank()) {
-                addRichTextWithCodeBlocks(cardContentPanel, before)
-                cardContentPanel.add(Box.createVerticalStrut(8))
-            }
-            cardContentPanel.add(createImageLabel(cardIcon))
-            if (after.isNotBlank()) {
-                cardContentPanel.add(Box.createVerticalStrut(8))
-                addRichTextWithCodeBlocks(cardContentPanel, after)
-            }
-        } else {
-            if (cardBody.isNotBlank()) addRichTextWithCodeBlocks(cardContentPanel, cardBody)
-            if (cardIcon != null) {
-                if (cardBody.isNotBlank()) cardContentPanel.add(Box.createVerticalStrut(8))
-                cardContentPanel.add(createImageLabel(cardIcon))
-            }
+        if (cardBody.isNotBlank() || !card.imagePath.isNullOrBlank()) {
+            RichContentRenderer.addRichContent(
+                container = cardContentPanel,
+                raw = cardBody,
+                hostClass = javaClass,
+                style = RichContentRenderer.Style(
+                    paragraphFont = JBFont.label(),
+                    paragraphColumns = 56,
+                    codeFont = Font(Font.MONOSPACED, Font.PLAIN, JBFont.label().size),
+                    codeBaseWidth = 440,
+                    imageScale = 0.5,
+                    imageMaxWidth = 520,
+                    imageAlignmentX = Component.LEFT_ALIGNMENT,
+                    segmentGapPx = 4
+                ),
+                inlineImagePath = card.imagePath
+            )
         }
 
         cardContentPanel.revalidate()
         cardContentPanel.repaint()
-    }
-
-    private fun addRichTextWithCodeBlocks(container: JPanel, content: String) {
-        val codeBlockRegex = Regex("(?s)```(?:[a-zA-Z0-9_-]+)?\\n(.*?)```")
-        var cursor = 0
-        val matches = codeBlockRegex.findAll(content).toList()
-        if (matches.isEmpty()) {
-            addCardTextWithTables(container, content)
-            return
-        }
-
-        matches.forEach { match ->
-            val start = match.range.first
-            val endExclusive = match.range.last + 1
-            if (start > cursor) {
-                val textPart = content.substring(cursor, start).trim()
-                if (textPart.isNotBlank()) {
-                    addCardTextWithTables(container, textPart)
-                    container.add(Box.createVerticalStrut(4))
-                }
-            }
-
-            val codePart = match.groupValues.getOrElse(1) { "" }.trimEnd()
-            if (codePart.isNotBlank()) {
-                container.add(createCodeBlock(codePart))
-                container.add(Box.createVerticalStrut(4))
-            }
-            cursor = endExclusive
-        }
-
-        if (cursor < content.length) {
-            val tail = content.substring(cursor).trim()
-            if (tail.isNotBlank()) addCardTextWithTables(container, tail)
-        }
-    }
-
-    private fun addCardTextWithTables(container: JPanel, text: String) {
-        val panel = MarkdownTableSupport.createBlocksPanel(
-            text = text,
-            paragraphFont = JBFont.label(),
-            paragraphColumns = 56
-        )
-        panel.alignmentX = Component.LEFT_ALIGNMENT
-        val pref = panel.preferredSize
-        panel.maximumSize = java.awt.Dimension(Int.MAX_VALUE, pref.height)
-        container.add(panel)
-    }
-
-    private fun createCodeBlock(code: String): JComponent {
-        val codeArea = JBTextArea(code).apply {
-            isEditable = false
-            lineWrap = false
-            wrapStyleWord = false
-            border = JBUI.Borders.empty(8)
-            background = JBColor(0xEEF2F7, 0x1B2230)
-            foreground = JBColor(0x1F2937, 0xD8DEE9)
-            font = Font(Font.MONOSPACED, Font.PLAIN, JBFont.label().size)
-            alignmentX = Component.LEFT_ALIGNMENT
-        }
-        return JScrollPane(codeArea).apply {
-            border = BorderFactory.createLineBorder(JBColor(0xD0D7DE, 0x3D4350), 1, true)
-            viewport.border = null
-            viewport.background = codeArea.background
-            horizontalScrollBarPolicy = JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
-            verticalScrollBarPolicy = JScrollPane.VERTICAL_SCROLLBAR_NEVER
-            alignmentX = Component.LEFT_ALIGNMENT
-            val lineCount = code.lineSequence().count().coerceAtLeast(1)
-            val lineHeight = codeArea.getFontMetrics(codeArea.font).height
-            val contentHeight = (lineHeight * lineCount) + JBUI.scale(16)
-            preferredSize = JBUI.size(CODE_BLOCK_BASE_WIDTH, contentHeight)
-            minimumSize = JBUI.size(300, contentHeight)
-            maximumSize = java.awt.Dimension(Int.MAX_VALUE, contentHeight)
-        }
-    }
-
-    private fun createImageLabel(rawIcon: javax.swing.Icon): JComponent {
-        val maxWidth = JBUI.scale(CARD_IMAGE_MAX_WIDTH)
-        val width = rawIcon.iconWidth.coerceAtLeast(1)
-        val height = rawIcon.iconHeight.coerceAtLeast(1)
-        val halfWidth = (width * 0.5).toInt().coerceAtLeast(1)
-        val halfHeight = (height * 0.5).toInt().coerceAtLeast(1)
-        val scaledIcon = if (halfWidth > maxWidth) {
-            val ratio = maxWidth.toDouble() / halfWidth.toDouble()
-            val scaledHeight = (halfHeight * ratio).toInt().coerceAtLeast(1)
-            javax.swing.ImageIcon(rawIcon.paintedImage().getScaledInstance(maxWidth, scaledHeight, Image.SCALE_SMOOTH))
-        } else {
-            javax.swing.ImageIcon(rawIcon.paintedImage().getScaledInstance(halfWidth, halfHeight, Image.SCALE_SMOOTH))
-        }
-        return JBLabel(scaledIcon).apply {
-            alignmentX = Component.LEFT_ALIGNMENT
-            horizontalAlignment = SwingConstants.CENTER
-        }
     }
 
     private fun registerEscapeToClose(dialog: JDialog) {
@@ -474,14 +372,6 @@ class KnowledgeSummaryDialog(
                 dialog.dispose()
             }
         })
-    }
-
-    private fun javax.swing.Icon.paintedImage(): java.awt.image.BufferedImage {
-        val image = java.awt.image.BufferedImage(iconWidth, iconHeight, java.awt.image.BufferedImage.TYPE_INT_ARGB)
-        val g = image.createGraphics()
-        paintIcon(null, g, 0, 0)
-        g.dispose()
-        return image
     }
 
     private class HoverPaintButton(
