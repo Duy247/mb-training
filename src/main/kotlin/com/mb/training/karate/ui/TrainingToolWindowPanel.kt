@@ -395,7 +395,7 @@ class TrainingToolWindowPanel(
         if (!becameCompleted && !alreadyCompleted) return
         scenarioAutoReturnTriggered = true
         ApplicationManager.getApplication().invokeLater(
-            { returnToOriginalProject(requireConfirmation = false) },
+            { returnToOriginalProject() },
             ModalityState.defaultModalityState()
         )
     }
@@ -912,22 +912,10 @@ class TrainingToolWindowPanel(
         }
     }
 
-    private fun returnToOriginalProject(requireConfirmation: Boolean = true) {
+    private fun returnToOriginalProject() {
         val root = projectRoot ?: return
         val context = resolveScenarioContext() ?: return
         val originalRoot = context.originalRootPath
-        if (requireConfirmation) {
-            val confirm = Messages.showYesNoDialog(
-                project,
-                "Bạn có chắc muốn quay lại project gốc?\n\n" +
-                    "Sandbox hiện tại sẽ bị đóng và thư mục temp sẽ bị xóa.",
-                "Quay trở lại project gốc",
-                "Quay lại project gốc",
-                "Hủy",
-                null
-            )
-            if (confirm != Messages.YES) return
-        }
 
         val originalCurrent = TrainingProjectProgressStore.load(originalRoot)
             ?: TrainingProgressSnapshot(
