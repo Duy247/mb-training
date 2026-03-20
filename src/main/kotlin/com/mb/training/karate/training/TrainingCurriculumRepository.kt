@@ -5,11 +5,13 @@ import com.mb.training.karate.model.TrainingItem
 import com.mb.training.karate.model.TrainingProgram
 import com.mb.training.karate.training.exercises.BasicExercise1Definition
 import com.mb.training.karate.training.exercises.BasicExercise2Definition
+import com.mb.training.karate.training.exercises.BasicExercise3Definition
 
 object TrainingCurriculumRepository {
     private val exerciseDefinitions: List<TrainingExercise> = listOf(
         BasicExercise1Definition.exercise,
-        BasicExercise2Definition.exercise
+        BasicExercise2Definition.exercise,
+        BasicExercise3Definition.exercise
     )
 
     val program: TrainingProgram = TrainingProgram(

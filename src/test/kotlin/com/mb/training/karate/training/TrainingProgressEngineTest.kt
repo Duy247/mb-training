@@ -4,6 +4,7 @@ import com.mb.training.karate.model.TrainingActivity
 import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingExercise
 import com.mb.training.karate.model.TrainingLevel
+import com.mb.training.karate.model.TrainingMode
 import com.mb.training.karate.model.TrainingProgram
 import com.mb.training.karate.model.TrainingQuizOption
 import com.mb.training.karate.model.TrainingQuizQuestion
@@ -232,6 +233,48 @@ class TrainingProgressEngineTest {
             assertTrue(snapshot.completedIds.contains("exercise-1"))
             assertTrue(snapshot.completedIds.contains("exercise-2"))
             assertTrue(snapshot.completedStepIds.contains("exercise-2::step-b"))
+        }
+    }
+
+    @Test
+    fun `engine keeps completed scenario exercise from snapshot`() {
+        withTempDir { root ->
+            val program = TrainingProgram(
+                id = "scenario-program",
+                title = "Scenario Program",
+                exercises = listOf(
+                    TrainingExercise(
+                        id = "exercise-scenario",
+                        title = "Scenario Exercise",
+                        level = TrainingLevel.BASIC,
+                        type = TrainingType.EXERCISE,
+                        mode = TrainingMode.SCENARIO,
+                        objective = "Run scenario in sandbox",
+                        startWhen = listOf(TrainingCondition.Always),
+                        steps = listOf(
+                            TrainingStep(
+                                id = "step-1",
+                                title = "Scenario Step",
+                                guidance = "Needs sandbox files",
+                                activities = listOf(TrainingActivity.CodeTask("Fix scenario")),
+                                doneWhen = listOf(TrainingCondition.FileExists("sandbox-only-file.txt"))
+                            )
+                        ),
+                        expectedOutcome = "Scenario done"
+                    )
+                )
+            )
+            val engine = TrainingProgressEngine(root, program)
+
+            val snapshot = TrainingProgressSnapshot(
+                currentItemId = "exercise-scenario",
+                completedIds = setOf("exercise-scenario"),
+                completedStepIds = setOf("exercise-scenario::step-1")
+            )
+            val synced = engine.sync(snapshot)
+
+            assertTrue(synced.completedIds.contains("exercise-scenario"))
+            assertTrue(synced.completedStepIds.contains("exercise-scenario::step-1"))
         }
     }
 

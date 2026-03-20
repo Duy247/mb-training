@@ -3,8 +3,10 @@ package com.mb.training.karate.training
 import com.mb.training.karate.model.CompletionPolicy
 import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingExercise
+import com.mb.training.karate.model.TrainingMode
 import com.mb.training.karate.model.TrainingProgram
 import com.mb.training.karate.services.TrainingProgressSnapshot
+import com.mb.training.karate.services.TrainingProjectProgressStore
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -17,10 +19,25 @@ class TrainingProgressEngine(
     private val fileContainsCache = mutableMapOf<FileContainsCacheKey, FileContainsCacheEntry>()
 
     fun sync(snapshot: TrainingProgressSnapshot): TrainingProgressSnapshot {
+        val scenarioCompletedMarkers = TrainingProjectProgressStore.loadScenarioCompletedExerciseIds(projectRoot)
         val completedExercises = mutableSetOf<String>()
         val completedSteps = mutableSetOf<String>()
 
         for (exercise in program.exercises) {
+            // SCENARIO exercises are evaluated inside a temporary workspace.
+            // Once they are marked completed in snapshot, keep them completed
+            // when user returns to original project (where scenario files won't exist).
+            if (
+                exercise.mode == TrainingMode.SCENARIO &&
+                (snapshot.completedIds.contains(exercise.id) || scenarioCompletedMarkers.contains(exercise.id))
+            ) {
+                completedExercises.add(exercise.id)
+                exercise.steps.forEach { step ->
+                    completedSteps.add(stepKey(exercise.id, step.id))
+                }
+                continue
+            }
+
             val preconditionsMet = areExercisePreconditionsMet(exercise, completedExercises)
             if (!preconditionsMet) continue
 
@@ -70,7 +87,8 @@ class TrainingProgressEngine(
         return snapshot.copy(
             currentItemId = nextExercise?.id ?: snapshot.currentItemId,
             completedIds = completedExercises,
-            completedStepIds = completedSteps
+            completedStepIds = completedSteps,
+            passedTheoryQuizExerciseIds = snapshot.passedTheoryQuizExerciseIds + scenarioCompletedMarkers
         )
     }
 

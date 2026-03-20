@@ -11,7 +11,7 @@ class TrainingCurriculumRepositoryTest {
     @Test
     fun `program registers basic exercise 1 and 2 in order`() {
         val ids = TrainingCurriculumRepository.program.exercises.map { it.id }
-        assertEquals(listOf("basic-exercise-1", "basic-exercise-2"), ids)
+        assertEquals(listOf("basic-exercise-1", "basic-exercise-2", "basic-exercise-3"), ids)
     }
 
     @Test

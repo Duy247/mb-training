@@ -26,6 +26,8 @@ enum class TrainingFolderType {
 
 object TrainingProjectProgressStore {
     private const val PROGRESS_FILE_NAME = "mb-training-progress.properties"
+    private const val SCENARIO_COMPLETION_FILE_NAME = "mb-training-scenario-completed.properties"
+    private const val SCENARIO_COMPLETED_IDS_KEY = "scenario.completed.ids"
     private const val CURRENT_ITEM_KEY = "current.item.id"
     private const val COMPLETED_IDS_KEY = "completed.ids"
     private const val COMPLETED_STEP_IDS_KEY = "completed.step.ids"
@@ -128,8 +130,45 @@ object TrainingProjectProgressStore {
         }
     }
 
+    fun loadScenarioCompletedExerciseIds(projectRoot: Path): Set<String> {
+        val file = scenarioCompletionFile(projectRoot)
+        if (!file.exists()) return emptySet()
+        val props = Properties()
+        Files.newInputStream(file).use { input: InputStream ->
+            props.load(input)
+        }
+        return props.getProperty(SCENARIO_COMPLETED_IDS_KEY)
+            ?.split(",")
+            ?.map { it.trim() }
+            ?.filter { it.isNotEmpty() }
+            ?.toSet()
+            ?: emptySet()
+    }
+
+    fun markScenarioCompleted(projectRoot: Path, exerciseId: String) {
+        val ideaDir = projectRoot.resolve(".idea")
+        Files.createDirectories(ideaDir)
+
+        val existing = loadScenarioCompletedExerciseIds(projectRoot)
+        val merged = (existing + exerciseId).sorted()
+        val props = Properties().apply {
+            setProperty(SCENARIO_COMPLETED_IDS_KEY, merged.joinToString(","))
+        }
+        Files.newOutputStream(scenarioCompletionFile(projectRoot)).use { output: OutputStream ->
+            props.store(output, "MB Training completed scenario exercises")
+        }
+    }
+
+    fun clearScenarioCompleted(projectRoot: Path) {
+        Files.deleteIfExists(scenarioCompletionFile(projectRoot))
+    }
+
     private fun progressFile(projectRoot: Path): Path {
         return projectRoot.resolve(".idea").resolve(PROGRESS_FILE_NAME)
+    }
+
+    private fun scenarioCompletionFile(projectRoot: Path): Path {
+        return projectRoot.resolve(".idea").resolve(SCENARIO_COMPLETION_FILE_NAME)
     }
 
     private fun initializeJavaProjectSkeleton(projectRoot: Path) {

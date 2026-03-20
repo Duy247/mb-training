@@ -5,11 +5,15 @@ import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.KillableColoredProcessHandler
 import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
+import com.intellij.ide.impl.OpenProjectTask
+import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.project.Project
+import com.intellij.openapi.project.ProjectManager
+import com.intellij.openapi.project.ex.ProjectManagerEx
 import com.intellij.openapi.ui.Messages
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
@@ -27,6 +31,7 @@ import com.intellij.util.ui.JBUI
 import com.mb.training.karate.model.TrainingActivity
 import com.mb.training.karate.model.TrainingItem
 import com.mb.training.karate.model.TrainingStep
+import com.mb.training.karate.services.ScenarioWorkspaceService
 import com.mb.training.karate.services.TrainingProgressSnapshot
 import com.mb.training.karate.services.TrainingProjectProgressStore
 import com.mb.training.karate.training.TrainingCurriculumRepository
@@ -78,6 +83,7 @@ class TrainingToolWindowPanel(
     }
 
     private val projectRoot = project.basePath?.let { Path.of(it) }
+    private var scenarioContext = projectRoot?.let { ScenarioWorkspaceService.loadScenarioContext(it) }
     private val hintPresenter = StepHintPresenter(project, projectRoot)
     private val engine = projectRoot?.let { TrainingProgressEngine(it, TrainingCurriculumRepository.program) }
     private val listModel = DefaultListModel<TrainingItem>()
@@ -95,6 +101,7 @@ class TrainingToolWindowPanel(
     private val quizActionButtons = linkedMapOf<String, JButton>()
     private val quizStatusLabels = linkedMapOf<String, JBLabel>()
     private val mavenSyncIds = collectMavenSyncIds()
+    private var scenarioAutoReturnTriggered = false
     private var suppressProgressDialogs = false
     private var pendingRefresh = false
     private var pendingSnapshotSave = false
@@ -327,6 +334,8 @@ class TrainingToolWindowPanel(
                 successfulMavenSyncIds = emptySet(),
                 passedTheoryQuizExerciseIds = emptySet()
             )
+            projectRoot?.let { TrainingProjectProgressStore.clearScenarioCompleted(it) }
+            scenarioAutoReturnTriggered = false
             refreshProgressFromEngine()
             persistSnapshot()
             list.repaint()
@@ -360,15 +369,35 @@ class TrainingToolWindowPanel(
     }
 
     private fun refreshProgressFromEngine() {
+        val beforeSync = snapshot
         val updated = runEngine(snapshot)
         if (updated != snapshot) {
             snapshot = updated
             persistSnapshot()
         }
+        maybeAutoReturnFromScenario(beforeSync = beforeSync, afterSync = snapshot)
         refreshProgress()
         if (list.selectedIndex < 0) {
             applyCurrentSelectionFromSnapshot()
         }
+    }
+
+    private fun maybeAutoReturnFromScenario(
+        beforeSync: TrainingProgressSnapshot,
+        afterSync: TrainingProgressSnapshot
+    ) {
+        if (scenarioAutoReturnTriggered) return
+        val context = resolveScenarioContext() ?: return
+        val scenarioExerciseId = context.scenarioExerciseId
+        val becameCompleted = !beforeSync.completedIds.contains(scenarioExerciseId) &&
+            afterSync.completedIds.contains(scenarioExerciseId)
+        val alreadyCompleted = afterSync.completedIds.contains(scenarioExerciseId)
+        if (!becameCompleted && !alreadyCompleted) return
+        scenarioAutoReturnTriggered = true
+        ApplicationManager.getApplication().invokeLater(
+            { returnToOriginalProject(requireConfirmation = false) },
+            ModalityState.defaultModalityState()
+        )
     }
 
     private fun refreshProgress() {
@@ -582,6 +611,11 @@ class TrainingToolWindowPanel(
                             syncId = runnableAction.syncId,
                             button = this
                         )
+                        is RunnableStepAction.ScenarioSetup -> runScenarioSetup(
+                            exerciseId = exerciseId,
+                            scenarioId = runnableAction.scenarioId,
+                            button = this
+                        )
                     }
                 }
             }
@@ -766,7 +800,23 @@ class TrainingToolWindowPanel(
     }
 
     private fun runEngine(current: TrainingProgressSnapshot): TrainingProgressSnapshot {
-        return engine?.sync(current) ?: current
+        val synced = engine?.sync(current) ?: current
+        if (resolveScenarioContext() == null) return synced
+        // In scenario temp workspace, preserve imported progress from original project
+        // so users see consistent state while working in sandbox.
+        return synced.copy(
+            completedIds = synced.completedIds + current.completedIds,
+            completedStepIds = synced.completedStepIds + current.completedStepIds
+        )
+    }
+
+    private fun resolveScenarioContext(): ScenarioWorkspaceService.ScenarioWorkspaceContext? {
+        val cached = scenarioContext
+        if (cached != null) return cached
+        val root = projectRoot ?: return null
+        val loaded = ScenarioWorkspaceService.loadScenarioContext(root)
+        scenarioContext = loaded
+        return loaded
     }
 
     private fun bindAutoRefreshPolling() {
@@ -788,6 +838,7 @@ class TrainingToolWindowPanel(
             is TrainingActivity.CreateFolder -> "Tạo thư mục ${activity.relativePath}"
             is TrainingActivity.CreateFile -> "Tạo file ${activity.relativePath} từ mẫu"
             is TrainingActivity.CodeTask -> "Thực hiện coding: ${activity.instruction} Ctrl + S (Save) để ghi nhận tiến độ code"
+            is TrainingActivity.SetupScenarioWorkspace -> activity.actionLabel
             is TrainingActivity.OpenMavenSettings -> "Mở file Maven settings đang được IntelliJ sử dụng"
             is TrainingActivity.RunCommandTask -> "${activity.instruction} (${activity.commandHint})"
             is TrainingActivity.RefreshMavenProjects -> activity.actionLabel
@@ -803,6 +854,10 @@ class TrainingToolWindowPanel(
                 is TrainingActivity.RunTestTask -> RunnableStepAction.Command(activity.commandId, activity.commandHint)
                 is TrainingActivity.CompileTask -> RunnableStepAction.Command(activity.commandId, activity.commandHint)
                 is TrainingActivity.RefreshMavenProjects -> RunnableStepAction.MavenSync(activity.syncId, activity.actionLabel)
+                is TrainingActivity.SetupScenarioWorkspace -> RunnableStepAction.ScenarioSetup(
+                    scenarioId = activity.scenarioId,
+                    actionLabel = activity.actionLabel
+                )
                 else -> null
             }
         }
@@ -812,6 +867,7 @@ class TrainingToolWindowPanel(
         return when (action) {
             is RunnableStepAction.Command -> "Run"
             is RunnableStepAction.MavenSync -> "Run"
+            is RunnableStepAction.ScenarioSetup -> "Run"
         }
     }
 
@@ -819,6 +875,92 @@ class TrainingToolWindowPanel(
         return when (action) {
             is RunnableStepAction.Command -> "Chạy: ${action.commandHint}"
             is RunnableStepAction.MavenSync -> action.actionLabel
+            is RunnableStepAction.ScenarioSetup -> action.actionLabel
+        }
+    }
+
+    private fun runScenarioSetup(exerciseId: String, scenarioId: String, button: JButton) {
+        val originalText = button.text
+        button.isEnabled = false
+        button.text = "Setting up..."
+        try {
+            val sourceSnapshot = runEngine(snapshot)
+            if (sourceSnapshot != snapshot) {
+                snapshot = sourceSnapshot
+                persistSnapshot()
+            }
+            val workspace = ScenarioWorkspaceService.setupAndOpenScenario(
+                project = project,
+                scenarioId = scenarioId,
+                scenarioExerciseId = exerciseId,
+                sourceSnapshot = snapshot
+            )
+            Messages.showInfoMessage(
+                project,
+                "Đã tạo sandbox scenario tại:\n$workspace\n\nPlugin đã mở project sandbox ở cửa sổ mới.",
+                "Scenario sandbox đã sẵn sàng"
+            )
+        } catch (e: Exception) {
+            Messages.showErrorDialog(
+                project,
+                "Không thể khởi tạo sandbox scenario.\n${e.message}",
+                "MB Training"
+            )
+        } finally {
+            button.isEnabled = true
+            button.text = originalText
+        }
+    }
+
+    private fun returnToOriginalProject(requireConfirmation: Boolean = true) {
+        val root = projectRoot ?: return
+        val context = resolveScenarioContext() ?: return
+        val originalRoot = context.originalRootPath
+        if (requireConfirmation) {
+            val confirm = Messages.showYesNoDialog(
+                project,
+                "Bạn có chắc muốn quay lại project gốc?\n\n" +
+                    "Sandbox hiện tại sẽ bị đóng và thư mục temp sẽ bị xóa.",
+                "Quay trở lại project gốc",
+                "Quay lại project gốc",
+                "Hủy",
+                null
+            )
+            if (confirm != Messages.YES) return
+        }
+
+        val originalCurrent = TrainingProjectProgressStore.load(originalRoot)
+            ?: TrainingProgressSnapshot(
+                currentItemId = context.scenarioExerciseId,
+                completedIds = emptySet()
+            )
+        val merged = originalCurrent.copy(
+            currentItemId = context.scenarioExerciseId,
+            completedIds = originalCurrent.completedIds + snapshot.completedIds + context.scenarioExerciseId,
+            completedStepIds = originalCurrent.completedStepIds + snapshot.completedStepIds,
+            passedCommandIds = originalCurrent.passedCommandIds + snapshot.passedCommandIds,
+            successfulMavenSyncIds = originalCurrent.successfulMavenSyncIds + snapshot.successfulMavenSyncIds,
+            passedTheoryQuizExerciseIds = originalCurrent.passedTheoryQuizExerciseIds +
+                snapshot.passedTheoryQuizExerciseIds +
+                context.scenarioExerciseId
+        )
+        TrainingProjectProgressStore.save(originalRoot, merged)
+        TrainingProjectProgressStore.markScenarioCompleted(originalRoot, context.scenarioExerciseId)
+
+        val originalRootText = originalRoot.toAbsolutePath().normalize().toString()
+        val alreadyOpen = ProjectManager.getInstance().openProjects.any { openProject ->
+            val openPath = openProject.basePath ?: return@any false
+            runCatching {
+                Path.of(openPath).toAbsolutePath().normalize().toString()
+            }.getOrNull() == originalRootText
+        }
+        if (!alreadyOpen) {
+            ProjectUtil.openOrImport(originalRoot, OpenProjectTask(forceOpenInNewFrame = true))
+        }
+
+        ProjectManagerEx.getInstanceEx().forceCloseProject(project, true)
+        ApplicationManager.getApplication().executeOnPooledThread {
+            ScenarioWorkspaceService.deleteWorkspaceQuietly(root)
         }
     }
 
@@ -1203,6 +1345,11 @@ class TrainingToolWindowPanel(
 
         data class MavenSync(
             val syncId: String,
+            val actionLabel: String
+        ) : RunnableStepAction
+
+        data class ScenarioSetup(
+            val scenarioId: String,
             val actionLabel: String
         ) : RunnableStepAction
     }

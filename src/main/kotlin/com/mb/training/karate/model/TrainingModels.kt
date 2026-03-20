@@ -13,6 +13,11 @@ enum class TrainingType {
     HOMEWORK
 }
 
+enum class TrainingMode {
+    GUIDED,
+    SCENARIO
+}
+
 enum class CompletionPolicy {
     ALL_STEPS_DONE,
     ANY_STEP_DONE
@@ -33,6 +38,10 @@ sealed interface TrainingActivity {
     data class CreateFolder(val relativePath: String) : TrainingActivity
     data class CreateFile(val relativePath: String, val template: String) : TrainingActivity
     data class CodeTask(val instruction: String) : TrainingActivity
+    data class SetupScenarioWorkspace(
+        val scenarioId: String,
+        val actionLabel: String = "Khởi tạo sandbox scenario"
+    ) : TrainingActivity
     data class OpenMavenSettings(val buttonLabel: String = "Open settings.xml") : TrainingActivity
     data class RunCommandTask(
         val instruction: String,
@@ -99,6 +108,7 @@ data class TrainingExercise(
     val title: String,
     val level: TrainingLevel,
     val type: TrainingType,
+    val mode: TrainingMode = TrainingMode.GUIDED,
     val objective: String,
     val startWhen: List<TrainingCondition>,
     val steps: List<TrainingStep>,
