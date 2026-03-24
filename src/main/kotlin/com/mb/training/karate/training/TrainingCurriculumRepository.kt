@@ -20,6 +20,8 @@ object TrainingCurriculumRepository {
         exercises = exerciseDefinitions
     )
 
+    val exerciseById: Map<String, TrainingExercise> = program.exercises.associateBy { it.id }
+
     val items: List<TrainingItem> = program.exercises.map { exercise ->
         TrainingItem(
             id = exercise.id,

@@ -19,8 +19,9 @@ internal object ExerciseUiFlowDecider {
         val unmet = exercise.preconditionExerciseIds.filterNot { completedExerciseIds.contains(it) }
         if (unmet.isEmpty()) return null
 
+        val titleByExerciseId = program.exercises.associate { it.id to it.title }
         val dependencyTitles = unmet.joinToString(", ") { depId ->
-            program.exercises.firstOrNull { it.id == depId }?.title ?: depId
+            titleByExerciseId[depId] ?: depId
         }
         return DependencyGate(
             unmetDependencyIds = unmet,

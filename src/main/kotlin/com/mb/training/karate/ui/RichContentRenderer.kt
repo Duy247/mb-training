@@ -90,10 +90,25 @@ internal object RichContentRenderer {
         if (text.isBlank()) return listOf(Segment.Text(""))
 
         val segments = mutableListOf<Segment>()
+        val codeMatches = CODE_BLOCK_REGEX.findAll(text).toList()
+        var codeMatchIndex = 0
         var index = 0
 
+        fun nextCodeMatch(fromIndex: Int): MatchResult? {
+            while (codeMatchIndex < codeMatches.size && codeMatches[codeMatchIndex].range.last < fromIndex) {
+                codeMatchIndex++
+            }
+            return codeMatches.getOrNull(codeMatchIndex)
+        }
+
+        fun appendTextSegment(startInclusive: Int, endExclusive: Int) {
+            if (endExclusive <= startInclusive) return
+            val value = text.substring(startInclusive, endExclusive).trim()
+            if (value.isNotBlank()) segments.add(Segment.Text(value))
+        }
+
         while (index < text.length) {
-            val codeMatch = CODE_BLOCK_REGEX.find(text, index)
+            val codeMatch = nextCodeMatch(index)
             val imageStart = text.indexOf(IMAGE_MARKER_PREFIX, index).takeIf { it >= 0 }
             val imageEnd = imageStart?.let { start ->
                 text.indexOf("}}", start + IMAGE_MARKER_PREFIX.length).takeIf { end -> end >= 0 }
@@ -107,10 +122,7 @@ internal object RichContentRenderer {
             }
 
             if (takeImage && nextImageStart != null && imageEnd != null) {
-                if (nextImageStart > index) {
-                    val before = text.substring(index, nextImageStart).trim()
-                    if (before.isNotBlank()) segments.add(Segment.Text(before))
-                }
+                appendTextSegment(index, nextImageStart)
                 val path = text.substring(nextImageStart + IMAGE_MARKER_PREFIX.length, imageEnd).trim()
                 if (path.isNotBlank()) segments.add(Segment.Image(path))
                 index = imageEnd + 2
@@ -118,13 +130,11 @@ internal object RichContentRenderer {
             }
 
             if (codeMatch != null) {
-                if (codeMatch.range.first > index) {
-                    val before = text.substring(index, codeMatch.range.first).trim()
-                    if (before.isNotBlank()) segments.add(Segment.Text(before))
-                }
+                appendTextSegment(index, codeMatch.range.first)
                 val code = codeMatch.groupValues.getOrElse(1) { "" }.trimEnd()
                 if (code.isNotBlank()) segments.add(Segment.Code(code))
                 index = codeMatch.range.last + 1
+                codeMatchIndex++
             } else {
                 val tail = text.substring(index).trim()
                 if (tail.isNotBlank()) segments.add(Segment.Text(tail))
