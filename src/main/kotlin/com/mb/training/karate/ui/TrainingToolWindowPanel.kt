@@ -448,7 +448,7 @@ class TrainingToolWindowPanel(
     }
 
     private fun createExerciseDetailsPanel(itemId: String): JComponent {
-        val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == itemId }
+        val exercise = TrainingCurriculumRepository.exerciseById[itemId]
             ?: return createEmptyDetailsPanel()
         stepStatusLabels.clear()
         quizActionButtons.clear()
@@ -702,7 +702,7 @@ class TrainingToolWindowPanel(
         if (currentExerciseId.isBlank()) return
         if (snapshot.completedIds.contains(currentExerciseId)) return
         val program = TrainingCurriculumRepository.program
-        val exercise = program.exercises.firstOrNull { it.id == currentExerciseId } ?: return
+        val exercise = TrainingCurriculumRepository.exerciseById[currentExerciseId] ?: return
         val intro = exercise.intro ?: return
         val dependencyGate = ExerciseUiFlowDecider.resolveDependencyGate(
             program = program,
@@ -753,7 +753,7 @@ class TrainingToolWindowPanel(
 
     private fun refreshStepStatusesOnly() {
         val exerciseId = currentDetailsExerciseId ?: return
-        val exercise = TrainingCurriculumRepository.program.exercises.firstOrNull { it.id == exerciseId } ?: return
+        val exercise = TrainingCurriculumRepository.exerciseById[exerciseId] ?: return
         exercise.steps.forEach { step ->
             val key = stepStatusKey(exercise.id, step.id)
             val label = stepStatusLabels[key] ?: return@forEach
