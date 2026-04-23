@@ -2,6 +2,10 @@
 
 Plugin IntelliJ IDEA hỗ trợ đào tạo Karate Framework theo lộ trình bài tập tương tác (exercise/mission/task/homework), theo dõi tiến độ và hiển thị hướng dẫn trực tiếp trong IDE.
 
+## Chính sách ngôn ngữ theo nhánh
+- `master`: phiên bản tiếng Anh (UI và nội dung hướng dẫn cho người học).
+- `vn-lang`: phiên bản tiếng Việt (UI và nội dung hướng dẫn cho người học).
+
 ## 1) Mục tiêu dự án
 - Cung cấp trải nghiệm học Karate ngay trong IntelliJ.
 - Chuẩn hóa nội dung training theo framework dữ liệu (modular, dễ mở rộng).
