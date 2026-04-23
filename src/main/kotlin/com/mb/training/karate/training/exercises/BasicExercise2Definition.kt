@@ -16,17 +16,17 @@ import com.mb.training.karate.model.TrainingType
 object BasicExercise2Definition {
     val exercise: TrainingExercise = TrainingExercise(
         id = "basic-exercise-2",
-        title = "Tạo Feature File Cơ Bản",
+        title = "Create a Basic Feature File",
         level = TrainingLevel.BASIC,
         type = TrainingType.EXERCISE,
-        objective = "Tạo một file feature có Feature, Background, Scenario và lệnh print đơn giản.",
+        objective = "Create a feature file with Feature, Background, Scenario, and a simple print command.",
         preconditionExerciseIds = listOf("basic-exercise-1"),
         startWhen = listOf(TrainingCondition.ExerciseCompleted("basic-exercise-1")),
         steps = listOf(
             TrainingStep(
                 id = "step-create-basic-feature-file",
-                title = "Tạo feature file in thông điệp đơn giản",
-                guidance = "Tạo file `src/test/resources/features/basic-exercise-2.feature` gồm Feature, Background, Scenario và `print`.",
+                title = "Create a feature file that prints a simple message",
+                guidance = "Create `src/test/resources/features/basic-exercise-2.feature` with Feature, Background, Scenario, and `print`.",
                 activities = listOf(
                     TrainingActivity.CreateFile(
                         relativePath = "src/test/resources/features/basic-exercise-2.feature",
@@ -40,17 +40,17 @@ Feature: Basic Exercise 2
     * print 'Hello from Karate'
                         """.trimIndent()
                     ),
-                    TrainingActivity.CodeTask("Có thể đổi text print theo ý bạn, miễn là vẫn giữ đủ cấu trúc.")
+                    TrainingActivity.CodeTask("You may change the print text, as long as the structure remains complete.")
                 ),
                 hints = listOf(
                     TrainingHint.LocationHint(
-                        title = "Tạo file feature",
+                        title = "Create feature file",
                         targetType = "file",
                         suggestedPath = "src/test/resources/features/basic-exercise-2.feature"
                     ),
                     TrainingHint.ContentHint(
                         filePath = "src/test/resources/features/basic-exercise-2.feature",
-                        title = "Mẫu nội dung feature tối thiểu",
+                        title = "Minimal feature content sample",
                         snippet = """
 Feature: Basic Exercise 2
 
@@ -71,14 +71,14 @@ Feature: Basic Exercise 2
                 )
             )
         ),
-        expectedOutcome = "Bạn tạo được feature file Karate cơ bản và sẵn sàng viết test flow.",
+        expectedOutcome = "You created a basic Karate feature file and are ready to write test flows.",
         completionPolicy = CompletionPolicy.ALL_STEPS_DONE,
         intro = TrainingExerciseIntro(
-            dialogTitle = "Basic Exercise 2: Feature file cơ bản",
-            heading = "Tạo feature file Karate đầu tiên",
-            subtitle = "Mục tiêu: làm quen cấu trúc Feature/Background/Scenario",
+            dialogTitle = "Basic Exercise 2: Basic Feature File",
+            heading = "Create Your First Karate Feature File",
+            subtitle = "Goal: get familiar with Feature/Background/Scenario structure",
             chips = listOf("Feature", "Background", "Scenario", "Print"),
-            structureTitle = "Vị trí file cần tạo:",
+            structureTitle = "File location to create:",
             structureTree = """
 src
 └─ test
@@ -86,21 +86,21 @@ src
       └─ features
          └─ basic-exercise-2.feature
             """.trimIndent(),
-            tasksTitle = "Yêu cầu bài tập:",
+            tasksTitle = "Exercise requirements:",
             tasks = """
-1) Tạo file `basic-exercise-2.feature` trong `src/test/resources/features`.
-2) Trong file có đủ: `Feature`, `Background`, `Scenario`.
-3) Dùng ít nhất một lệnh `print` để kiểm tra chạy flow cơ bản.
+1) Create `basic-exercise-2.feature` in `src/test/resources/features`.
+2) Ensure the file contains: `Feature`, `Background`, `Scenario`.
+3) Use at least one `print` command to validate the basic flow.
             """.trimIndent()
         ),
         theoryQuiz = TrainingTheoryQuiz(
-            title = "Kiểm tra lý thuyết Exercise 2",
+            title = "Theory Check: Exercise 2",
             questionsToAsk = 3,
             passThreshold = 2,
             questionPool = listOf(
                 quizQuestion(
                     id = "ex2-q1",
-                    prompt = "Trong feature cơ bản, block nào mô tả kịch bản test chính?",
+                    prompt = "In a basic feature file, which block describes the main test flow?",
                     options = listOf(
                         quizOption("A", "Feature"),
                         quizOption("B", "Background"),
@@ -108,31 +108,31 @@ src
                         quizOption("D", "Examples")
                     ),
                     correct = "C",
-                    hint = "Scenario là đơn vị mô tả luồng test cụ thể."
+                    hint = "Scenario is the unit that describes a concrete test flow."
                 ),
                 quizQuestion(
                     id = "ex2-q2",
-                    prompt = "Background trong Karate dùng để làm gì?",
+                    prompt = "What is Background used for in Karate?",
                     options = listOf(
-                        quizOption("A", "Khai báo setup chạy trước mỗi scenario"),
-                        quizOption("B", "Định nghĩa endpoint production"),
-                        quizOption("C", "Tạo report HTML"),
-                        quizOption("D", "Build project Maven")
+                        quizOption("A", "Define setup that runs before each scenario"),
+                        quizOption("B", "Define production endpoint"),
+                        quizOption("C", "Generate HTML report"),
+                        quizOption("D", "Build Maven project")
                     ),
                     correct = "A",
-                    hint = "Background thường chứa setup dùng chung."
+                    hint = "Background usually contains shared setup."
                 ),
                 quizQuestion(
                     id = "ex2-q3",
-                    prompt = "Lệnh nào phù hợp để in log trong feature file?",
+                    prompt = "Which command is suitable for logging in a feature file?",
                     promptRich = """
-Trong Karate, với đoạn scenario sau:
+In Karate, given this scenario:
 ```gherkin
 Scenario: demo
   * def value = 1
   * ??? 'hello'
 ```
-Keyword nào thay `???` để in log ra console?
+Which keyword should replace `???` to print logs to console?
                     """.trimIndent(),
                     options = listOf(
                         quizOption("A", "echo"),
@@ -141,11 +141,11 @@ Keyword nào thay `???` để in log ra console?
                         quizOption("D", "System.out.println")
                     ),
                     correct = "B",
-                    hint = "Karate hỗ trợ keyword print."
+                    hint = "Karate supports the `print` keyword."
                 ),
                 quizQuestion(
                     id = "ex2-q4",
-                    prompt = "Vị trí đúng của file basic-exercise-2.feature là?",
+                    prompt = "What is the correct location for basic-exercise-2.feature?",
                     options = listOf(
                         quizOption("A", "src/test/resources/features"),
                         quizOption("B", "src/main/resources/features"),
@@ -153,17 +153,17 @@ Keyword nào thay `???` để in log ra console?
                         quizOption("D", "features/")
                     ),
                     correct = "A",
-                    hint = "Bài yêu cầu rõ vị trí file trong test resources."
+                    hint = "The exercise explicitly requires test resources location."
                 ),
                 quizQuestion(
                     id = "ex2-q5",
-                    prompt = "Trong Maven tool window, thao tác nào dùng để đồng bộ lại dependency/model sau khi sửa pom.xml?",
+                    prompt = "In Maven tool window, which action refreshes dependencies/model after editing pom.xml?",
                     promptRich = """
-Quan sát ảnh và chọn thao tác đúng để đồng bộ Maven:
+Look at the image and choose the correct action to refresh Maven:
 
 {{image:/summary-img/reload_maven.png}}
 
-Gợi ý: Đây là thao tác bạn thường dùng sau khi update `pom.xml`.
+Hint: This is the action commonly used after updating `pom.xml`.
                     """.trimIndent(),
                     options = listOf(
                         quizOption("A", "Reload All Maven Projects"),
@@ -172,7 +172,7 @@ Gợi ý: Đây là thao tác bạn thường dùng sau khi update `pom.xml`.
                         quizOption("D", "Invalidate caches")
                     ),
                     correct = "A",
-                    hint = "Trong Maven tool window, icon reload dùng để re-import/reload project."
+                    hint = "In Maven tool window, reload icon is used to re-import/reload project."
                 )
             )
         )

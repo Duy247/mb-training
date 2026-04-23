@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.intellij.ide.impl.OpenProjectTask
 import com.intellij.ide.impl.ProjectUtil
@@ -52,7 +52,7 @@ class OnboardingDialog(
         private const val CARD_LOGO_SCALE = 1f
     }
 
-    private val doNotShowAgainCheckBox = JBCheckBox("Không hiển thị lại").apply {
+    private val doNotShowAgainCheckBox = JBCheckBox("Do not show again").apply {
         isSelected = settingsService.isDoNotShowAgainEnabled()
         isOpaque = false
         background = Color(0, 0, 0, 0)
@@ -186,12 +186,12 @@ class OnboardingDialog(
             alignmentX = java.awt.Component.LEFT_ALIGNMENT
         }
 
-        val titleLabel = JBLabel("Học cấp tốc Karate Framework").apply {
+        val titleLabel = JBLabel("Learn Karate Framework Fast").apply {
             font = JBFont.label().deriveFont(Font.BOLD, JBFont.label().size + 8f)
             alignmentX = java.awt.Component.LEFT_ALIGNMENT
             maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
         }
-        val subtitleLabel = JBLabel("Từ cơ bản đến nâng cao").apply {
+        val subtitleLabel = JBLabel("From basic to advanced").apply {
             font = JBFont.label().deriveFont(JBFont.label().size + 1f)
             foreground = JBColor.GRAY
             alignmentX = java.awt.Component.LEFT_ALIGNMENT
@@ -226,7 +226,7 @@ class OnboardingDialog(
             maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
         }
 
-        listOf("Hướng dẫn", "Lý giải", "Bài tập", "Project").forEachIndexed { index, label ->
+        listOf("Guidance", "Explanation", "Exercise", "Project").forEachIndexed { index, label ->
             val (bgColor, borderColor, fgColor) = when (index) {
                 0 -> Triple(JBColor(0x1D4F44, 0x1D4F44), JBColor(0x27B082, 0x27B082), JBColor(0x8AF7C9, 0x8AF7C9))
                 1 -> Triple(JBColor(0x43355A, 0x43355A), JBColor(0x7E5CE6, 0x7E5CE6), JBColor(0xE3D8FF, 0xE3D8FF))
@@ -268,7 +268,7 @@ class OnboardingDialog(
         }
 
         val closeButton = HoverPaintButton(
-            text = "Đóng",
+            text = "Close",
             baseBg = JBColor(0x3A3D45, 0x3A3D45),
             hoverBg = JBColor(0x4E5360, 0x4E5360),
             pressedBg = JBColor(0x31343B, 0x31343B),
@@ -389,7 +389,7 @@ class OnboardingDialog(
                 TrainingFolderType.INVALID_FOLDER -> {
                     Messages.showWarningDialog(
                         currentProject,
-                        "Đây không phải là một folder trống hay project luyện tập",
+                        "This is not an empty folder or a training project.",
                         MbTrainingConstants.ONBOARDING_TITLE
                     )
                 }
@@ -403,7 +403,7 @@ class OnboardingDialog(
         if (currentBasePath != null && currentBasePath == selectedPath) {
             Messages.showInfoMessage(
                 currentProject,
-                "Project này đang được mở sẵn. Tiếp tục training tại cửa sổ hiện tại.",
+                "This project is already open. Continue training in the current window.",
                 MbTrainingConstants.ONBOARDING_TITLE
             )
             return
@@ -411,3 +411,4 @@ class OnboardingDialog(
         ProjectUtil.openOrImport(projectPath, OpenProjectTask(forceOpenInNewFrame = true))
     }
 }
+

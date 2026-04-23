@@ -21,18 +21,18 @@ object BasicExercise3Definition {
         level = TrainingLevel.BASIC,
         type = TrainingType.EXERCISE,
         mode = TrainingMode.SCENARIO,
-        objective = "Làm việc trên sandbox project, sửa lỗi path trong TestRunner rồi chạy test thành công.",
+        objective = "Work in a sandbox project, fix the path error in TestRunner, then run tests successfully.",
         startWhen = listOf(TrainingCondition.Always),
         completionPolicy = CompletionPolicy.ALL_STEPS_DONE,
         steps = listOf(
             TrainingStep(
                 id = "setup-scenario-sandbox",
-                title = "Khởi tạo sandbox scenario",
-                guidance = "Bấm Run để tạo workspace tạm với project scenario đã được preset.",
+                title = "Initialize scenario sandbox",
+                guidance = "Click Run to create a temporary workspace with a preset scenario project.",
                 activities = listOf(
                     TrainingActivity.SetupScenarioWorkspace(
                         scenarioId = "scenario-runner-path-fix-1",
-                        actionLabel = "Khởi tạo sandbox scenario"
+                        actionLabel = "Initialize scenario sandbox"
                     )
                 ),
                 doneWhen = listOf(
@@ -43,19 +43,19 @@ object BasicExercise3Definition {
             ),
             TrainingStep(
                 id = "fix-runner-path",
-                title = "Sửa sai đường dẫn feature trong TestRunner",
-                guidance = "Mở TestRunner và sửa lại classpath feature cho đúng.",
+                title = "Fix incorrect feature path in TestRunner",
+                guidance = "Open TestRunner and correct the feature classpath.",
                 activities = listOf(
                     TrainingActivity.CodeTask(
-                        "Sửa Karate.run(...) để trỏ đến classpath:features/scenario-runner-path-fix.feature"
+                        "Update Karate.run(...) to point to classpath:features/scenario-runner-path-fix.feature"
                     )
                 ),
                 hints = listOf(
                     TrainingHint.ContentHint(
                         filePath = "src/test/java/com/mb/training/scenario/TestRunner.java",
-                        title = "Gợi ý path đúng",
+                        title = "Correct path hint",
                         snippet = "return Karate.run(\"classpath:features/scenario-runner-path-fix.feature\");",
-                        note = "Hiện tại file đang dùng 'feature' (thiếu chữ s)."
+                        note = "Current file uses 'feature' (missing trailing 's')."
                     )
                 ),
                 doneWhen = listOf(
@@ -67,8 +67,8 @@ object BasicExercise3Definition {
             ),
             TrainingStep(
                 id = "run-scenario-test",
-                title = "Xác nhận bằng lệnh test",
-                guidance = "Chạy lệnh Maven đúng target runner.",
+                title = "Validate with test command",
+                guidance = "Run the Maven command targeting the correct runner.",
                 activities = listOf(
                     TrainingActivity.RunTestTask(
                         commandHint = "mvn test -Dtest=TestRunner",
@@ -80,13 +80,13 @@ object BasicExercise3Definition {
                 )
             )
         ),
-        expectedOutcome = "Scenario project chạy pass qua TestRunner sau khi fix đúng path.",
+        expectedOutcome = "Scenario project passes through TestRunner after fixing the correct path.",
         intro = TrainingExerciseIntro(
             dialogTitle = "Scenario Exercise 3: Fix Runner Path",
             heading = "Freestyle Scenario: Runner Path",
-            subtitle = "Bạn sẽ làm việc trên một project sandbox đã setup sẵn lỗi thực tế.",
+            subtitle = "You will work on a sandbox project preconfigured with a realistic defect.",
             chips = listOf("Scenario", "Debug", "Runner", "Maven"),
-            structureTitle = "Sandbox được chuẩn bị sẵn",
+            structureTitle = "Sandbox is pre-configured",
             structureTree = """
 .
 ├─ pom.xml
@@ -95,35 +95,35 @@ object BasicExercise3Definition {
       ├─ java/com/mb/training/scenario/TestRunner.java
       └─ resources/features/scenario-runner-path-fix.feature
             """.trimIndent(),
-            tasksTitle = "Mục tiêu bài",
+            tasksTitle = "Exercise goals",
             tasks = """
-1) Mở file `TestRunner.java` và tìm lỗi đường dẫn classpath.
-2) Sửa path để runner gọi đúng feature file.
-3) Chạy `mvn test -Dtest=TestRunner` và đạt BUILD SUCCESS.
+1) Open `TestRunner.java` and find the classpath issue.
+2) Fix the path so the runner calls the correct feature file.
+3) Run `mvn test -Dtest=TestRunner` and reach BUILD SUCCESS.
             """.trimIndent()
         ),
         theoryQuiz = TrainingTheoryQuiz(
-            title = "Kiểm tra lý thuyết Exercise 3",
+            title = "Theory Check: Exercise 3",
             questionsToAsk = 2,
             passThreshold = 1,
             questionPool = listOf(
                 TrainingQuizQuestion(
                     id = "ex3-q1",
-                    prompt = "Trong Karate runner, classpath sai thường gây lỗi gì?",
-                    promptRich = "Trong Karate runner, classpath sai thường gây lỗi gì?",
+                    prompt = "In a Karate runner, what error is commonly caused by incorrect classpath?",
+                    promptRich = "In a Karate runner, what error is commonly caused by incorrect classpath?",
                     options = listOf(
-                        TrainingQuizOption("A", "Không tìm thấy feature file"),
-                        TrainingQuizOption("B", "Sai JDK version"),
-                        TrainingQuizOption("C", "Lỗi network Maven"),
-                        TrainingQuizOption("D", "IDE không mở được project")
+                        TrainingQuizOption("A", "Feature file not found"),
+                        TrainingQuizOption("B", "Wrong JDK version"),
+                        TrainingQuizOption("C", "Maven network error"),
+                        TrainingQuizOption("D", "IDE cannot open project")
                     ),
                     correctOptionId = "A",
-                    hint = "Runner gọi trực tiếp đến file feature qua classpath."
+                    hint = "Runner resolves feature files directly from classpath."
                 ),
                 TrainingQuizQuestion(
                     id = "ex3-q2",
-                    prompt = "Lệnh nào được yêu cầu để validate bài scenario này?",
-                    promptRich = "Lệnh nào được yêu cầu để validate bài scenario này?",
+                    prompt = "Which command is required to validate this scenario exercise?",
+                    promptRich = "Which command is required to validate this scenario exercise?",
                     options = listOf(
                         TrainingQuizOption("A", "mvn -q test"),
                         TrainingQuizOption("B", "mvn test -Dtest=TestRunner"),
@@ -131,7 +131,7 @@ object BasicExercise3Definition {
                         TrainingQuizOption("D", "mvn clean install")
                     ),
                     correctOptionId = "B",
-                    hint = "Bài yêu cầu target đúng class runner."
+                    hint = "This exercise requires targeting the specific runner class."
                 )
             )
         )

@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
@@ -220,7 +220,7 @@ class BasicExerciseIntroDialog(
                     )
                     alignmentX = Component.LEFT_ALIGNMENT
                     add(
-                        JBLabel("Cảnh báo phụ thuộc").apply {
+                        JBLabel("Prerequisite Warning").apply {
                             font = JBFont.label().deriveFont(Font.BOLD)
                             foreground = JBColor(0xFFE7B8, 0xFFE7B8)
                         },
@@ -260,7 +260,7 @@ class BasicExerciseIntroDialog(
                 isOpaque = false
                 add(
                     HoverPaintButton(
-                        text = "Đã hiểu",
+                        text = "Acknowledge",
                         baseBg = JBColor(0x2F8D5A, 0x2F8D5A),
                         hoverBg = JBColor(0x39A266, 0x39A266),
                         pressedBg = JBColor(0x26764B, 0x26764B),
@@ -405,3 +405,4 @@ class BasicExerciseIntroDialog(
         }
     }
 }
+

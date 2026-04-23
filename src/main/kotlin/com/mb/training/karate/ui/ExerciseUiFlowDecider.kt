@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.mb.training.karate.model.CompletionPolicy
 import com.mb.training.karate.model.TrainingExercise
@@ -26,8 +26,8 @@ internal object ExerciseUiFlowDecider {
         return DependencyGate(
             unmetDependencyIds = unmet,
             firstUnmetDependencyId = unmet.first(),
-            warningMessage = "Bạn chưa hoàn thành bài phụ thuộc: $dependencyTitles.\n" +
-                "Bấm Đã hiểu để quay về bài phụ thuộc đầu tiên."
+            warningMessage = "You have not completed required prerequisite exercises: $dependencyTitles.\n" +
+                "Click Acknowledge to return to the first prerequisite exercise."
         )
     }
 
@@ -43,3 +43,4 @@ internal object ExerciseUiFlowDecider {
         }
     }
 }
+

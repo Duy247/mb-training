@@ -18,29 +18,29 @@ import com.mb.training.karate.model.TrainingType
 object BasicExercise1Definition {
     val exercise: TrainingExercise = TrainingExercise(
         id = "basic-exercise-1",
-        title = "Khởi tạo Maven Karate Project Cơ Bản",
+        title = "Initialize a Basic Maven Karate Project",
         level = TrainingLevel.BASIC,
         type = TrainingType.EXERCISE,
-        objective = "Tạo cấu trúc project Maven chuẩn để bắt đầu luyện tập Karate Framework.",
+        objective = "Create a standard Maven project structure to start practicing Karate Framework.",
         startWhen = listOf(TrainingCondition.Always),
         steps = listOf(
             TrainingStep(
                 id = "step-create-project-structure",
-                title = "Tạo cấu trúc thư mục Maven cho Karate",
-                guidance = "Tạo các thư mục bắt buộc để chứa test Java và feature files.",
+                title = "Create Maven folder structure for Karate",
+                guidance = "Create required folders for Java tests and feature files.",
                 activities = listOf(
                     TrainingActivity.CreateFolder("src/test/java"),
                     TrainingActivity.CreateFolder("src/test/resources/features")
                 ),
                 hints = listOf(
                     TrainingHint.LocationHint(
-                        title = "Tạo thư mục test Java",
+                        title = "Create Java test folder",
                         targetType = "folder",
                         suggestedPath = "src/test/java",
-                        note = "Tạo từ root project."
+                        note = "Create it from the project root."
                     ),
                     TrainingHint.LocationHint(
-                        title = "Tạo thư mục chứa feature",
+                        title = "Create feature folder",
                         targetType = "folder",
                         suggestedPath = "src/test/resources/features"
                     )
@@ -52,8 +52,8 @@ object BasicExercise1Definition {
             ),
             TrainingStep(
                 id = "step-create-pom-with-karate",
-                title = "Tạo pom.xml có Karate dependency",
-                guidance = "Tạo file `pom.xml` dùng `com.intuit.karate:karate-junit5` và cấu hình `maven-surefire-plugin`.",
+                title = "Create pom.xml with Karate dependency",
+                guidance = "Create `pom.xml` using `com.intuit.karate:karate-junit5` and configure `maven-surefire-plugin`.",
                 activities = listOf(
                     TrainingActivity.CreateFile(
                         relativePath = "pom.xml",
@@ -72,18 +72,18 @@ object BasicExercise1Definition {
 </project>
                         """.trimIndent()
                     ),
-                    TrainingActivity.CodeTask("Đảm bảo pom.xml có đủ dependency Karate và surefire plugin.")
+                    TrainingActivity.CodeTask("Make sure pom.xml includes Karate dependency and the surefire plugin.")
                 ),
                 hints = listOf(
                     TrainingHint.LocationHint(
-                        title = "Tạo file pom.xml tại root",
+                        title = "Create pom.xml at root",
                         targetType = "file",
                         suggestedPath = "pom.xml",
-                        note = "pom.xml đặt ở root project."
+                        note = "pom.xml must be located at project root."
                     ),
                     TrainingHint.ContentHint(
                         filePath = "pom.xml",
-                        title = "Block Dependency Karate",
+                        title = "Karate Dependency Block",
                         snippet = """
                                 <dependencies>
                                     <dependency>
@@ -94,11 +94,11 @@ object BasicExercise1Definition {
                                     </dependency>
                                 </dependencies>
                                 """.trimIndent(),
-                        note = "Snippet bắt buộc để framework nhận diện dependency Karate."
+                        note = "This snippet is required so the framework can resolve Karate dependency."
                     ),
                     TrainingHint.ContentHint(
                         filePath = "pom.xml",
-                        title = "Block Surefire Plugin",
+                        title = "Surefire Plugin Block",
                         snippet = """
                                 <build>
                                     <plugins>
@@ -109,7 +109,7 @@ object BasicExercise1Definition {
                                     </plugins>
                                 </build>
                                 """.trimIndent(),
-                        note = "Thêm block này trong file pom."
+                        note = "Add this block in pom.xml."
                     )
                 ),
                 doneWhen = listOf(
@@ -121,22 +121,22 @@ object BasicExercise1Definition {
             ),
             TrainingStep(
                 id = "step-check-maven-repository-source",
-                title = "Kiểm tra nguồn tải package",
-                guidance = "Kiểm tra Maven đang dùng Maven Central hay Nexus nội bộ.",
+                title = "Check package repository source",
+                guidance = "Verify whether Maven is using Maven Central or internal Nexus.",
                 activities = listOf(
                     TrainingActivity.RunCommandTask(
-                        instruction = "Xuất effective settings để kiểm tra mirror/repository đang được áp dụng.",
+                        instruction = "Export effective settings to check active mirrors/repositories.",
                         commandHint = "mvn help:effective-settings -Doutput=target/effective-settings.xml",
                         commandId = "basic-exercise-1-maven-repo-check"
                     ),
                     TrainingActivity.OpenMavenSettings("Open settings.xml"),
                     TrainingActivity.CodeTask(
-                        "Nếu phát hiện Maven Central, cập nhật ~/.m2/settings.xml để dùng Nexus nội bộ rồi chạy lại bước này."
+                        "If Maven Central is detected, update ~/.m2/settings.xml to use internal Nexus, then rerun this step."
                     )
                 ),
                 hints = listOf(
                     TrainingHint.LocationHint(
-                        title = "Vị trí settings Maven local",
+                        title = "Local Maven settings location",
                         targetType = "file",
                         suggestedPath = "~/.m2/settings.xml",
                         note = "Windows: C:/Users/<user>/.m2/settings.xml"
@@ -148,8 +148,8 @@ object BasicExercise1Definition {
             ),
             TrainingStep(
                 id = "step-refresh-maven-project",
-                title = "Đồng bộ Maven project",
-                guidance = "Bấm Reload All Maven Projects để tải dependency và đồng bộ project.",
+                title = "Refresh Maven project",
+                guidance = "Click Reload All Maven Projects to fetch dependencies and refresh project model.",
                 activities = listOf(
                     TrainingActivity.RefreshMavenProjects(
                         syncId = "basic-exercise-1-maven-sync",
@@ -158,10 +158,10 @@ object BasicExercise1Definition {
                 ),
                 hints = listOf(
                     TrainingHint.LocationHint(
-                        title = "Nút Reload Maven",
+                        title = "Maven Reload button",
                         targetType = "tool-window button",
                         suggestedPath = "Maven Tool Window > Reload All Maven Projects",
-                        note = "Theo dõi tab Build/Sync, cần có dấu tích xanh mới đạt."
+                        note = "Watch Build/Sync tab and wait for a green success state."
                     )
                 ),
                 doneWhen = listOf(
@@ -172,8 +172,8 @@ object BasicExercise1Definition {
             ),
             TrainingStep(
                 id = "step-verify-build-command",
-                title = "Xác nhận lệnh build/test",
-                guidance = "Chạy `mvn test` để kiểm tra project đã sẵn sàng cho bài tập tiếp theo.",
+                title = "Verify build/test command",
+                guidance = "Run `mvn test` to confirm the project is ready for the next exercise.",
                 activities = listOf(
                     TrainingActivity.RunTestTask(
                         commandHint = "mvn test",
@@ -186,14 +186,14 @@ object BasicExercise1Definition {
                 )
             )
         ),
-        expectedOutcome = "Bạn có một Maven project tối thiểu dùng Karate Framework và sẵn sàng sang bài tiếp theo.",
+        expectedOutcome = "You have a minimal Maven project using Karate Framework and are ready for the next exercise.",
         completionPolicy = CompletionPolicy.ALL_STEPS_DONE,
         intro = TrainingExerciseIntro(
-            dialogTitle = "Basic Exercise 1: Cấu trúc project Karate",
-            heading = "Khởi tạo sân chơi Karate Framework",
-            subtitle = "Mục tiêu: tạo project Maven chuẩn để bắt đầu luyện tập",
+            dialogTitle = "Basic Exercise 1: Karate Project Structure",
+            heading = "Initialize Your Karate Framework Workspace",
+            subtitle = "Goal: create a standard Maven project to start training",
             chips = listOf("Maven", "Karate", "pom.xml", "Folder Structure"),
-            structureTitle = "Cấu trúc cần tạo:",
+            structureTitle = "Required structure:",
             structureTree = """
 .
 ├─ pom.xml
@@ -203,22 +203,22 @@ object BasicExercise1Definition {
       └─ resources
          └─ features
             """.trimIndent(),
-            tasksTitle = "Yêu cầu bài tập:",
+            tasksTitle = "Exercise requirements:",
             tasks = """
-1) Tạo đúng cấu trúc thư mục Maven như bên trên.
-2) Tạo `pom.xml` có dependency Karate: `com.intuit.karate:karate-junit5`.
-3) Cấu hình `maven-surefire-plugin` trong phần build để sẵn sàng chạy test.
+1) Create the Maven folder structure shown above.
+2) Create `pom.xml` with Karate dependency: `com.intuit.karate:karate-junit5`.
+3) Configure `maven-surefire-plugin` in the build section so tests are runnable.
             """.trimIndent()
         ),
         knowledgeSummary = TrainingKnowledgeSummary(
-            title = "Tổng kết kiến thức: Maven + Karate nền tảng",
-            subtitle = "Sau bài này, bạn cần nắm chắc các điểm cốt lõi dưới đây",
+            title = "Knowledge Summary: Maven + Karate Fundamentals",
+            subtitle = "After this exercise, you should understand the core points below",
             labels = listOf("Maven", "Dependency", "Sync", "Test"),
             cards = listOf(
                 card(
-                    "Cấu trúc project test với Karate",
+                    "Karate test project structure",
                     """
-Cấu trúc chuẩn của project Maven test:
+Standard Maven test project structure:
 ```text
 project-root/
  ├─ pom.xml
@@ -227,77 +227,77 @@ project-root/
     └─ resources/features
 ```
 
-Maven mặc định map `src/test/resources` vào classpath test.
-Vì vậy Karate đọc file qua `classpath:` rất ổn định.
+Maven maps `src/test/resources` to the test classpath by default.
+That is why Karate can reliably read files via `classpath:`.
                     """.trimIndent()
                 ),
                 card(
-                    "Vai trò của pom.xml",
+                    "Role of pom.xml",
                     """
-`pom.xml` là trung tâm của Maven:
-- Khai báo dependency (ví dụ `karate-junit5`)
-- Khai báo plugin build (ví dụ `maven-surefire-plugin`)
-- Điều khiển lifecycle khi chạy `mvn test`
+`pom.xml` is the center of Maven configuration:
+- Declare dependencies (for example `karate-junit5`)
+- Declare build plugins (for example `maven-surefire-plugin`)
+- Control lifecycle when running `mvn test`
 
-Nếu pom đúng, Maven sẽ resolve dependency và chạy test theo chuẩn.
+If pom.xml is correct, Maven resolves dependencies and runs tests consistently.
                     """.trimIndent()
                 ),
                 card(
-                    "Maven Central và local cache",
+                    "Maven Central and local cache",
                     """
-Maven Central là kho package chính của hệ Java.
-Khi khai báo dependency, Maven tải về và cache tại:
+Maven Central is the primary package repository in the Java ecosystem.
+When dependencies are declared, Maven downloads and caches them at:
 `~/.m2/repository`
 
-Lần build sau dùng lại cache nên nhanh hơn.
+Subsequent builds reuse cache and run faster.
                     """.trimIndent()
                 ),
                 card(
-                    "Môi trường doanh nghiệp và Nexus",
+                    "Enterprise environment and Nexus",
                     """
-Trong môi trường corporate, truy cập internet thường bị hạn chế.
-Thực tế sẽ dùng Nexus/Artifactory nội bộ để:
-- kiểm soát bảo mật dependency
-- chuẩn hóa version
-- tăng ổn định tốc độ tải
+In corporate environments, internet access is often restricted.
+In practice, internal Nexus/Artifactory is used to:
+- control dependency security
+- standardize versions
+- improve download stability
                     """.trimIndent()
                 ),
                 card(
-                    "settings.xml và Maven Sync",
+                    "settings.xml and Maven Sync",
                     """
-`~/.m2/settings.xml` quyết định mirror/repository Maven dùng.
-Sau khi đổi `pom.xml`, cần bấm Maven Sync (Reload All) để IDEA:
-- đọc lại pom
-- tải dependency
-- cập nhật classpath và project model
+`~/.m2/settings.xml` controls which mirrors/repositories Maven uses.
+After changing `pom.xml`, click Maven Sync (Reload All) so IDEA can:
+- re-read pom.xml
+- download dependencies
+- update classpath and project model
 
 {{image}}
 
-Sau khi bấm reload, theo dõi tab Maven/Build để chắc chắn sync chạy thành công.
+After reloading, monitor the Maven/Build tab to make sure sync succeeds.
                     """.trimIndent(),
                     imagePath = "/summary-img/reload_maven.png"
                 ),
                 card(
-                    "Xác nhận readiness bằng mvn test",
+                    "Confirm readiness with mvn test",
                     """
-Khi chạy `mvn test` pass, nghĩa là:
-- dependency tải đúng
-- plugin surefire hoạt động
-- runtime test sẵn sàng
+When `mvn test` passes, it means:
+- dependencies are resolved correctly
+- surefire plugin is working
+- test runtime is ready
 
-Đây là checkpoint chuẩn trước khi sang bài tiếp theo.
+This is the standard checkpoint before moving to the next exercise.
                     """.trimIndent()
                 )
             )
         ),
         theoryQuiz = TrainingTheoryQuiz(
-            title = "Kiểm tra lý thuyết Exercise 1",
+            title = "Theory Check: Exercise 1",
             questionsToAsk = 5,
             passThreshold = 3,
             questionPool = listOf(
                 quizQuestion(
                     id = "ex1-q1",
-                    prompt = "Trong project Karate theo Maven, thư mục nào thường chứa feature file?",
+                    prompt = "In a Maven-based Karate project, which folder usually contains feature files?",
                     options = listOf(
                         quizOption("A", "src/main/resources/features"),
                         quizOption("B", "src/test/resources/features"),
@@ -305,11 +305,11 @@ Khi chạy `mvn test` pass, nghĩa là:
                         quizOption("D", "src/resources/test/features")
                     ),
                     correct = "B",
-                    hint = "Karate test thường đặt dưới scope test resources."
+                    hint = "Karate test resources are typically under test scope."
                 ),
                 quizQuestion(
                     id = "ex1-q2",
-                    prompt = "Dependency đúng cho Karate JUnit5 trong bài là?",
+                    prompt = "What is the correct Karate JUnit5 dependency in this exercise?",
                     options = listOf(
                         quizOption("A", "com.intuit.karate:karate-junit5"),
                         quizOption("B", "org.karate:karate-core"),
@@ -317,11 +317,11 @@ Khi chạy `mvn test` pass, nghĩa là:
                         quizOption("D", "io.karatelabs:karate-junit5")
                     ),
                     correct = "A",
-                    hint = "Bài hướng dẫn đang dùng groupId com.intuit.karate."
+                    hint = "This exercise uses groupId com.intuit.karate."
                 ),
                 quizQuestion(
                     id = "ex1-q3",
-                    prompt = "Plugin nào được cấu hình để Maven chạy test?",
+                    prompt = "Which plugin is configured for Maven test execution?",
                     options = listOf(
                         quizOption("A", "maven-compiler-plugin"),
                         quizOption("B", "maven-failsafe-plugin"),
@@ -329,43 +329,43 @@ Khi chạy `mvn test` pass, nghĩa là:
                         quizOption("D", "maven-jar-plugin")
                     ),
                     correct = "C",
-                    hint = "Surefire là plugin mặc định cho unit test."
+                    hint = "Surefire is the default plugin for unit tests."
                 ),
                 quizQuestion(
                     id = "ex1-q4",
-                    prompt = "Vì sao cần Maven Reload/Sync sau khi đổi pom.xml?",
+                    prompt = "Why do you need Maven Reload/Sync after editing pom.xml?",
                     options = listOf(
-                        quizOption("A", "Để đổi theme IntelliJ"),
-                        quizOption("B", "Để IDE resolve dependency và cập nhật classpath"),
-                        quizOption("C", "Để xoá cache .m2"),
-                        quizOption("D", "Để build nhanh hơn ngay lập tức")
+                        quizOption("A", "To change IntelliJ theme"),
+                        quizOption("B", "To let the IDE resolve dependencies and update classpath"),
+                        quizOption("C", "To clear .m2 cache"),
+                        quizOption("D", "To immediately make builds faster")
                     ),
                     correct = "B",
-                    hint = "Reload giúp IDE cập nhật model project."
+                    hint = "Reload updates the IDE project model."
                 ),
                 quizQuestion(
                     id = "ex1-q5",
-                    prompt = "Dấu hiệu nào cho thấy bước test readiness đã đạt?",
+                    prompt = "Which sign shows the test-readiness step is complete?",
                     options = listOf(
-                        quizOption("A", "Có file README"),
-                        quizOption("B", "Lệnh mvn test pass"),
-                        quizOption("C", "Có folder src/main"),
-                        quizOption("D", "Đã mở Maven tool window")
+                        quizOption("A", "README file exists"),
+                        quizOption("B", "mvn test passes"),
+                        quizOption("C", "src/main folder exists"),
+                        quizOption("D", "Maven tool window is opened")
                     ),
                     correct = "B",
-                    hint = "Step cuối yêu cầu chạy test thành công."
+                    hint = "The final step requires successful test execution."
                 ),
                 quizQuestion(
                     id = "ex1-q6",
-                    prompt = "Trong môi trường enterprise, lý do dùng Nexus nội bộ là gì?",
+                    prompt = "In enterprise environments, why use internal Nexus?",
                     options = listOf(
-                        quizOption("A", "Để bỏ qua pom.xml"),
-                        quizOption("B", "Để kiểm soát source dependency ổn định/bảo mật"),
-                        quizOption("C", "Để không cần internet trên máy dev"),
-                        quizOption("D", "Để luôn build không lỗi")
+                        quizOption("A", "To skip pom.xml"),
+                        quizOption("B", "To control dependency source stability and security"),
+                        quizOption("C", "So developer machines never need internet"),
+                        quizOption("D", "To guarantee builds never fail")
                     ),
                     correct = "B",
-                    hint = "Nexus giúp quản trị dependency tập trung."
+                    hint = "Nexus provides centralized dependency governance."
                 )
             )
         )

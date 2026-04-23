@@ -1,4 +1,4 @@
-package com.mb.training.karate.model
+﻿package com.mb.training.karate.model
 
 enum class TrainingLevel {
     BASIC,
@@ -40,7 +40,7 @@ sealed interface TrainingActivity {
     data class CodeTask(val instruction: String) : TrainingActivity
     data class SetupScenarioWorkspace(
         val scenarioId: String,
-        val actionLabel: String = "Khởi tạo sandbox scenario"
+        val actionLabel: String = "Initialize scenario sandbox"
     ) : TrainingActivity
     data class OpenMavenSettings(val buttonLabel: String = "Open settings.xml") : TrainingActivity
     data class RunCommandTask(
@@ -58,14 +58,14 @@ sealed interface TrainingActivity {
 
 sealed interface TrainingHint {
     data class LocationHint(
-        val title: String = "Gợi ý vị trí",
+        val title: String = "Location Hint",
         val targetType: String,
         val suggestedPath: String,
         val note: String? = null
     ) : TrainingHint
 
     data class RenameHint(
-        val title: String = "Gợi ý đổi tên",
+        val title: String = "Rename Hint",
         val fromName: String,
         val toName: String,
         val contextPath: String? = null
@@ -73,7 +73,7 @@ sealed interface TrainingHint {
 
     data class ContentHint(
         val filePath: String,
-        val title: String = "Gợi ý nội dung",
+        val title: String = "Content Hint",
         val snippet: String,
         val note: String? = null
     ) : TrainingHint
@@ -180,3 +180,4 @@ data class TrainingQuizOption(
     val id: String,
     val text: String
 )
+

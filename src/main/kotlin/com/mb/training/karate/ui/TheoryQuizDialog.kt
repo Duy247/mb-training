@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.ui.popup.Balloon
@@ -79,7 +79,7 @@ class TheoryQuizDialog(
         val owner = resolveOwnerWindow()
         val dialog = JDialog(owner, Dialog.ModalityType.APPLICATION_MODAL).apply {
             isUndecorated = true
-            title = "Kiểm tra lý thuyết"
+            title = "Theory Quiz"
             defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
             contentPane = createDialogRoot(this)
             pack()
@@ -143,7 +143,7 @@ class TheoryQuizDialog(
                     isOpaque = false
                     add(JBLabel(appIcon))
                     add(
-                        JBLabel("Kiểm tra lý thuyết").apply {
+                        JBLabel("Theory Quiz").apply {
                             font = JBFont.label().deriveFont(JBFont.label().size + 1f)
                             foreground = JBColor(0xE6EDF7, 0xE6EDF7)
                         }
@@ -248,25 +248,25 @@ class TheoryQuizDialog(
     }
 
     private fun createBottomBar(dialog: JDialog): JComponent {
-        prevButton = grayButton("Trở lại") {
+        prevButton = grayButton("Back") {
             if (cardIndex > 0) {
                 cardIndex--
                 refreshCardUI()
             }
         }
-        nextButton = greenButton("Tiếp theo") {
+        nextButton = greenButton("Next") {
             if (cardIndex < cards.lastIndex) {
                 cardIndex++
                 refreshCardUI()
             }
         }
-        submitButton = greenButton("Gửi") {
+        submitButton = greenButton("Submit") {
             submitQuiz(dialog)
         }
         hintButton = grayButton("Hint") {
             showHintBubble(it.source as? JComponent ?: return@grayButton)
         }
-        val closeButton = grayButton("Đóng") { dialog.dispose() }
+        val closeButton = grayButton("Close") { dialog.dispose() }
 
         return JPanel(BorderLayout()).apply {
             isOpaque = false
@@ -296,7 +296,7 @@ class TheoryQuizDialog(
         val safeIndex = cardIndex.coerceIn(0, total - 1)
         cardIndex = safeIndex
         val card = cards[safeIndex]
-        indicatorLabel.text = "Câu ${safeIndex + 1}/$total • Cần đúng tối thiểu ${quiz.passThreshold}"
+        indicatorLabel.text = "Question ${safeIndex + 1}/$total • Minimum correct answers: ${quiz.passThreshold}"
         promptContentPanel.removeAll()
         RichContentRenderer.addRichContent(
             container = promptContentPanel,
@@ -360,7 +360,7 @@ class TheoryQuizDialog(
         }
 
         JBPopupFactory.getInstance()
-            .createMessage("Bạn đúng $correct/${cards.size}. Chưa đạt ngưỡng ${quiz.passThreshold}. Hệ thống sẽ tạo bộ câu hỏi mới, hãy thử lại.")
+            .createMessage("You got $correct/${cards.size} correct. Threshold ${quiz.passThreshold} not reached. A new question set will be generated, please try again.")
             .showInFocusCenter()
         regenerateQuestionSet()
         refreshCardUI()
@@ -370,12 +370,12 @@ class TheoryQuizDialog(
         val card = cards.getOrNull(cardIndex) ?: return
         val hintText = card.question.hint?.trim().orEmpty()
         if (hintText.isBlank()) {
-            JBPopupFactory.getInstance().createMessage("Câu này chưa có hint.").showUnderneathOf(anchor)
+            JBPopupFactory.getInstance().createMessage("No hint is available for this question.").showUnderneathOf(anchor)
             return
         }
         val panel = JPanel().apply {
             border = JBUI.Borders.empty(8)
-            add(JBLabel("<html><b>Gợi ý</b><br/>$hintText</html>"))
+            add(JBLabel("<html><b>Hint</b><br/>$hintText</html>"))
             isOpaque = false
         }
         val balloon = JBPopupFactory.getInstance()
@@ -464,3 +464,4 @@ class TheoryQuizDialog(
         }
     }
 }
+

@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.IconLoader
@@ -48,7 +48,7 @@ class KnowledgeSummaryDialog(
     }
 
     private val cards: List<TrainingKnowledgeCard> = summary.cards.ifEmpty {
-        listOf(TrainingKnowledgeCard(title = "Tổng kết", content = "Chưa có nội dung."))
+        listOf(TrainingKnowledgeCard(title = "Summary", content = "No content available yet."))
     }
     private var cardIndex: Int = 0
     private lateinit var cardContentPanel: JPanel
@@ -60,7 +60,7 @@ class KnowledgeSummaryDialog(
         val owner = resolveOwnerWindow()
         val dialog = JDialog(owner, Dialog.ModalityType.APPLICATION_MODAL).apply {
             isUndecorated = true
-            title = "Tóm tắt kiến thức"
+            title = "Knowledge Summary"
             defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
             contentPane = createDialogRoot(this)
             pack()
@@ -118,7 +118,7 @@ class KnowledgeSummaryDialog(
                     isOpaque = false
                     add(JBLabel(appIcon))
                     add(
-                        JBLabel("Tóm tắt kiến thức").apply {
+                        JBLabel("Knowledge Summary").apply {
                             font = JBFont.label().deriveFont(JBFont.label().size + 1f)
                             foreground = JBColor(0xE6EDF7, 0xE6EDF7)
                         }
@@ -251,7 +251,7 @@ class KnowledgeSummaryDialog(
 
     private fun createBottomBar(dialog: JDialog): JComponent {
         previousButton = HoverPaintButton(
-            text = "Trở lại",
+            text = "Back",
             baseBg = JBColor(0x3A3D45, 0x3A3D45),
             hoverBg = JBColor(0x4E5360, 0x4E5360),
             pressedBg = JBColor(0x31343B, 0x31343B),
@@ -267,7 +267,7 @@ class KnowledgeSummaryDialog(
             }
         }
         nextButton = HoverPaintButton(
-            text = "Tiếp theo",
+            text = "Next",
             baseBg = JBColor(0x2F8D5A, 0x2F8D5A),
             hoverBg = JBColor(0x39A266, 0x39A266),
             pressedBg = JBColor(0x26764B, 0x26764B),
@@ -283,7 +283,7 @@ class KnowledgeSummaryDialog(
             }
         }
         val closeButton = HoverPaintButton(
-            text = "Đóng",
+            text = "Close",
             baseBg = JBColor(0x3A3D45, 0x3A3D45),
             hoverBg = JBColor(0x4E5360, 0x4E5360),
             pressedBg = JBColor(0x31343B, 0x31343B),
@@ -317,7 +317,7 @@ class KnowledgeSummaryDialog(
         cardIndex = safeIndex
         val current = cards.getOrElse(safeIndex) { TrainingKnowledgeCard("", "") }
         renderCard(current)
-        cardIndicatorLabel.text = "Thẻ ${safeIndex + 1}/$total"
+        cardIndicatorLabel.text = "Card ${safeIndex + 1}/$total"
         previousButton.isEnabled = safeIndex > 0
         nextButton.isEnabled = safeIndex < total - 1
     }
@@ -413,3 +413,4 @@ class KnowledgeSummaryDialog(
         }
     }
 }
+

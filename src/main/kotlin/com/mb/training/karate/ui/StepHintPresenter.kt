@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
@@ -45,7 +45,7 @@ class StepHintPresenter(
 
         val options = hints.mapIndexed { index, hint -> HintOption(index, hint) }
         JBPopupFactory.getInstance().createPopupChooserBuilder(options).apply {
-            setTitle("Chọn gợi ý")
+            setTitle("Choose a hint")
             setRenderer(HintOptionCellRenderer())
             setItemChosenCallback {
                 showHint(it.hint, anchor)
@@ -60,15 +60,15 @@ class StepHintPresenter(
                 showHudBalloon(
                     """
                     <b>${hint.title}</b><br/>
-                    Loại: ${hint.targetType}<br/>
-                    Tạo tại: <code>${hint.suggestedPath}</code>
+                    Type: ${hint.targetType}<br/>
+                    Create at: <code>${hint.suggestedPath}</code>
                     $note
                     """.trimIndent(),
                     anchor
                 )
             }
             is TrainingHint.RenameHint -> {
-                val ctx = hint.contextPath?.let { "<br/>Bối cảnh: $it" } ?: ""
+                val ctx = hint.contextPath?.let { "<br/>Context: $it" } ?: ""
                 showHudBalloon(
                     """
                     <b>${hint.title}</b><br/>
@@ -86,13 +86,13 @@ class StepHintPresenter(
 
     private fun showContentHint(hint: TrainingHint.ContentHint, anchor: JComponent) {
         val root = projectRoot ?: run {
-            showHudBalloon("Không xác định được thư mục project hiện tại.", anchor)
+            showHudBalloon("Unable to determine current project directory.", anchor)
             return
         }
 
         val nioPath = root.resolve(hint.filePath)
         if (!nioPath.toFile().exists()) {
-            showHudBalloon("Chưa tìm thấy file <code>${hint.filePath}</code> để hiển thị gợi ý inline.", anchor)
+            showHudBalloon("File <code>${hint.filePath}</code> not found for inline hint display.", anchor)
             return
         }
 
@@ -102,19 +102,19 @@ class StepHintPresenter(
                 {
                     if (project.isDisposed) return@invokeLater
                     if (vFile == null) {
-                        showHudBalloon("Không mở được file <code>${hint.filePath}</code>.", anchor)
+                        showHudBalloon("Unable to open file <code>${hint.filePath}</code>.", anchor)
                         return@invokeLater
                     }
 
                     FileEditorManager.getInstance(project).openFile(vFile, true)
                     val editor = FileEditorManager.getInstance(project).selectedTextEditor
                     if (editor == null) {
-                        showHudBalloon("Không tìm thấy editor đang mở để chèn gợi ý inline.", anchor)
+                        showHudBalloon("No open editor found to insert inline hint.", anchor)
                         return@invokeLater
                     }
 
                     renderInlineSuggestion(editor, hint)
-                    showHudBalloon("Đã chèn gợi ý inline vào file <code>${hint.filePath}</code>.", anchor)
+                    showHudBalloon("Inline hint inserted into file <code>${hint.filePath}</code>.", anchor)
                 },
                 ModalityState.defaultModalityState()
             )
@@ -271,3 +271,4 @@ private class InlineHintRenderer(
         return lines
     }
 }
+

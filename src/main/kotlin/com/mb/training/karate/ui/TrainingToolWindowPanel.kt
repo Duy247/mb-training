@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.intellij.execution.RunContentExecutor
 import com.intellij.execution.configurations.GeneralCommandLine
@@ -90,8 +90,8 @@ class TrainingToolWindowPanel(
     private val list = JBList(listModel)
     private val detailsScroll = JBScrollPane()
     private val progressLabel = JBLabel()
-    private val validateButton = JButton("Cập nhật tiến độ")
-    private val resetButton = JButton("Đặt lại")
+    private val validateButton = JButton("Refresh Progress")
+    private val resetButton = JButton("Reset")
     private val fallbackCurrentId = TrainingCurriculumRepository.items.firstOrNull()?.id.orEmpty()
     private var snapshot = runEngine(loadInitialSnapshot())
     private var introPopupEnabled = false
@@ -257,7 +257,7 @@ class TrainingToolWindowPanel(
                 BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 JBUI.Borders.empty(8)
             )
-            add(sectionHeaderLabel("Lộ trình"), BorderLayout.NORTH)
+            add(sectionHeaderLabel("Roadmap"), BorderLayout.NORTH)
             add(JBScrollPane(list), BorderLayout.CENTER)
         }
 
@@ -267,7 +267,7 @@ class TrainingToolWindowPanel(
                 BorderFactory.createLineBorder(BORDER_COLOR, 1, true),
                 JBUI.Borders.empty(8)
             )
-            add(sectionHeaderLabel("Chi tiết"), BorderLayout.NORTH)
+            add(sectionHeaderLabel("Details"), BorderLayout.NORTH)
             add(detailsScroll, BorderLayout.CENTER)
         }
 
@@ -318,10 +318,10 @@ class TrainingToolWindowPanel(
         resetButton.addActionListener {
             val confirmed = Messages.showYesNoDialog(
                 project,
-                "Đặt lại sẽ xóa tiến độ đã lưu của bài hiện tại (bao gồm trạng thái run/sync). Tiếp tục?",
-                "Xác nhận đặt lại",
-                "Đặt lại",
-                "Hủy",
+                "Reset will clear saved progress for the current exercise (including run/sync state). Continue?",
+                "Confirm Reset",
+                "Reset",
+                "Cancel",
                 null
             )
             if (confirmed != Messages.YES) return@addActionListener
@@ -403,7 +403,7 @@ class TrainingToolWindowPanel(
     private fun refreshProgress() {
         val total = TrainingCurriculumRepository.items.size
         val completed = TrainingCurriculumRepository.items.count { isCompleted(it.id) }
-        progressLabel.text = "Tiến độ: $completed/$total"
+        progressLabel.text = "Progress: $completed/$total"
     }
 
     private fun applyCurrentSelectionFromSnapshot() {
@@ -439,9 +439,9 @@ class TrainingToolWindowPanel(
             isOpaque = false
             border = JBUI.Borders.empty(10)
             alignmentX = Component.LEFT_ALIGNMENT
-            add(sectionTitle("Chi tiết bài học"))
+            add(sectionTitle("Exercise Details"))
             add(Box.createVerticalStrut(6))
-            add(wrappedText("Chọn một bài trong lộ trình để xem mục tiêu, các bước thực hiện và kết quả kỳ vọng."))
+            add(wrappedText("Select an item in the roadmap to view objective, steps, and expected outcome."))
             add(Box.createVerticalGlue())
         }
         return panel
@@ -463,13 +463,13 @@ class TrainingToolWindowPanel(
 
         panel.add(titleLabel(exercise.title))
         panel.add(Box.createVerticalStrut(4))
-        panel.add(metaLabel("Độ khó: ${toVietnameseLevel(exercise.level.name)}  |  Loại: ${toVietnameseType(exercise.type.name)}"))
+        panel.add(metaLabel("Level: ${toVietnameseLevel(exercise.level.name)}  |  Type: ${toVietnameseType(exercise.type.name)}"))
         panel.add(Box.createVerticalStrut(10))
-        panel.add(sectionTitle("Mục tiêu"))
+        panel.add(sectionTitle("Objective"))
         panel.add(Box.createVerticalStrut(4))
         panel.add(wrappedText(exercise.objective))
         panel.add(Box.createVerticalStrut(10))
-        panel.add(sectionTitle("Các bước thực hiện"))
+        panel.add(sectionTitle("Steps"))
         panel.add(Box.createVerticalStrut(6))
 
         exercise.steps.forEach { step ->
@@ -477,28 +477,28 @@ class TrainingToolWindowPanel(
             panel.add(Box.createVerticalStrut(8))
         }
 
-        panel.add(sectionTitle("Điều kiện hoàn thành bài"))
+        panel.add(sectionTitle("Completion Criteria"))
         panel.add(Box.createVerticalStrut(4))
         panel.add(
             wrappedText(
                 when (exercise.completionPolicy.name) {
-                    "ALL_STEPS_DONE" -> "Hoàn thành khi tất cả các bước hoàn tất."
-                    "ANY_STEP_DONE" -> "Hoàn thành khi hoàn tất ít nhất một bước."
-                    else -> "Hoàn thành theo điều kiện của bài."
+                    "ALL_STEPS_DONE" -> "Complete when all steps are done."
+                    "ANY_STEP_DONE" -> "Complete when at least one step is done."
+                    else -> "Complete based on exercise rules."
                 }
             )
         )
         panel.add(Box.createVerticalStrut(10))
-        panel.add(sectionTitle("Kết quả kỳ vọng"))
+        panel.add(sectionTitle("Expected Outcome"))
         panel.add(Box.createVerticalStrut(4))
         panel.add(wrappedText(exercise.expectedOutcome))
         val summary = exercise.knowledgeSummary
         if (summary != null) {
             panel.add(Box.createVerticalStrut(10))
-            panel.add(sectionTitle("Tóm tắt"))
+            panel.add(sectionTitle("Summary"))
             panel.add(Box.createVerticalStrut(4))
             panel.add(
-                JButton("Mở tóm tắt kiến thức").apply {
+                JButton("Open Knowledge Summary").apply {
                     alignmentX = Component.LEFT_ALIGNMENT
                     addActionListener { showKnowledgeSummary(summary) }
                 }
@@ -508,10 +508,10 @@ class TrainingToolWindowPanel(
         if (quiz != null) {
             val stepsReadyForQuiz = isExerciseStepsSatisfied(exercise)
             panel.add(Box.createVerticalStrut(10))
-            panel.add(sectionTitle("Kiểm tra lý thuyết"))
+            panel.add(sectionTitle("Theory Quiz"))
             panel.add(Box.createVerticalStrut(4))
             val quizStatusLabel = JBLabel(
-                if (isTheoryQuizPassed(exercise.id)) "Trạng thái: Đã pass" else "Trạng thái: Chưa pass"
+                if (isTheoryQuizPassed(exercise.id)) "Status: Passed" else "Status: Not Passed"
             ).apply {
                 font = JBFont.small()
                 alignmentX = Component.LEFT_ALIGNMENT
@@ -524,13 +524,13 @@ class TrainingToolWindowPanel(
             quizStatusLabels[exercise.id] = quizStatusLabel
             panel.add(quizStatusLabel)
             panel.add(Box.createVerticalStrut(4))
-            val quizButton = JButton("Làm kiểm tra lý thuyết").apply {
+            val quizButton = JButton("Take Theory Quiz").apply {
                 alignmentX = Component.LEFT_ALIGNMENT
                 isEnabled = stepsReadyForQuiz
                 toolTipText = if (stepsReadyForQuiz) {
-                    "Mở bài kiểm tra lý thuyết"
+                    "Open theory quiz"
                 } else {
-                    "Cần hoàn thành toàn bộ step trước khi làm quiz"
+                    "Complete all steps before taking the quiz"
                 }
                 addActionListener {
                     TheoryQuizDialog(project, quiz) {
@@ -559,7 +559,7 @@ class TrainingToolWindowPanel(
             maximumSize = Dimension(Int.MAX_VALUE, Int.MAX_VALUE)
         }
 
-        val statusText = if (done) "Đã hoàn thành" else "Chưa hoàn thành"
+        val statusText = if (done) "Completed" else "Not Completed"
         val statusColor = if (done) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
         val statusLabel = JBLabel(statusText).apply {
             foreground = statusColor
@@ -580,7 +580,7 @@ class TrainingToolWindowPanel(
 
         card.add(top)
         card.add(Box.createVerticalStrut(4))
-        card.add(wrappedText("Hướng dẫn: ${step.guidance}", italic = true))
+        card.add(wrappedText("Guidance: ${step.guidance}", italic = true))
         card.add(Box.createVerticalStrut(6))
         val actionRow = JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(6), 0)).apply {
             isOpaque = false
@@ -589,7 +589,7 @@ class TrainingToolWindowPanel(
         }
         val hintButton = JButton("Hint").apply {
             isEnabled = step.hints.isNotEmpty()
-            toolTipText = if (step.hints.isNotEmpty()) "Hiển thị gợi ý HUD cho bước này" else "Bước này chưa có gợi ý"
+            toolTipText = if (step.hints.isNotEmpty()) "Show HUD hints for this step" else "No hints available for this step"
             addActionListener { hintPresenter.showHints(step.hints, this) }
         }
         actionRow.add(hintButton)
@@ -627,14 +627,14 @@ class TrainingToolWindowPanel(
             .firstOrNull()
         if (openSettingsActivity != null) {
             val openSettingsButton = JButton(openSettingsActivity.buttonLabel).apply {
-                toolTipText = "Mở file settings.xml Maven hiệu lực trong IntelliJ"
+                toolTipText = "Open effective Maven settings.xml in IntelliJ"
                 addActionListener { openEffectiveMavenSettings() }
             }
             actionRow.add(openSettingsButton)
         }
         card.add(actionRow)
         card.add(Box.createVerticalStrut(6))
-        card.add(JBLabel("Việc cần làm").apply { font = JBFont.label().asBold() })
+        card.add(JBLabel("Tasks").apply { font = JBFont.label().asBold() })
         card.add(Box.createVerticalStrut(4))
         card.add(bulletedList(step.activities.map { renderActivity(it) }))
         return card
@@ -758,7 +758,7 @@ class TrainingToolWindowPanel(
             val key = stepStatusKey(exercise.id, step.id)
             val label = stepStatusLabels[key] ?: return@forEach
             val done = isStepCompleted(exercise.id, step.id)
-            label.text = if (done) "Đã hoàn thành" else "Chưa hoàn thành"
+            label.text = if (done) "Completed" else "Not Completed"
             label.foreground = if (done) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
         }
         refreshQuizSectionState(exercise)
@@ -771,14 +771,14 @@ class TrainingToolWindowPanel(
         quizActionButtons[exercise.id]?.apply {
             isEnabled = ready
             toolTipText = if (ready) {
-                "Mở bài kiểm tra lý thuyết"
+                "Open theory quiz"
             } else {
-                "Cần hoàn thành toàn bộ step trước khi làm quiz"
+                "Complete all steps before taking the quiz"
             }
         }
         quizStatusLabels[exercise.id]?.apply {
             val passed = isTheoryQuizPassed(exercise.id)
-            text = if (passed) "Trạng thái: Đã pass" else "Trạng thái: Chưa pass"
+            text = if (passed) "Status: Passed" else "Status: Not Passed"
             foreground = if (passed) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
         }
     }
@@ -835,15 +835,15 @@ class TrainingToolWindowPanel(
 
     private fun renderActivity(activity: TrainingActivity): String {
         return when (activity) {
-            is TrainingActivity.CreateFolder -> "Tạo thư mục ${activity.relativePath}"
-            is TrainingActivity.CreateFile -> "Tạo file ${activity.relativePath} từ mẫu"
-            is TrainingActivity.CodeTask -> "Thực hiện coding: ${activity.instruction} Ctrl + S (Save) để ghi nhận tiến độ code"
+            is TrainingActivity.CreateFolder -> "Create folder ${activity.relativePath}"
+            is TrainingActivity.CreateFile -> "Create file ${activity.relativePath} from template"
+            is TrainingActivity.CodeTask -> "Coding task: ${activity.instruction} Ctrl + S (Save) to record coding progress"
             is TrainingActivity.SetupScenarioWorkspace -> activity.actionLabel
-            is TrainingActivity.OpenMavenSettings -> "Mở file Maven settings đang được IntelliJ sử dụng"
+            is TrainingActivity.OpenMavenSettings -> "Open Maven settings currently used by IntelliJ"
             is TrainingActivity.RunCommandTask -> "${activity.instruction} (${activity.commandHint})"
             is TrainingActivity.RefreshMavenProjects -> activity.actionLabel
-            is TrainingActivity.CompileTask -> "Lệnh biên dịch gợi ý: ${activity.commandHint}"
-            is TrainingActivity.RunTestTask -> "Lệnh chạy test gợi ý: ${activity.commandHint}"
+            is TrainingActivity.CompileTask -> "Suggested compile command: ${activity.commandHint}"
+            is TrainingActivity.RunTestTask -> "Suggested test command: ${activity.commandHint}"
         }
     }
 
@@ -873,7 +873,7 @@ class TrainingToolWindowPanel(
 
     private fun runnableActionTooltip(action: RunnableStepAction): String {
         return when (action) {
-            is RunnableStepAction.Command -> "Chạy: ${action.commandHint}"
+            is RunnableStepAction.Command -> "Run: ${action.commandHint}"
             is RunnableStepAction.MavenSync -> action.actionLabel
             is RunnableStepAction.ScenarioSetup -> action.actionLabel
         }
@@ -897,13 +897,13 @@ class TrainingToolWindowPanel(
             )
             Messages.showInfoMessage(
                 project,
-                "Đã tạo sandbox scenario tại:\n$workspace\n\nPlugin đã mở project sandbox ở cửa sổ mới.",
-                "Scenario sandbox đã sẵn sàng"
+                "Scenario sandbox created at:\n$workspace\n\nThe plugin has opened the sandbox project in a new window.",
+                "Scenario sandbox is ready"
             )
         } catch (e: Exception) {
             Messages.showErrorDialog(
                 project,
-                "Không thể khởi tạo sandbox scenario.\n${e.message}",
+                "Unable to initialize scenario sandbox.\n${e.message}",
                 "MB Training"
             )
         } finally {
@@ -960,7 +960,7 @@ class TrainingToolWindowPanel(
         button: JButton
     ) {
         val root = projectRoot ?: run {
-            Messages.showErrorDialog(project, "Không tìm thấy project root để chạy lệnh.", "MB Training")
+            Messages.showErrorDialog(project, "Project root not found for command execution.", "MB Training")
             return
         }
         val originalText = button.text
@@ -1009,10 +1009,10 @@ class TrainingToolWindowPanel(
                             Messages.showErrorDialog(
                                 project,
                                 evaluation.message ?: (
-                                    "Lệnh đã chạy nhưng chưa đạt điều kiện pass.\n" +
-                                        "Yêu cầu: exit code = 0 và có BUILD SUCCESS/BUILD PASSED trong log.\n\n${result.summary}"
+                                    "The command finished but did not meet pass conditions.\n" +
+                                        "Required: exit code = 0 and BUILD SUCCESS/BUILD PASSED in logs.\n\n${result.summary}"
                                     ),
-                                "Run chưa đạt"
+                                "Run did not pass"
                             )
                         }
                     }
@@ -1025,7 +1025,7 @@ class TrainingToolWindowPanel(
         } catch (e: Exception) {
             button.isEnabled = true
             button.text = originalText
-            Messages.showErrorDialog(project, "Không thể khởi chạy lệnh.\n${e.message}", "MB Training")
+            Messages.showErrorDialog(project, "Unable to start command.\n${e.message}", "MB Training")
         }
     }
 
@@ -1059,16 +1059,16 @@ class TrainingToolWindowPanel(
             if (exitCode != 0) {
                 return CommandEvaluation(
                     passed = false,
-                    message = "Không thể kiểm tra nguồn repository (exit code != 0). " +
-                        "Hãy kiểm tra Maven và chạy lại.\n\n${summarizeOutput(output)}"
+                    message = "Unable to verify repository source (exit code != 0). " +
+                        "Please check Maven and run this step again.\n\n${summarizeOutput(output)}"
                 )
             }
             val effectiveSettings = root.resolve("target").resolve("effective-settings.xml")
             if (!Files.exists(effectiveSettings)) {
                 return CommandEvaluation(
                     passed = false,
-                    message = "Không tìm thấy file target/effective-settings.xml. " +
-                        "Hãy chạy lại bước kiểm tra."
+                    message = "File target/effective-settings.xml was not found. " +
+                        "Please run the check step again."
                 )
             }
             val content = Files.readString(effectiveSettings)
@@ -1078,8 +1078,8 @@ class TrainingToolWindowPanel(
             if (usesMavenCentral) {
                 return CommandEvaluation(
                     passed = false,
-                    message = "Phát hiện Maven đang pull từ Maven Central.\n\n" +
-                        "Vui lòng cập nhật ~/.m2/settings.xml để dùng Nexus nội bộ, sau đó chạy lại bước này."
+                    message = "Detected Maven is pulling from Maven Central.\n\n" +
+                        "Please update ~/.m2/settings.xml to use your internal Nexus, then rerun this step."
                 )
             }
             return CommandEvaluation(
@@ -1112,7 +1112,7 @@ class TrainingToolWindowPanel(
                         if (project.isDisposed) return@invokeLater
                         Messages.showErrorDialog(
                             project,
-                            "Không xác định được Maven settings.xml đang dùng.",
+                            "Unable to determine active Maven settings.xml.",
                             "Open settings.xml"
                         )
                     },
@@ -1134,7 +1134,7 @@ class TrainingToolWindowPanel(
                         if (project.isDisposed) return@invokeLater
                         Messages.showErrorDialog(
                             project,
-                            "Không thể chuẩn bị file settings.xml: ${e.message}",
+                            "Unable to prepare settings.xml file: ${e.message}",
                             "Open settings.xml"
                         )
                     },
@@ -1150,7 +1150,7 @@ class TrainingToolWindowPanel(
                     if (vFile == null) {
                         Messages.showErrorDialog(
                             project,
-                            "Không mở được file: $settingsPath",
+                            "Unable to open file: $settingsPath",
                             "Open settings.xml"
                         )
                         return@invokeLater
@@ -1194,12 +1194,12 @@ class TrainingToolWindowPanel(
                 if (healthy) {
                     updateMavenSyncState(syncId = syncId, synced = true)
                     updateStepStatus(exerciseId, stepId)
-                    Messages.showInfoMessage(project, "Maven sync đã thành công.", "Sync thành công")
+                    Messages.showInfoMessage(project, "Maven sync completed successfully.", "Sync Successful")
                 } else {
                     Messages.showWarningDialog(
                         project,
-                        "Maven sync đã được trigger. Nếu chưa đạt, vui lòng chờ kết thúc hoặc xem tab Build/Sync.",
-                        "Đang đồng bộ Maven"
+                        "Maven sync was triggered. If not complete yet, wait for completion or check Build/Sync tab.",
+                        "Maven Sync in Progress"
                     )
                 }
             }
@@ -1278,26 +1278,26 @@ class TrainingToolWindowPanel(
 
     private fun summarizeOutput(raw: String): String {
         val lines = raw.lines().filter { it.isNotBlank() }
-        if (lines.isEmpty()) return "Không có output."
+        if (lines.isEmpty()) return "No output."
         return lines.takeLast(12).joinToString("\n")
     }
 
     private fun showRunSuccessDialog(command: String) {
         val body = """
             <html>
-            <b>Đã hoàn thành bước chạy test</b><br/><br/>
-            Lệnh <code>$command</code> đã chạy thành công.<br/>
-            Điều kiện bài tập đã được cập nhật.<br/><br/>
-            <font color='#7a7a7a'>Chi tiết log xem trong tab Run.</font>
+            <b>Test run step completed</b><br/><br/>
+            Command <code>$command</code> completed successfully.<br/>
+            Exercise conditions have been updated.<br/><br/>
+            <font color='#7a7a7a'>View detailed logs in the Run tab.</font>
             </html>
         """.trimIndent()
-        Messages.showInfoMessage(project, body, "Run thành công")
+        Messages.showInfoMessage(project, body, "Run Successful")
     }
 
     private fun updateStepStatus(exerciseId: String, stepId: String) {
         val label = stepStatusLabels[stepStatusKey(exerciseId, stepId)] ?: return
         val done = isStepCompleted(exerciseId, stepId)
-        label.text = if (done) "Đã hoàn thành" else "Chưa hoàn thành"
+        label.text = if (done) "Completed" else "Not Completed"
         label.foreground = if (done) JBColor(0x1A7F37, 0x3FB950) else JBColor(0x9A6700, 0xD29922)
         detailsScroll.viewport.repaint()
     }
@@ -1311,7 +1311,7 @@ class TrainingToolWindowPanel(
         refreshProgressFromEngine()
         list.repaint()
         refreshDetailsFromSelection()
-        Messages.showInfoMessage(project, "Bạn đã vượt qua kiểm tra lý thuyết.", "MB Training")
+        Messages.showInfoMessage(project, "You passed the theory quiz.", "MB Training")
     }
 
     private data class CommandRunResult(
@@ -1344,20 +1344,21 @@ class TrainingToolWindowPanel(
 
     private fun toVietnameseLevel(level: String): String {
         return when (level) {
-            "BASIC" -> "Cơ bản"
-            "INTERMEDIATE" -> "Trung cấp"
-            "ADVANCED" -> "Nâng cao"
+            "BASIC" -> "Basic"
+            "INTERMEDIATE" -> "Intermediate"
+            "ADVANCED" -> "Advanced"
             else -> level
         }
     }
 
     private fun toVietnameseType(type: String): String {
         return when (type) {
-            "EXERCISE" -> "Bài tập"
-            "MISSION" -> "Nhiệm vụ"
-            "TASK" -> "Tác vụ"
-            "HOMEWORK" -> "Bài về nhà"
+            "EXERCISE" -> "Exercise"
+            "MISSION" -> "Mission"
+            "TASK" -> "Task"
+            "HOMEWORK" -> "Homework"
             else -> type
         }
     }
 }
+

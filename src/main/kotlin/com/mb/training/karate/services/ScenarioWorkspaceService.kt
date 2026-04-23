@@ -1,4 +1,4 @@
-package com.mb.training.karate.services
+﻿package com.mb.training.karate.services
 
 import com.intellij.ide.impl.OpenProjectTask
 import com.intellij.ide.impl.ProjectUtil
@@ -47,7 +47,7 @@ object ScenarioWorkspaceService {
 
         TrainingProjectProgressStore.save(sessionFolder, sourceSnapshot)
         val originalRoot = project.basePath?.let { Path.of(it).normalize() }
-            ?: error("Không tìm thấy project root hiện tại.")
+            ?: error("Current project root not found.")
         saveScenarioContext(
             projectRoot = sessionFolder,
             context = ScenarioWorkspaceContext(
@@ -184,7 +184,7 @@ object ScenarioWorkspaceService {
 
                 @Karate.Test
                 Karate testAll() {
-                    // TODO: Fix đường dẫn classpath bị sai để test chạy được
+                    // TODO: Fix incorrect classpath so the test can run
                     return Karate.run("classpath:feature/scenario-runner-path-fix.feature");
                 }
             }
@@ -201,3 +201,4 @@ object ScenarioWorkspaceService {
         )
     }
 }
+

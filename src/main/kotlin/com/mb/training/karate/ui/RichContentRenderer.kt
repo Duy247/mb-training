@@ -1,4 +1,4 @@
-package com.mb.training.karate.ui
+﻿package com.mb.training.karate.ui
 
 import com.intellij.openapi.util.IconLoader
 import com.intellij.ui.JBColor
@@ -200,7 +200,7 @@ internal object RichContentRenderer {
             }
             label.icon = rendered
         } else {
-            label.text = "Không tải được ảnh: $path"
+            label.text = "Unable to load image: $path"
             label.foreground = JBColor.GRAY
         }
         return label
@@ -220,3 +220,4 @@ internal object RichContentRenderer {
         data class Image(val path: String) : Segment
     }
 }
+
