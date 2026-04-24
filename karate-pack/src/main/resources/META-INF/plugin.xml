@@ -3,7 +3,16 @@
     <name>MBTraining Karate Pack</name>
     <vendor email="support@mb-training.com">MB Training</vendor>
     <description>
-        Karate training content pack for MBTraining Engine Framework.
+        <![CDATA[
+        <p><b>MBTraining Karate Pack</b> is a <b>proof of concept (POC)</b> training content pack for MBTraining Engine Framework.</p>
+        <p>It demonstrates how a pack can plug into the engine and deliver a guided learning path for Karate API testing.</p>
+        <p>What it includes:</p>
+        <ul>
+          <li>A staged roadmap from basic scripting to end-to-end API flow exercises</li>
+          <li>Pack-defined onboarding content and learner guidance</li>
+          <li>Exercise metadata consumed by the engine for progress tracking and validation</li>
+        </ul>
+        ]]>
     </description>
 
     <depends>com.intellij.modules.platform</depends>

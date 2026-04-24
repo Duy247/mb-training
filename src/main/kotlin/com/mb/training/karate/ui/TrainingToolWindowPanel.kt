@@ -3,8 +3,8 @@
 import com.intellij.execution.RunContentExecutor
 import com.intellij.execution.configurations.GeneralCommandLine
 import com.intellij.execution.process.KillableColoredProcessHandler
-import com.intellij.execution.process.ProcessAdapter
 import com.intellij.execution.process.ProcessEvent
+import com.intellij.execution.process.ProcessListener
 import com.intellij.ide.impl.OpenProjectTask
 import com.intellij.ide.impl.ProjectUtil
 import com.intellij.openapi.application.ApplicationManager
@@ -1036,7 +1036,7 @@ class TrainingToolWindowPanel(
             val processHandler = KillableColoredProcessHandler(commandLine)
             val outputBuffer = StringBuilder()
 
-            processHandler.addProcessListener(object : ProcessAdapter() {
+            processHandler.addProcessListener(object : ProcessListener {
                 override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
                     outputBuffer.append(event.text)
                 }

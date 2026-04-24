@@ -3,7 +3,18 @@
     <name>MBTraining Engine Framework</name>
     <vendor email="support@mb-training.com">MB Training</vendor>
     <description>
-        Core training engine framework for interactive learning packs.
+        <![CDATA[
+        <p><b>MBTraining Engine Framework</b> is a <b>proof of concept (POC)</b> for modular, in-IDE technical training.</p>
+        <p>This plugin provides the core runtime only. It does not include exercises by itself.</p>
+        <p>What it does:</p>
+        <ul>
+          <li>Discovers installed training packs via extension points</li>
+          <li>Lets users select and activate one training pack</li>
+          <li>Hosts onboarding and tool window lifecycle for the active pack</li>
+          <li>Tracks project training progress and completion state</li>
+        </ul>
+        <p>Install this plugin together with a training pack (for example, MBTraining Karate Pack) to get a complete learning experience.</p>
+        ]]>
     </description>
 
     <depends>com.intellij.modules.platform</depends>
