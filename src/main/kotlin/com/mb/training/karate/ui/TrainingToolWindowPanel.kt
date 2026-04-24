@@ -29,6 +29,7 @@ import com.intellij.ui.components.JBTextArea
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.mb.training.karate.model.TrainingActivity
+import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingItem
 import com.mb.training.karate.model.TrainingStep
 import com.mb.training.karate.services.ScenarioWorkspaceService
@@ -59,7 +60,6 @@ import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JPanel
 import javax.swing.ListSelectionModel
-import javax.swing.SwingUtilities
 import javax.swing.Timer
 
 class TrainingToolWindowPanel(
@@ -316,6 +316,17 @@ class TrainingToolWindowPanel(
         }
 
         resetButton.addActionListener {
+            val currentExerciseId = resolveCurrentExerciseIdForReset()
+            val currentExercise = currentExerciseId?.let { TrainingCurriculumRepository.exerciseById[it] }
+            if (currentExercise == null) {
+                Messages.showWarningDialog(
+                    project,
+                    "No exercise selected to reset.",
+                    "Reset"
+                )
+                return@addActionListener
+            }
+
             val confirmed = Messages.showYesNoDialog(
                 project,
                 "Reset will clear saved progress for the current exercise (including run/sync state). Continue?",
@@ -326,15 +337,7 @@ class TrainingToolWindowPanel(
             )
             if (confirmed != Messages.YES) return@addActionListener
 
-            snapshot = TrainingProgressSnapshot(
-                currentItemId = snapshot.currentItemId,
-                completedIds = emptySet(),
-                completedStepIds = emptySet(),
-                passedCommandIds = emptySet(),
-                successfulMavenSyncIds = emptySet(),
-                passedTheoryQuizExerciseIds = emptySet()
-            )
-            projectRoot?.let { TrainingProjectProgressStore.clearScenarioCompleted(it) }
+            resetExerciseProgress(currentExercise)
             scenarioAutoReturnTriggered = false
             refreshProgressFromEngine()
             persistSnapshot()
@@ -787,6 +790,66 @@ class TrainingToolWindowPanel(
         return "$exerciseId::$stepId"
     }
 
+    private fun resolveCurrentExerciseIdForReset(): String? {
+        val selectedId = list.selectedValue?.id
+        if (!selectedId.isNullOrBlank()) return selectedId
+        if (!currentDetailsExerciseId.isNullOrBlank()) return currentDetailsExerciseId
+        return snapshot.currentItemId.takeIf { it.isNotBlank() }
+    }
+
+    private fun resetExerciseProgress(exercise: com.mb.training.karate.model.TrainingExercise) {
+        val stepKeys = exercise.steps.map { stepStatusKey(exercise.id, it.id) }.toSet()
+        val commandIds = collectExerciseCommandIds(exercise)
+        val mavenSyncIds = collectExerciseMavenSyncIds(exercise)
+
+        snapshot = snapshot.copy(
+            completedIds = snapshot.completedIds - exercise.id,
+            completedStepIds = snapshot.completedStepIds - stepKeys,
+            passedCommandIds = snapshot.passedCommandIds - commandIds,
+            successfulMavenSyncIds = snapshot.successfulMavenSyncIds - mavenSyncIds,
+            passedTheoryQuizExerciseIds = snapshot.passedTheoryQuizExerciseIds - exercise.id
+        )
+        projectRoot?.let { TrainingProjectProgressStore.clearScenarioCompleted(it, exercise.id) }
+    }
+
+    private fun collectExerciseCommandIds(exercise: com.mb.training.karate.model.TrainingExercise): Set<String> {
+        return exercise.steps.flatMap { step ->
+            val fromActivities = step.activities.mapNotNull { activity ->
+                when (activity) {
+                    is TrainingActivity.RunCommandTask -> activity.commandId
+                    is TrainingActivity.RunTestTask -> activity.commandId
+                    is TrainingActivity.CompileTask -> activity.commandId
+                    else -> null
+                }
+            }
+            val fromConditions = step.doneWhen.mapNotNull { condition ->
+                when (condition) {
+                    is TrainingCondition.CommandPassed -> condition.commandId
+                    else -> null
+                }
+            }
+            fromActivities + fromConditions
+        }.toSet()
+    }
+
+    private fun collectExerciseMavenSyncIds(exercise: com.mb.training.karate.model.TrainingExercise): Set<String> {
+        return exercise.steps.flatMap { step ->
+            val fromActivities = step.activities.mapNotNull { activity ->
+                when (activity) {
+                    is TrainingActivity.RefreshMavenProjects -> activity.syncId
+                    else -> null
+                }
+            }
+            val fromConditions = step.doneWhen.mapNotNull { condition ->
+                when (condition) {
+                    is TrainingCondition.MavenSyncSucceeded -> condition.syncId
+                    else -> null
+                }
+            }
+            fromActivities + fromConditions
+        }.toSet()
+    }
+
     private fun persistSnapshot() {
         pendingSnapshotSave = true
         snapshotSaveDebounceTimer.restart()
@@ -979,11 +1042,8 @@ class TrainingToolWindowPanel(
                 }
 
                 override fun processTerminated(event: ProcessEvent) {
-                    SwingUtilities.invokeLater {
-                        button.isEnabled = true
-                        button.text = originalText
-
-                        val fullOutput = outputBuffer.toString()
+                    val fullOutput = outputBuffer.toString()
+                    ApplicationManager.getApplication().executeOnPooledThread {
                         val evaluation = evaluateCommandResult(
                             commandId = commandId,
                             command = effectiveCommand,
@@ -992,29 +1052,37 @@ class TrainingToolWindowPanel(
                             root = root
                         )
                         val result = CommandRunResult(event.exitCode, summarizeOutput(fullOutput), evaluation.passed)
+                        ApplicationManager.getApplication().invokeLater(
+                            {
+                                if (project.isDisposed) return@invokeLater
+                                button.isEnabled = true
+                                button.text = originalText
 
-                        if (result.passed) {
-                            snapshot = snapshot.copy(passedCommandIds = snapshot.passedCommandIds + commandId)
-                            persistSnapshot()
-                            list.repaint()
-                            updateStepStatus(exerciseId, stepId)
-                            suppressProgressDialogs = true
-                            try {
-                                showRunSuccessDialog(effectiveCommand)
-                            } finally {
-                                suppressProgressDialogs = false
-                            }
-                            refreshProgressFromEngine()
-                        } else {
-                            Messages.showErrorDialog(
-                                project,
-                                evaluation.message ?: (
-                                    "The command finished but did not meet pass conditions.\n" +
-                                        "Required: exit code = 0 and BUILD SUCCESS/BUILD PASSED in logs.\n\n${result.summary}"
-                                    ),
-                                "Run did not pass"
-                            )
-                        }
+                                if (result.passed) {
+                                    snapshot = snapshot.copy(passedCommandIds = snapshot.passedCommandIds + commandId)
+                                    persistSnapshot()
+                                    list.repaint()
+                                    updateStepStatus(exerciseId, stepId)
+                                    suppressProgressDialogs = true
+                                    try {
+                                        showRunSuccessDialog(effectiveCommand)
+                                    } finally {
+                                        suppressProgressDialogs = false
+                                    }
+                                    refreshProgressFromEngine()
+                                } else {
+                                    Messages.showErrorDialog(
+                                        project,
+                                        evaluation.message ?: (
+                                            "The command finished but did not meet pass conditions.\n" +
+                                                "Required: exit code = 0 and BUILD SUCCESS/BUILD PASSED in logs.\n\n${result.summary}"
+                                            ),
+                                        "Run did not pass"
+                                    )
+                                }
+                            },
+                            ModalityState.defaultModalityState()
+                        )
                     }
                 }
             })
@@ -1143,10 +1211,10 @@ class TrainingToolWindowPanel(
                 return@executeOnPooledThread
             }
 
+            val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(settingsPath)
             ApplicationManager.getApplication().invokeLater(
                 {
                     if (project.isDisposed) return@invokeLater
-                    val vFile = LocalFileSystem.getInstance().refreshAndFindFileByNioFile(settingsPath)
                     if (vFile == null) {
                         Messages.showErrorDialog(
                             project,

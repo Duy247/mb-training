@@ -126,7 +126,7 @@ object TrainingProjectProgressStore {
         }
 
         Files.newOutputStream(progressFile(projectRoot)).use { output: OutputStream ->
-            props.store(output, "MB Training for Karate progress")
+            props.store(output, "MBTraining Engine progress")
         }
     }
 
@@ -155,7 +155,27 @@ object TrainingProjectProgressStore {
             setProperty(SCENARIO_COMPLETED_IDS_KEY, merged.joinToString(","))
         }
         Files.newOutputStream(scenarioCompletionFile(projectRoot)).use { output: OutputStream ->
-            props.store(output, "MB Training completed scenario exercises")
+            props.store(output, "MBTraining completed scenario exercises")
+        }
+    }
+
+    fun clearScenarioCompleted(projectRoot: Path, exerciseId: String) {
+        val normalizedExerciseId = exerciseId.trim()
+        if (normalizedExerciseId.isEmpty()) return
+
+        val remaining = loadScenarioCompletedExerciseIds(projectRoot) - normalizedExerciseId
+        if (remaining.isEmpty()) {
+            Files.deleteIfExists(scenarioCompletionFile(projectRoot))
+            return
+        }
+
+        val ideaDir = projectRoot.resolve(".idea")
+        Files.createDirectories(ideaDir)
+        val props = Properties().apply {
+            setProperty(SCENARIO_COMPLETED_IDS_KEY, remaining.sorted().joinToString(","))
+        }
+        Files.newOutputStream(scenarioCompletionFile(projectRoot)).use { output: OutputStream ->
+            props.store(output, "MBTraining completed scenario exercises")
         }
     }
 

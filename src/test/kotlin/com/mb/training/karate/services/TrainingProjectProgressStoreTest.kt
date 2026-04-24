@@ -86,6 +86,21 @@ class TrainingProjectProgressStoreTest {
         assertFalse(TrainingProjectProgressStore.hasProgressFile(missingRoot))
     }
 
+    @Test
+    fun `clear scenario completed removes only selected exercise marker`() {
+        withTempDir { root ->
+            TrainingProjectProgressStore.markScenarioCompleted(root, "exercise-a")
+            TrainingProjectProgressStore.markScenarioCompleted(root, "exercise-b")
+
+            TrainingProjectProgressStore.clearScenarioCompleted(root, "exercise-a")
+            val remaining = TrainingProjectProgressStore.loadScenarioCompletedExerciseIds(root)
+            assertEquals(setOf("exercise-b"), remaining)
+
+            TrainingProjectProgressStore.clearScenarioCompleted(root, "exercise-b")
+            assertTrue(TrainingProjectProgressStore.loadScenarioCompletedExerciseIds(root).isEmpty())
+        }
+    }
+
     private fun withTempDir(block: (Path) -> Unit) {
         val dir = Files.createTempDirectory("mb-training-test-")
         try {
