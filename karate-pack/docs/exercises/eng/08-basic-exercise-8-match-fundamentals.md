@@ -110,7 +110,7 @@ Establishes robust assertion style used repeatedly in contract and business-flow
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A test script using the right match operator for each assertion intent.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-7")$(if (@{Order=8; Id=basic-exercise-8; Title=Match Fundamentals; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-7; Objective=Apply strict and partial matching assertions for reliable response validation.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Leverages response handling foundations from basic-exercise-7.; Contribution=Establishes robust assertion style used repeatedly in contract and business-flow validation.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=match; HintPath2=src/test/resources/features/basic-exercise-8.feature; Chips=System.Object[]; Subtitle=Master core Karate match assertions; ExpectedOutcome=A test script using the right match operator for each assertion intent.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-7")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Establishes robust assertion style used repeatedly in contract and business-flow
 - chips: [`match ==`, `contains`, `contains only`, `assertion style`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/basic-exercise-8.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Match Fundamentals
+- title: Knowledge Summary - Match Fundamentals
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -200,13 +200,13 @@ Establishes robust assertion style used repeatedly in contract and business-flow
   - [ ] id = "basic-exercise-8"
   - [ ] 	itle = "Match Fundamentals"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=8; Id=basic-exercise-8; Title=Match Fundamentals; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-7; Objective=Apply strict and partial matching assertions for reliable response validation.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Leverages response handling foundations from basic-exercise-7.; Contribution=Establishes robust assertion style used repeatedly in contract and business-flow validation.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=match; HintPath2=src/test/resources/features/basic-exercise-8.feature; Chips=System.Object[]; Subtitle=Master core Karate match assertions; ExpectedOutcome=A test script using the right match operator for each assertion intent.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-7"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-8-verify") matches TrainingCondition.CommandPassed("basic-exercise-8-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

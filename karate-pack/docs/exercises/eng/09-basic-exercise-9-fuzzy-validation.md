@@ -110,7 +110,7 @@ Prevents fragile tests and improves resilience as data variability increases in 
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A resilient validation style that handles dynamic payload values safely.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-8")$(if (@{Order=9; Id=basic-exercise-9; Title=Fuzzy Validation; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-8; Objective=Use fuzzy markers and type-oriented checks for dynamic values in response payloads.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on basic match operators from basic-exercise-8.; Contribution=Prevents fragile tests and improves resilience as data variability increases in later flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=#string; HintPath2=src/test/resources/features/basic-exercise-9.feature; Chips=System.Object[]; Subtitle=Stabilize validations for dynamic responses; ExpectedOutcome=A resilient validation style that handles dynamic payload values safely.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-8")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Prevents fragile tests and improves resilience as data variability increases in 
 - chips: [`fuzzy match`, `types`, `dynamic data`, `schema-like checks`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/basic-exercise-9.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Fuzzy Validation
+- title: Knowledge Summary - Fuzzy Validation
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -200,13 +200,13 @@ Prevents fragile tests and improves resilience as data variability increases in 
   - [ ] id = "basic-exercise-9"
   - [ ] 	itle = "Fuzzy Validation"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=9; Id=basic-exercise-9; Title=Fuzzy Validation; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-8; Objective=Use fuzzy markers and type-oriented checks for dynamic values in response payloads.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on basic match operators from basic-exercise-8.; Contribution=Prevents fragile tests and improves resilience as data variability increases in later flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=#string; HintPath2=src/test/resources/features/basic-exercise-9.feature; Chips=System.Object[]; Subtitle=Stabilize validations for dynamic responses; ExpectedOutcome=A resilient validation style that handles dynamic payload values safely.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-8"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-9-verify") matches TrainingCondition.CommandPassed("basic-exercise-9-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

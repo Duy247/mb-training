@@ -110,7 +110,7 @@ Expands coverage without duplicating scenario logic, essential for scalable proj
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A maintainable data-driven scenario with multiple executed permutations.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-4")$(if (@{Order=17; Id=intermediate-exercise-5; Title=Data-Driven Outline; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-4; Objective=Create data-driven scenarios using Scenario Outline and Examples tables.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses global config/bootstrap and reusable setup from prior exercises.; Contribution=Expands coverage without duplicating scenario logic, essential for scalable project test sets.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Scenario Outline; HintPath2=src/test/resources/features/intermediate-exercise-5.feature; Chips=System.Object[]; Subtitle=Scale scenarios with outline data; ExpectedOutcome=A maintainable data-driven scenario with multiple executed permutations.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-4")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Expands coverage without duplicating scenario logic, essential for scalable proj
 - chips: [`Scenario Outline`, `Examples`, `data-driven`, `coverage`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/intermediate-exercise-5.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Data-Driven Outline
+- title: Knowledge Summary - Data-Driven Outline
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -200,13 +200,13 @@ Expands coverage without duplicating scenario logic, essential for scalable proj
   - [ ] id = "intermediate-exercise-5"
   - [ ] 	itle = "Data-Driven Outline"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=17; Id=intermediate-exercise-5; Title=Data-Driven Outline; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-4; Objective=Create data-driven scenarios using Scenario Outline and Examples tables.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses global config/bootstrap and reusable setup from prior exercises.; Contribution=Expands coverage without duplicating scenario logic, essential for scalable project test sets.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Scenario Outline; HintPath2=src/test/resources/features/intermediate-exercise-5.feature; Chips=System.Object[]; Subtitle=Scale scenarios with outline data; ExpectedOutcome=A maintainable data-driven scenario with multiple executed permutations.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-4"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-5-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-5-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

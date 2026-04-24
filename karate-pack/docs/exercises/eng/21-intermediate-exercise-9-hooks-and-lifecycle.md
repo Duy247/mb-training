@@ -111,7 +111,7 @@ Adds operational observability and cleanup discipline for long-running project s
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: Hook-enabled suite with predictable diagnostics and cleanup behavior.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-8")$(if (@{Order=21; Id=intermediate-exercise-9; Title=Hooks and Lifecycle; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-8; Objective=Use lifecycle hooks for controlled diagnostics and cleanup behavior.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses stable parallel-ready setup from intermediate-exercise-8.; Contribution=Adds operational observability and cleanup discipline for long-running project suites.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=afterScenario; HintPath2=src/test/java/karate-config.js; Chips=System.Object[]; Subtitle=Control diagnostics and cleanup with hooks; ExpectedOutcome=Hook-enabled suite with predictable diagnostics and cleanup behavior.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-8")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,24 +121,24 @@ Adds operational observability and cleanup discipline for long-running project s
 - chips: [`hooks`, `lifecycle`, `diagnostics`, `cleanup`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/intermediate-exercise-9.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Hooks and Lifecycle
+- title: Knowledge Summary - Hooks and Lifecycle
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -201,13 +201,13 @@ Adds operational observability and cleanup discipline for long-running project s
   - [ ] id = "intermediate-exercise-9"
   - [ ] 	itle = "Hooks and Lifecycle"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=21; Id=intermediate-exercise-9; Title=Hooks and Lifecycle; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-8; Objective=Use lifecycle hooks for controlled diagnostics and cleanup behavior.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses stable parallel-ready setup from intermediate-exercise-8.; Contribution=Adds operational observability and cleanup discipline for long-running project suites.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=afterScenario; HintPath2=src/test/java/karate-config.js; Chips=System.Object[]; Subtitle=Control diagnostics and cleanup with hooks; ExpectedOutcome=Hook-enabled suite with predictable diagnostics and cleanup behavior.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-8"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-9-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-9-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -220,4 +220,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

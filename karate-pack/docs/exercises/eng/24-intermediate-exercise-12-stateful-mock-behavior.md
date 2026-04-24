@@ -112,7 +112,7 @@ Provides realistic local backend behavior needed for complete business-flow test
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A stateful local mock API supporting realistic CRUD and auth test flows.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-11")$(if (@{Order=24; Id=intermediate-exercise-12; Title=Stateful Mock Behavior; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-11; Objective=Add stateful behavior to mock API for realistic CRUD/auth workflows.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends mock bootstrap routes into realistic stateful interactions.; Contribution=Provides realistic local backend behavior needed for complete business-flow testing in project.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dtest=MockServerRunner; KeywordHint=def store; HintPath2=src/test/resources/mock/state-utils.js; Chips=System.Object[]; Subtitle=Make mock API behavior realistic; ExpectedOutcome=A stateful local mock API supporting realistic CRUD and auth test flows.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-11")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -122,25 +122,25 @@ Provides realistic local backend behavior needed for complete business-flow test
 - chips: [`stateful mock`, `CRUD`, `auth`, `in-memory state`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/mock/mock-api.feature
       ├─ src/test/resources/mock/state-utils.js
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Stateful Mock Behavior
+- title: Knowledge Summary - Stateful Mock Behavior
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -203,13 +203,13 @@ Provides realistic local backend behavior needed for complete business-flow test
   - [ ] id = "intermediate-exercise-12"
   - [ ] 	itle = "Stateful Mock Behavior"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=24; Id=intermediate-exercise-12; Title=Stateful Mock Behavior; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-11; Objective=Add stateful behavior to mock API for realistic CRUD/auth workflows.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends mock bootstrap routes into realistic stateful interactions.; Contribution=Provides realistic local backend behavior needed for complete business-flow testing in project.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dtest=MockServerRunner; KeywordHint=def store; HintPath2=src/test/resources/mock/state-utils.js; Chips=System.Object[]; Subtitle=Make mock API behavior realistic; ExpectedOutcome=A stateful local mock API supporting realistic CRUD and auth test flows.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-11"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-12-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-12-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -222,4 +222,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

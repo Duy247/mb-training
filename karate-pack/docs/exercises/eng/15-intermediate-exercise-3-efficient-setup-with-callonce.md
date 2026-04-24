@@ -111,7 +111,7 @@ Improves suite runtime and provides scalable setup strategy for growing project 
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A predictable one-time setup pattern that improves test efficiency.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-2")$(if (@{Order=15; Id=intermediate-exercise-3; Title=Efficient Setup with callonce; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-2; Objective=Optimize repeated setup by applying callonce where one-time execution is safe.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on shared setup modularization from intermediate-exercise-2.; Contribution=Improves suite runtime and provides scalable setup strategy for growing project scope.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=callonce; HintPath2=src/test/resources/features/common/bootstrap.feature; Chips=System.Object[]; Subtitle=Optimize setup execution safely; ExpectedOutcome=A predictable one-time setup pattern that improves test efficiency.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-2")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,24 +121,24 @@ Improves suite runtime and provides scalable setup strategy for growing project 
 - chips: [`callonce`, `performance`, `setup`, `isolation`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/common/bootstrap.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Efficient Setup with callonce
+- title: Knowledge Summary - Efficient Setup with callonce
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -201,13 +201,13 @@ Improves suite runtime and provides scalable setup strategy for growing project 
   - [ ] id = "intermediate-exercise-3"
   - [ ] 	itle = "Efficient Setup with callonce"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=15; Id=intermediate-exercise-3; Title=Efficient Setup with callonce; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-2; Objective=Optimize repeated setup by applying callonce where one-time execution is safe.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on shared setup modularization from intermediate-exercise-2.; Contribution=Improves suite runtime and provides scalable setup strategy for growing project scope.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=callonce; HintPath2=src/test/resources/features/common/bootstrap.feature; Chips=System.Object[]; Subtitle=Optimize setup execution safely; ExpectedOutcome=A predictable one-time setup pattern that improves test efficiency.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-2"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-3-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-3-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -220,4 +220,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

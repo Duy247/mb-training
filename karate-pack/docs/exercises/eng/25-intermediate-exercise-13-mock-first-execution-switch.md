@@ -111,7 +111,7 @@ Completes local-first strategy so project can run end-to-end without public APIs
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: Existing scenarios execute deterministically against local mock via environment switch.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-12")$(if (@{Order=25; Id=intermediate-exercise-13; Title=Mock-First Execution Switch; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-12; Objective=Enable env-driven switching between local mock target and real integration target.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Depends on working local mock API from intermediate-exercise-12.; Contribution=Completes local-first strategy so project can run end-to-end without public APIs.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=mock; HintPath2=src/test/java/karate-config.js; Chips=System.Object[]; Subtitle=Switch suite between mock and real targets; ExpectedOutcome=Existing scenarios execute deterministically against local mock via environment switch.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-12")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,24 +121,24 @@ Completes local-first strategy so project can run end-to-end without public APIs
 - chips: [`mock-first`, `env switch`, `target routing`, `local execution`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/common/target-resolution.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Mock-First Execution Switch
+- title: Knowledge Summary - Mock-First Execution Switch
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -201,13 +201,13 @@ Completes local-first strategy so project can run end-to-end without public APIs
   - [ ] id = "intermediate-exercise-13"
   - [ ] 	itle = "Mock-First Execution Switch"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=25; Id=intermediate-exercise-13; Title=Mock-First Execution Switch; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-12; Objective=Enable env-driven switching between local mock target and real integration target.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Depends on working local mock API from intermediate-exercise-12.; Contribution=Completes local-first strategy so project can run end-to-end without public APIs.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=mock; HintPath2=src/test/java/karate-config.js; Chips=System.Object[]; Subtitle=Switch suite between mock and real targets; ExpectedOutcome=Existing scenarios execute deterministically against local mock via environment switch.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-12"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-13-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-13-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -220,4 +220,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

@@ -111,7 +111,7 @@ Ensures project validates resilience and error handling, not only happy path beh
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A maintainable negative-test matrix with strict error contract checks.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("advanced-exercise-3")$(if (@{Order=29; Id=advanced-exercise-4; Title=Negative and Error Matrix; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-3; Objective=Create structured negative/error coverage across validation, auth, and server-side failure classes.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses async/business flows as positive baseline for negative-case inversions.; Contribution=Ensures project validates resilience and error handling, not only happy path behavior.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=400; HintPath2=src/test/resources/data/negative-matrix.json; Chips=System.Object[]; Subtitle=Systematically validate error behavior; ExpectedOutcome=A maintainable negative-test matrix with strict error contract checks.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("advanced-exercise-3")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,25 +121,25 @@ Ensures project validates resilience and error handling, not only happy path beh
 - chips: [`negative testing`, `error matrix`, `validation`, `robustness`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/advanced-exercise-4.feature
       ├─ src/test/resources/data/negative-matrix.json
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Negative and Error Matrix
+- title: Knowledge Summary - Negative and Error Matrix
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [ADVANCED, Project-Building, Karate, Phase C]
 - Cards:
@@ -202,13 +202,13 @@ Ensures project validates resilience and error handling, not only happy path beh
   - [ ] id = "advanced-exercise-4"
   - [ ] 	itle = "Negative and Error Matrix"
   - [ ] level = TrainingLevel.ADVANCED
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=29; Id=advanced-exercise-4; Title=Negative and Error Matrix; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-3; Objective=Create structured negative/error coverage across validation, auth, and server-side failure classes.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses async/business flows as positive baseline for negative-case inversions.; Contribution=Ensures project validates resilience and error handling, not only happy path behavior.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=400; HintPath2=src/test/resources/data/negative-matrix.json; Chips=System.Object[]; Subtitle=Systematically validate error behavior; ExpectedOutcome=A maintainable negative-test matrix with strict error contract checks.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "advanced-exercise-3"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "advanced-exercise-4-verify") matches TrainingCondition.CommandPassed("advanced-exercise-4-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -221,4 +221,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

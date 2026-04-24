@@ -112,7 +112,7 @@ Critical for CI speed and reliability as project test volume increases.
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A suite segment that runs in parallel with stable, repeatable outcomes.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-7")$(if (@{Order=20; Id=intermediate-exercise-8; Title=Parallel-Safe Design; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-7; Objective=Refactor tests to run safely in parallel without shared-state collisions.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on tagged suite organization to enable high-throughput execution.; Contribution=Critical for CI speed and reliability as project test volume increases.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=parallel; HintPath2=src/test/java/com/mb/training/runner/ParallelRunner.java; Chips=System.Object[]; Subtitle=Make suite parallel-safe; ExpectedOutcome=A suite segment that runs in parallel with stable, repeatable outcomes.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-7")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -122,25 +122,25 @@ Critical for CI speed and reliability as project test volume increases.
 - chips: [`parallel`, `isolation`, `stability`, `CI speed`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/intermediate-exercise-8.feature
       ├─ src/test/java/com/mb/training/runner/ParallelRunner.java
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Parallel-Safe Design
+- title: Knowledge Summary - Parallel-Safe Design
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -203,13 +203,13 @@ Critical for CI speed and reliability as project test volume increases.
   - [ ] id = "intermediate-exercise-8"
   - [ ] 	itle = "Parallel-Safe Design"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=20; Id=intermediate-exercise-8; Title=Parallel-Safe Design; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-7; Objective=Refactor tests to run safely in parallel without shared-state collisions.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on tagged suite organization to enable high-throughput execution.; Contribution=Critical for CI speed and reliability as project test volume increases.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=parallel; HintPath2=src/test/java/com/mb/training/runner/ParallelRunner.java; Chips=System.Object[]; Subtitle=Make suite parallel-safe; ExpectedOutcome=A suite segment that runs in parallel with stable, repeatable outcomes.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-7"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-8-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-8-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -222,4 +222,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

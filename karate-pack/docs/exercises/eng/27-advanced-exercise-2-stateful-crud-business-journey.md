@@ -110,7 +110,7 @@ Forms the core of final project business-flow validation.
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A reliable entity lifecycle flow with strong state-transition assertions.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("advanced-exercise-1")$(if (@{Order=27; Id=advanced-exercise-2; Title=Stateful CRUD Business Journey; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-1; Objective=Implement realistic business entity lifecycle testing across create, read, update, and delete operations.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses authenticated workflow from advanced-exercise-1.; Contribution=Forms the core of final project business-flow validation.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=method post; HintPath2=src/test/resources/features/advanced-exercise-2.feature; Chips=System.Object[]; Subtitle=Validate end-to-end CRUD journey; ExpectedOutcome=A reliable entity lifecycle flow with strong state-transition assertions.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("advanced-exercise-1")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Forms the core of final project business-flow validation.
 - chips: [`CRUD`, `state transitions`, `entity lifecycle`, `business flow`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/advanced-exercise-2.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Stateful CRUD Business Journey
+- title: Knowledge Summary - Stateful CRUD Business Journey
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [ADVANCED, Project-Building, Karate, Phase C]
 - Cards:
@@ -200,13 +200,13 @@ Forms the core of final project business-flow validation.
   - [ ] id = "advanced-exercise-2"
   - [ ] 	itle = "Stateful CRUD Business Journey"
   - [ ] level = TrainingLevel.ADVANCED
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=27; Id=advanced-exercise-2; Title=Stateful CRUD Business Journey; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-1; Objective=Implement realistic business entity lifecycle testing across create, read, update, and delete operations.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses authenticated workflow from advanced-exercise-1.; Contribution=Forms the core of final project business-flow validation.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=method post; HintPath2=src/test/resources/features/advanced-exercise-2.feature; Chips=System.Object[]; Subtitle=Validate end-to-end CRUD journey; ExpectedOutcome=A reliable entity lifecycle flow with strong state-transition assertions.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "advanced-exercise-1"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "advanced-exercise-2-verify") matches TrainingCondition.CommandPassed("advanced-exercise-2-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

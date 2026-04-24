@@ -112,7 +112,7 @@ Enables selective pipeline execution and faster feedback loops in project CI wor
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A tagged suite that can run targeted subsets deterministically.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-6")$(if (@{Order=19; Id=intermediate-exercise-7; Title=Tags and Execution Slices; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-6; Objective=Organize scenarios by tags for smoke/regression/environment-specific execution slices.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses growing scenario set from previous exercises to create execution slices.; Contribution=Enables selective pipeline execution and faster feedback loops in project CI workflows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.options="--tags @smoke"; KeywordHint=@smoke; HintPath2=src/test/resources/features/intermediate-exercise-7.feature; Chips=System.Object[]; Subtitle=Slice suite execution with tags; ExpectedOutcome=A tagged suite that can run targeted subsets deterministically.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-6")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -122,25 +122,25 @@ Enables selective pipeline execution and faster feedback loops in project CI wor
 - chips: [`tags`, `smoke`, `regression`, `selective execution`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/intermediate-exercise-7.feature
       ├─ src/test/java/com/mb/training/runner/TagRunner.java
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Tags and Execution Slices
+- title: Knowledge Summary - Tags and Execution Slices
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -203,13 +203,13 @@ Enables selective pipeline execution and faster feedback loops in project CI wor
   - [ ] id = "intermediate-exercise-7"
   - [ ] 	itle = "Tags and Execution Slices"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=19; Id=intermediate-exercise-7; Title=Tags and Execution Slices; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-6; Objective=Organize scenarios by tags for smoke/regression/environment-specific execution slices.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses growing scenario set from previous exercises to create execution slices.; Contribution=Enables selective pipeline execution and faster feedback loops in project CI workflows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.options="--tags @smoke"; KeywordHint=@smoke; HintPath2=src/test/resources/features/intermediate-exercise-7.feature; Chips=System.Object[]; Subtitle=Slice suite execution with tags; ExpectedOutcome=A tagged suite that can run targeted subsets deterministically.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-6"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-7-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-7-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -222,4 +222,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

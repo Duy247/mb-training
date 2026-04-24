@@ -112,7 +112,7 @@ Creates the project skeleton and build pipeline required for all subsequent API 
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A runnable Maven Karate project baseline ready for feature authoring.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("none")$(if (@{Order=1; Id=basic-exercise-1; Title=Project Bootstrap; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=none; Objective=Initialize a Maven Karate project foundation with required structure, dependencies, and baseline run capability.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=This is the first exercise and establishes base project conventions.; Contribution=Creates the project skeleton and build pipeline required for all subsequent API scripting and mock/server exercises.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=<artifactId>karate-junit5</artifactId>; HintPath2=pom.xml > dependencies/build; Chips=System.Object[]; Subtitle=Bootstrap Maven + Karate baseline; ExpectedOutcome=A runnable Maven Karate project baseline ready for feature authoring.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.Always
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -122,7 +122,7 @@ Creates the project skeleton and build pipeline required for all subsequent API 
 - chips: [`Maven`, `Karate`, `Surefire`, `Project Structure`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
@@ -130,18 +130,18 @@ Creates the project skeleton and build pipeline required for all subsequent API 
       ├─ pom.xml
       ├─ src/test/java/
       ├─ src/test/resources/features/
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Project Bootstrap
+- title: Knowledge Summary - Project Bootstrap
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -204,13 +204,12 @@ Creates the project skeleton and build pipeline required for all subsequent API 
   - [ ] id = "basic-exercise-1"
   - [ ] 	itle = "Project Bootstrap"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=1; Id=basic-exercise-1; Title=Project Bootstrap; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=none; Objective=Initialize a Maven Karate project foundation with required structure, dependencies, and baseline run capability.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=This is the first exercise and establishes base project conventions.; Contribution=Creates the project skeleton and build pipeline required for all subsequent API scripting and mock/server exercises.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=<artifactId>karate-junit5</artifactId>; HintPath2=pom.xml > dependencies/build; Chips=System.Object[]; Subtitle=Bootstrap Maven + Karate baseline; ExpectedOutcome=A runnable Maven Karate project baseline ready for feature authoring.; Cards=System.Object[]}.Prereq) when not 
-one
+  - [ ] preconditionExerciseIds = emptyList() for the first exercise
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-1-verify") matches TrainingCondition.CommandPassed("basic-exercise-1-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -223,4 +222,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

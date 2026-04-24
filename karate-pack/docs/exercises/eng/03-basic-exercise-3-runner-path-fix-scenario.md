@@ -111,7 +111,7 @@ Strengthens debugging confidence and prepares learners for scenario-mode exercis
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: Scenario runner executes successfully after classpath correction.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-2")$(if (@{Order=3; Id=basic-exercise-3; Title=Runner Path Fix (Scenario); Level=BASIC; Mode=SCENARIO; Phase=Phase A; Prereq=basic-exercise-2; Objective=Diagnose and fix a broken runner classpath in a scenario sandbox so tests execute successfully.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on feature syntax awareness from basic-exercise-2.; Contribution=Strengthens debugging confidence and prepares learners for scenario-mode exercises with temporary workspaces.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dtest=TestRunner; KeywordHint=classpath:features/; HintPath2=src/test/java/com/mb/training/scenario/TestRunner.java; Chips=System.Object[]; Subtitle=Fix runner classpath in sandbox; ExpectedOutcome=Scenario runner executes successfully after classpath correction.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-2")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,25 +121,25 @@ Strengthens debugging confidence and prepares learners for scenario-mode exercis
 - chips: [`Runner`, `Classpath`, `Debug`, `Scenario`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/java/com/mb/training/scenario/TestRunner.java
       ├─ src/test/resources/features/scenario-runner-path-fix.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Runner Path Fix (Scenario)
+- title: Knowledge Summary - Runner Path Fix (Scenario)
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -202,13 +202,13 @@ Strengthens debugging confidence and prepares learners for scenario-mode exercis
   - [ ] id = "basic-exercise-3"
   - [ ] 	itle = "Runner Path Fix (Scenario)"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.SCENARIO
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=3; Id=basic-exercise-3; Title=Runner Path Fix (Scenario); Level=BASIC; Mode=SCENARIO; Phase=Phase A; Prereq=basic-exercise-2; Objective=Diagnose and fix a broken runner classpath in a scenario sandbox so tests execute successfully.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on feature syntax awareness from basic-exercise-2.; Contribution=Strengthens debugging confidence and prepares learners for scenario-mode exercises with temporary workspaces.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dtest=TestRunner; KeywordHint=classpath:features/; HintPath2=src/test/java/com/mb/training/scenario/TestRunner.java; Chips=System.Object[]; Subtitle=Fix runner classpath in sandbox; ExpectedOutcome=Scenario runner executes successfully after classpath correction.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-2"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-3-verify") matches TrainingCondition.CommandPassed("basic-exercise-3-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -221,4 +221,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

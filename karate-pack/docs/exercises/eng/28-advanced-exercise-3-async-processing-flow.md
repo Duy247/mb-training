@@ -110,7 +110,7 @@ Adds realistic async validation pattern common in production API ecosystems.
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A deterministic async test flow with controlled polling and completion assertions.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("advanced-exercise-2")$(if (@{Order=28; Id=advanced-exercise-3; Title=Async Processing Flow; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-2; Objective=Validate asynchronous API operations using polling with retry-until semantics.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends synchronous CRUD flow into async operation handling.; Contribution=Adds realistic async validation pattern common in production API ecosystems.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=retry until; HintPath2=src/test/resources/features/advanced-exercise-3.feature; Chips=System.Object[]; Subtitle=Validate asynchronous processing APIs; ExpectedOutcome=A deterministic async test flow with controlled polling and completion assertions.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("advanced-exercise-2")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Adds realistic async validation pattern common in production API ecosystems.
 - chips: [`async`, `polling`, `retry until`, `eventual consistency`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/advanced-exercise-3.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Async Processing Flow
+- title: Knowledge Summary - Async Processing Flow
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [ADVANCED, Project-Building, Karate, Phase C]
 - Cards:
@@ -200,13 +200,13 @@ Adds realistic async validation pattern common in production API ecosystems.
   - [ ] id = "advanced-exercise-3"
   - [ ] 	itle = "Async Processing Flow"
   - [ ] level = TrainingLevel.ADVANCED
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=28; Id=advanced-exercise-3; Title=Async Processing Flow; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-2; Objective=Validate asynchronous API operations using polling with retry-until semantics.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends synchronous CRUD flow into async operation handling.; Contribution=Adds realistic async validation pattern common in production API ecosystems.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=retry until; HintPath2=src/test/resources/features/advanced-exercise-3.feature; Chips=System.Object[]; Subtitle=Validate asynchronous processing APIs; ExpectedOutcome=A deterministic async test flow with controlled polling and completion assertions.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "advanced-exercise-2"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "advanced-exercise-3-verify") matches TrainingCondition.CommandPassed("advanced-exercise-3-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

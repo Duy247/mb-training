@@ -111,7 +111,7 @@ Creates strong contract safety net before transitioning to local mock API and ad
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A reusable contract-validation layer for endpoint responses.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-9")$(if (@{Order=22; Id=intermediate-exercise-10; Title=Contract Assertions; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-9; Objective=Strengthen response contract validation using nested and collection-wide assertions.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on hook-enabled and parallel-safe test architecture.; Contribution=Creates strong contract safety net before transitioning to local mock API and advanced flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=match each; HintPath2=src/test/resources/features/intermediate-exercise-10.feature; Chips=System.Object[]; Subtitle=Establish stronger response contracts; ExpectedOutcome=A reusable contract-validation layer for endpoint responses.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-9")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,25 +121,25 @@ Creates strong contract safety net before transitioning to local mock API and ad
 - chips: [`contract`, `match each`, `nested checks`, `schema`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/intermediate-exercise-10.feature
       ├─ src/test/resources/data/contracts/
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Contract Assertions
+- title: Knowledge Summary - Contract Assertions
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -202,13 +202,13 @@ Creates strong contract safety net before transitioning to local mock API and ad
   - [ ] id = "intermediate-exercise-10"
   - [ ] 	itle = "Contract Assertions"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=22; Id=intermediate-exercise-10; Title=Contract Assertions; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-9; Objective=Strengthen response contract validation using nested and collection-wide assertions.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on hook-enabled and parallel-safe test architecture.; Contribution=Creates strong contract safety net before transitioning to local mock API and advanced flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=match each; HintPath2=src/test/resources/features/intermediate-exercise-10.feature; Chips=System.Object[]; Subtitle=Establish stronger response contracts; ExpectedOutcome=A reusable contract-validation layer for endpoint responses.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-9"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-10-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-10-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -221,4 +221,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

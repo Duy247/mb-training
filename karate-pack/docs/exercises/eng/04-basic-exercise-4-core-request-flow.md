@@ -110,7 +110,7 @@ Starts real API testing layer; all business flow tests later build on this reque
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A passing GET API scenario with clear request and status validation.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-3")$(if (@{Order=4; Id=basic-exercise-4; Title=Core Request Flow; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-3; Objective=Implement a basic API GET flow using url, path, method, and status assertions.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Depends on feature syntax and runner understanding from earlier exercises.; Contribution=Starts real API testing layer; all business flow tests later build on this request-response skeleton.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Given url; HintPath2=src/test/resources/features/basic-exercise-4.feature; Chips=System.Object[]; Subtitle=Implement first API request flow; ExpectedOutcome=A passing GET API scenario with clear request and status validation.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-3")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Starts real API testing layer; all business flow tests later build on this reque
 - chips: [`HTTP GET`, `url/path`, `method`, `status`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/basic-exercise-4.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Core Request Flow
+- title: Knowledge Summary - Core Request Flow
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -200,13 +200,13 @@ Starts real API testing layer; all business flow tests later build on this reque
   - [ ] id = "basic-exercise-4"
   - [ ] 	itle = "Core Request Flow"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=4; Id=basic-exercise-4; Title=Core Request Flow; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-3; Objective=Implement a basic API GET flow using url, path, method, and status assertions.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Depends on feature syntax and runner understanding from earlier exercises.; Contribution=Starts real API testing layer; all business flow tests later build on this request-response skeleton.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Given url; HintPath2=src/test/resources/features/basic-exercise-4.feature; Chips=System.Object[]; Subtitle=Implement first API request flow; ExpectedOutcome=A passing GET API scenario with clear request and status validation.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-3"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-4-verify") matches TrainingCondition.CommandPassed("basic-exercise-4-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

@@ -113,7 +113,7 @@ Delivers the final functional project objective: a complete, runnable, maintaina
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A complete API testing project runnable locally (mock) and adaptable for integration environments.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("advanced-exercise-5")$(if (@{Order=31; Id=advanced-exercise-6; Title=Capstone Whole API Flow; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-5; Objective=Assemble a full CI-ready end-to-end API flow suite runnable on local mock and optional real environment.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Composes all previous capabilities: config, reuse, mock, auth, CRUD, async, negative, security.; Contribution=Delivers the final functional project objective: a complete, runnable, maintainable Karate API automation suite.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=capstone; HintPath2=src/test/resources/features/capstone/; Chips=System.Object[]; Subtitle=Deliver complete functional API project; ExpectedOutcome=A complete API testing project runnable locally (mock) and adaptable for integration environments.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("advanced-exercise-5")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -123,25 +123,25 @@ Delivers the final functional project objective: a complete, runnable, maintaina
 - chips: [`capstone`, `end-to-end`, `CI-ready`, `functional project`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/capstone/
       ├─ src/test/java/com/mb/training/runner/CapstoneRunner.java
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Capstone Whole API Flow
+- title: Knowledge Summary - Capstone Whole API Flow
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [ADVANCED, Project-Building, Karate, Phase C]
 - Cards:
@@ -204,13 +204,13 @@ Delivers the final functional project objective: a complete, runnable, maintaina
   - [ ] id = "advanced-exercise-6"
   - [ ] 	itle = "Capstone Whole API Flow"
   - [ ] level = TrainingLevel.ADVANCED
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=31; Id=advanced-exercise-6; Title=Capstone Whole API Flow; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=advanced-exercise-5; Objective=Assemble a full CI-ready end-to-end API flow suite runnable on local mock and optional real environment.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Composes all previous capabilities: config, reuse, mock, auth, CRUD, async, negative, security.; Contribution=Delivers the final functional project objective: a complete, runnable, maintainable Karate API automation suite.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=capstone; HintPath2=src/test/resources/features/capstone/; Chips=System.Object[]; Subtitle=Deliver complete functional API project; ExpectedOutcome=A complete API testing project runnable locally (mock) and adaptable for integration environments.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "advanced-exercise-5"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "advanced-exercise-6-verify") matches TrainingCondition.CommandPassed("advanced-exercise-6-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -223,4 +223,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

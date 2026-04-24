@@ -110,7 +110,7 @@ Enables realistic API request shaping needed for filtering, versioning, and auth
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A set of scenarios that validate query/header-driven endpoint behavior.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-9")$(if (@{Order=10; Id=basic-exercise-10; Title=Query and Headers; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-9; Objective=Control endpoint behavior with query parameters, headers, and optional cookie context.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Reuses request/assertion patterns and fuzzy checks from prior basic exercises.; Contribution=Enables realistic API request shaping needed for filtering, versioning, and auth-driven behavior.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=And param; HintPath2=src/test/resources/features/basic-exercise-10.feature; Chips=System.Object[]; Subtitle=Drive API behavior with request metadata; ExpectedOutcome=A set of scenarios that validate query/header-driven endpoint behavior.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-9")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Enables realistic API request shaping needed for filtering, versioning, and auth
 - chips: [`query`, `headers`, `cookies`, `metadata-driven behavior`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/basic-exercise-10.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Query and Headers
+- title: Knowledge Summary - Query and Headers
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -200,13 +200,13 @@ Enables realistic API request shaping needed for filtering, versioning, and auth
   - [ ] id = "basic-exercise-10"
   - [ ] 	itle = "Query and Headers"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=10; Id=basic-exercise-10; Title=Query and Headers; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-9; Objective=Control endpoint behavior with query parameters, headers, and optional cookie context.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Reuses request/assertion patterns and fuzzy checks from prior basic exercises.; Contribution=Enables realistic API request shaping needed for filtering, versioning, and auth-driven behavior.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=And param; HintPath2=src/test/resources/features/basic-exercise-10.feature; Chips=System.Object[]; Subtitle=Drive API behavior with request metadata; ExpectedOutcome=A set of scenarios that validate query/header-driven endpoint behavior.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-9"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-10-verify") matches TrainingCondition.CommandPassed("basic-exercise-10-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

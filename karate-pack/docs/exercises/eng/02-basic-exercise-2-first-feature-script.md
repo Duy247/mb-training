@@ -110,7 +110,7 @@ Introduces the first executable test artifact; later exercises extend this synta
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A valid and runnable first Karate feature file in project classpath.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-1")$(if (@{Order=2; Id=basic-exercise-2; Title=First Feature Script; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-1; Objective=Create the first valid Karate feature file using Feature, Background, and Scenario blocks with simple executable DSL.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Reuses project structure and Maven setup from basic-exercise-1.; Contribution=Introduces the first executable test artifact; later exercises extend this syntax into real HTTP flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Scenario:; HintPath2=src/test/resources/features/basic-exercise-2.feature; Chips=System.Object[]; Subtitle=Create your first executable Karate feature; ExpectedOutcome=A valid and runnable first Karate feature file in project classpath.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-1")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -120,24 +120,24 @@ Introduces the first executable test artifact; later exercises extend this synta
 - chips: [`Feature`, `Background`, `Scenario`, `Print`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/basic-exercise-2.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - First Feature Script
+- title: Knowledge Summary - First Feature Script
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -200,13 +200,13 @@ Introduces the first executable test artifact; later exercises extend this synta
   - [ ] id = "basic-exercise-2"
   - [ ] 	itle = "First Feature Script"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=2; Id=basic-exercise-2; Title=First Feature Script; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-1; Objective=Create the first valid Karate feature file using Feature, Background, and Scenario blocks with simple executable DSL.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Reuses project structure and Maven setup from basic-exercise-1.; Contribution=Introduces the first executable test artifact; later exercises extend this syntax into real HTTP flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Scenario:; HintPath2=src/test/resources/features/basic-exercise-2.feature; Chips=System.Object[]; Subtitle=Create your first executable Karate feature; ExpectedOutcome=A valid and runnable first Karate feature file in project classpath.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-1"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-2-verify") matches TrainingCondition.CommandPassed("basic-exercise-2-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -219,4 +219,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

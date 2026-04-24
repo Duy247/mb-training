@@ -111,7 +111,7 @@ Introduces payload-driven interaction required for create/update operations in l
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A stable POST scenario with request/response content validation.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-4")$(if (@{Order=5; Id=basic-exercise-5; Title=Request Body Basics; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-4; Objective=Send POST requests with JSON bodies and validate response payload content.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends basic request flow from basic-exercise-4 by introducing body payloads.; Contribution=Introduces payload-driven interaction required for create/update operations in later CRUD exercises.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=And request; HintPath2=src/test/resources/data/basic-request.json; Chips=System.Object[]; Subtitle=Send and validate request body payloads; ExpectedOutcome=A stable POST scenario with request/response content validation.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-4")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,25 +121,25 @@ Introduces payload-driven interaction required for create/update operations in l
 - chips: [`POST`, `JSON Body`, `request`, `response`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/basic-exercise-5.feature
       ├─ src/test/resources/data/basic-request.json
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Request Body Basics
+- title: Knowledge Summary - Request Body Basics
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -202,13 +202,13 @@ Introduces payload-driven interaction required for create/update operations in l
   - [ ] id = "basic-exercise-5"
   - [ ] 	itle = "Request Body Basics"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=5; Id=basic-exercise-5; Title=Request Body Basics; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-4; Objective=Send POST requests with JSON bodies and validate response payload content.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends basic request flow from basic-exercise-4 by introducing body payloads.; Contribution=Introduces payload-driven interaction required for create/update operations in later CRUD exercises.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=And request; HintPath2=src/test/resources/data/basic-request.json; Chips=System.Object[]; Subtitle=Send and validate request body payloads; ExpectedOutcome=A stable POST scenario with request/response content validation.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-4"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-5-verify") matches TrainingCondition.CommandPassed("basic-exercise-5-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -221,4 +221,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

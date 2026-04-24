@@ -112,7 +112,7 @@ Introduces local test backend, making project self-contained and suitable for of
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A runnable local mock API server with stable base routes.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-10")$(if (@{Order=23; Id=intermediate-exercise-11; Title=Mock API Bootstrap; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-10; Objective=Create and run a local Karate mock API so exercises no longer depend on external/public APIs.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses contract/feature foundations from previous exercises to define mock response behavior.; Contribution=Introduces local test backend, making project self-contained and suitable for offline/local development.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dtest=MockServerRunner; KeywordHint=Scenario:; HintPath2=src/test/resources/mock/mock-api.feature; Chips=System.Object[]; Subtitle=Stand up local Karate mock API; ExpectedOutcome=A runnable local mock API server with stable base routes.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-10")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -122,25 +122,25 @@ Introduces local test backend, making project self-contained and suitable for of
 - chips: [`mock API`, `local server`, `routes`, `deterministic responses`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/mock/mock-api.feature
       ├─ src/test/java/com/mb/training/mock/MockServerRunner.java
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Mock API Bootstrap
+- title: Knowledge Summary - Mock API Bootstrap
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -203,13 +203,13 @@ Introduces local test backend, making project self-contained and suitable for of
   - [ ] id = "intermediate-exercise-11"
   - [ ] 	itle = "Mock API Bootstrap"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=23; Id=intermediate-exercise-11; Title=Mock API Bootstrap; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-10; Objective=Create and run a local Karate mock API so exercises no longer depend on external/public APIs.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Uses contract/feature foundations from previous exercises to define mock response behavior.; Contribution=Introduces local test backend, making project self-contained and suitable for offline/local development.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dtest=MockServerRunner; KeywordHint=Scenario:; HintPath2=src/test/resources/mock/mock-api.feature; Chips=System.Object[]; Subtitle=Stand up local Karate mock API; ExpectedOutcome=A runnable local mock API server with stable base routes.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-10"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-11-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-11-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -222,4 +222,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

@@ -112,7 +112,7 @@ Establishes secure session flow foundation for all downstream business operation
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A reusable auth workflow validated across protected endpoint scenarios.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-13")$(if (@{Order=26; Id=advanced-exercise-1; Title=Authentication Workflow; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=intermediate-exercise-13; Objective=Validate complete authentication lifecycle including login, token use, and refresh behavior.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on mock-first routing to test auth flows locally and optionally real env.; Contribution=Establishes secure session flow foundation for all downstream business operations.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=Authorization; HintPath2=src/test/resources/features/common/auth.feature; Chips=System.Object[]; Subtitle=Test full authentication lifecycle; ExpectedOutcome=A reusable auth workflow validated across protected endpoint scenarios.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-13")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -122,25 +122,25 @@ Establishes secure session flow foundation for all downstream business operation
 - chips: [`authentication`, `token lifecycle`, `refresh`, `protected APIs`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/advanced-exercise-1.feature
       ├─ src/test/resources/features/common/auth.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Authentication Workflow
+- title: Knowledge Summary - Authentication Workflow
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [ADVANCED, Project-Building, Karate, Phase C]
 - Cards:
@@ -203,13 +203,13 @@ Establishes secure session flow foundation for all downstream business operation
   - [ ] id = "advanced-exercise-1"
   - [ ] 	itle = "Authentication Workflow"
   - [ ] level = TrainingLevel.ADVANCED
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=26; Id=advanced-exercise-1; Title=Authentication Workflow; Level=ADVANCED; Mode=GUIDED; Phase=Phase C; Prereq=intermediate-exercise-13; Objective=Validate complete authentication lifecycle including login, token use, and refresh behavior.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Builds on mock-first routing to test auth flows locally and optionally real env.; Contribution=Establishes secure session flow foundation for all downstream business operations.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test -Dkarate.env=mock; KeywordHint=Authorization; HintPath2=src/test/resources/features/common/auth.feature; Chips=System.Object[]; Subtitle=Test full authentication lifecycle; ExpectedOutcome=A reusable auth workflow validated across protected endpoint scenarios.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-13"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "advanced-exercise-1-verify") matches TrainingCondition.CommandPassed("advanced-exercise-1-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -222,4 +222,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

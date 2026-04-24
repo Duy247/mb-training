@@ -111,7 +111,7 @@ Provides scalable global initialization mechanism for mock-server, auth, and cap
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A reliable global bootstrap mechanism available across feature suites.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("intermediate-exercise-3")$(if (@{Order=16; Id=intermediate-exercise-4; Title=Global One-Time Setup with callSingle; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-3; Objective=Use karate.callSingle() for global initialization shared across feature files.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends setup optimization from callonce to global-level initialization.; Contribution=Provides scalable global initialization mechanism for mock-server, auth, and capstone startup flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=karate.callSingle; HintPath2=src/test/java/karate-config.js; Chips=System.Object[]; Subtitle=Establish global one-time initialization; ExpectedOutcome=A reliable global bootstrap mechanism available across feature suites.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("intermediate-exercise-3")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,24 +121,24 @@ Provides scalable global initialization mechanism for mock-server, auth, and cap
 - chips: [`callSingle`, `global init`, `config`, `bootstrap`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/common/global-init.feature
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Global One-Time Setup with callSingle
+- title: Knowledge Summary - Global One-Time Setup with callSingle
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [INTERMEDIATE, Project-Building, Karate, Phase B]
 - Cards:
@@ -201,13 +201,13 @@ Provides scalable global initialization mechanism for mock-server, auth, and cap
   - [ ] id = "intermediate-exercise-4"
   - [ ] 	itle = "Global One-Time Setup with callSingle"
   - [ ] level = TrainingLevel.INTERMEDIATE
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=16; Id=intermediate-exercise-4; Title=Global One-Time Setup with callSingle; Level=INTERMEDIATE; Mode=GUIDED; Phase=Phase B; Prereq=intermediate-exercise-3; Objective=Use karate.callSingle() for global initialization shared across feature files.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Extends setup optimization from callonce to global-level initialization.; Contribution=Provides scalable global initialization mechanism for mock-server, auth, and capstone startup flows.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=karate.callSingle; HintPath2=src/test/java/karate-config.js; Chips=System.Object[]; Subtitle=Establish global one-time initialization; ExpectedOutcome=A reliable global bootstrap mechanism available across feature suites.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "intermediate-exercise-3"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "intermediate-exercise-4-verify") matches TrainingCondition.CommandPassed("intermediate-exercise-4-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -220,4 +220,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 

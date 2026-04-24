@@ -111,7 +111,7 @@ Serves as phase checkpoint before moving to reusable architecture and mock API s
 - completionPolicy: ALL_STEPS_DONE
 - expectedOutcome: A functional mini-flow feature proving readiness for intermediate phase.
 - startWhen proposal:
-  - TrainingCondition.ExerciseCompleted("basic-exercise-11")$(if (@{Order=12; Id=basic-exercise-12; Title=Mini Checkpoint Mission; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-11; Objective=Combine all basic skills into a mini end-to-end API mission inside the same project.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Composes all basic exercises into one integrated mission.; Contribution=Serves as phase checkpoint before moving to reusable architecture and mock API strategy.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Scenario:; HintPath2=src/test/resources/features/basic-exercise-12.feature; Chips=System.Object[]; Subtitle=Integrate basic skills into one mission; ExpectedOutcome=A functional mini-flow feature proving readiness for intermediate phase.; Cards=System.Object[]}.Prereq -eq "none") { " or TrainingCondition.Always for the very first exercise." } else { "." })
+  - TrainingCondition.ExerciseCompleted("basic-exercise-11")
 
 ## 6) Intro Dialog Draft (TrainingExerciseIntro)
 
@@ -121,25 +121,25 @@ Serves as phase checkpoint before moving to reusable architecture and mock API s
 - chips: [`checkpoint`, `mini flow`, `integration`, `reuse`]
 - structureTitle: Assets touched in this exercise
 - structureTree:
-`	ext
+```text
 .
 ├─ pom.xml
 └─ src
    └─ test
       ├─ src/test/resources/features/basic-exercise-12.feature
       ├─ src/test/resources/features/common/
-`
-- 	asksTitle: Exercise tasks
-- 	asks:
-`	ext
+```
+- tasksTitle: Exercise tasks
+- tasks:
+```text
 1) Implement the exercise objective in project files.
 2) Verify behavior using deterministic checks and run command.
 3) Keep outputs reusable for subsequent exercises.
-`
+```
 
 ## 7) Knowledge Summary Draft (TrainingKnowledgeSummary)
 
-- 	itle: Knowledge Summary - Mini Checkpoint Mission
+- title: Knowledge Summary - Mini Checkpoint Mission
 - subtitle: Key takeaways to keep this project functional and maintainable
 - labels: [BASIC, Project-Building, Karate, Phase A]
 - Cards:
@@ -202,13 +202,13 @@ Serves as phase checkpoint before moving to reusable architecture and mock API s
   - [ ] id = "basic-exercise-12"
   - [ ] 	itle = "Mini Checkpoint Mission"
   - [ ] level = TrainingLevel.BASIC
-  - [ ] 	ype = TrainingType.EXERCISE
+  - [ ] type = TrainingType.EXERCISE
   - [ ] mode = TrainingMode.GUIDED
   - [ ] objective, startWhen, steps, expectedOutcome
-  - [ ] preconditionExerciseIds includes $(@{Order=12; Id=basic-exercise-12; Title=Mini Checkpoint Mission; Level=BASIC; Mode=GUIDED; Phase=Phase A; Prereq=basic-exercise-11; Objective=Combine all basic skills into a mini end-to-end API mission inside the same project.; Outcomes=System.Object[]; FilesAdded=System.Object[]; FilesUpdated=System.Object[]; DependencyNotes=Composes all basic exercises into one integrated mission.; Contribution=Serves as phase checkpoint before moving to reusable architecture and mock API strategy.; StepGuidance=System.Object[]; StepTasks=System.Object[]; VerifyCommand=mvn test; KeywordHint=Scenario:; HintPath2=src/test/resources/features/basic-exercise-12.feature; Chips=System.Object[]; Subtitle=Integrate basic skills into one mission; ExpectedOutcome=A functional mini-flow feature proving readiness for intermediate phase.; Cards=System.Object[]}.Prereq) when not 
+  - [ ] preconditionExerciseIds includes "basic-exercise-11"
 one
   - [ ] completionPolicy = CompletionPolicy.ALL_STEPS_DONE
-  - [ ] intro, knowledgeSummary, 	heoryQuiz
+  - [ ] intro, knowledgeSummary, theoryQuiz
 - Runtime checks:
   - [ ] RunTestTask(commandId = "basic-exercise-12-verify") matches TrainingCondition.CommandPassed("basic-exercise-12-verify")
   - [ ] File-based conditions target real project paths used in this exercise
@@ -221,4 +221,5 @@ one
 2. All doneWhen checks are deterministic and plugin-detectable.
 3. Resulting assets are reused by subsequent exercises.
 4. Verification command can be executed repeatedly with stable results.
+
 
