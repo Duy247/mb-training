@@ -1,0 +1,15 @@
+<idea-plugin>
+    <id>com.mb.training.karate.pack</id>
+    <name>MBTraining Karate Pack</name>
+    <vendor email="support@mb-training.com">MB Training</vendor>
+    <description>
+        Karate training content pack for MBTraining Engine Framework.
+    </description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.mb.training.engine</depends>
+
+    <extensions defaultExtensionNs="com.mb.training.engine">
+        <trainingPackProvider implementation="com.mb.training.karate.pack.KarateTrainingPackProvider"/>
+    </extensions>
+</idea-plugin>

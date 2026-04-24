@@ -1,17 +1,29 @@
 <idea-plugin>
-    <id>com.mb.training.karate</id>
-    <name>MB Training for Karate Framework</name>
+    <id>com.mb.training.engine</id>
+    <name>MBTraining Engine Framework</name>
     <vendor email="support@mb-training.com">MB Training</vendor>
     <description>
-        Interactive Karate Framework training plugin with guided exercises, missions, tasks, and homework from basic to advanced.
+        Core training engine framework for interactive learning packs.
     </description>
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
     <depends>org.jetbrains.idea.maven</depends>
 
+    <extensionPoints>
+        <extensionPoint
+                name="trainingPackProvider"
+                interface="com.mb.training.karate.packs.TrainingPackProvider"
+                dynamic="true"/>
+    </extensionPoints>
+
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.mb.training.karate.startup.OnboardingStartupActivity"/>
+        <applicationConfigurable
+                id="mb.training.engine.settings"
+                displayName="MBTraining Engine"
+                parentId="tools"
+                instance="com.mb.training.karate.settings.TrainingEngineConfigurable"/>
         <toolWindow
                 id="MB Training"
                 anchor="right"
@@ -23,8 +35,8 @@
         <action
                 id="com.mb.training.karate.OpenTrainingAction"
                 class="com.mb.training.karate.actions.OpenTrainingAction"
-                text="Open MB Training for Karate"
-                description="Open interactive MB Training for Karate Framework">
+                text="Open MBTraining Engine"
+                description="Open MBTraining Engine tool window">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>

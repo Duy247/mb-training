@@ -15,8 +15,9 @@ repositories {
 }
 
 dependencies {
-    testImplementation(kotlin("test"))
+    testImplementation(kotlin("test-junit5"))
     testImplementation("junit:junit:4.13.2")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     intellijPlatform {
         create("IC", "2025.1.4.1")
@@ -33,14 +34,43 @@ intellijPlatform {
     }
 }
 
+intellijPlatformTesting {
+    runIde.register("runIdeWithKaratePack") {
+        plugins {
+            val karatePackDependency =
+                project.dependencies.project(mapOf("path" to ":karate-pack")) as org.gradle.api.artifacts.ProjectDependency
+            localPlugin(karatePackDependency)
+        }
+        task {
+            group = "intellij platform"
+            description = "Run IDE sandbox with MBTraining Engine Framework + MBTraining Karate Pack."
+        }
+    }
+}
+
 tasks {
     withType<JavaCompile> {
         sourceCompatibility = "21"
         targetCompatibility = "21"
     }
 
+    named<org.jetbrains.intellij.platform.gradle.tasks.RunIdeTask>("runIde") {
+        group = "intellij platform"
+        description = "Run IDE sandbox with MBTraining Engine Framework only."
+    }
+
+    named("buildSearchableOptions") {
+        enabled = false
+    }
+
     test {
         useJUnitPlatform()
+    }
+
+    register("unitTest") {
+        group = "verification"
+        description = "Run core MBTraining Engine Framework unit tests."
+        dependsOn("test")
     }
 
     register("openTestIde") {

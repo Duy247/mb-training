@@ -11,12 +11,14 @@ import com.intellij.openapi.components.Storage
 class OnboardingSettingsService : PersistentStateComponent<OnboardingSettingsService.State> {
 
     data class State(
-        var doNotShowAgain: Boolean = false
+        var activePackId: String? = null,
+        var onboardingSuppressedPackIds: MutableSet<String> = mutableSetOf()
     )
 
     private var state = State()
     @Volatile
-    private var shownInCurrentSession: Boolean = false
+    private var packSelectorShownInCurrentSession: Boolean = false
+    private val packOnboardingShownInCurrentSession: MutableSet<String> = mutableSetOf()
 
     override fun getState(): State = state
 
@@ -24,16 +26,38 @@ class OnboardingSettingsService : PersistentStateComponent<OnboardingSettingsSer
         this.state = state
     }
 
-    fun isDoNotShowAgainEnabled(): Boolean = state.doNotShowAgain
+    fun getActivePackId(): String? = state.activePackId?.trim()?.ifEmpty { null }
 
-    fun setDoNotShowAgain(enabled: Boolean) {
-        state.doNotShowAgain = enabled
+    fun setActivePackId(packId: String?) {
+        state.activePackId = packId?.trim()?.ifEmpty { null }
     }
 
-    fun canShowThisSession(): Boolean = !shownInCurrentSession
+    fun isPackOnboardingSuppressed(packId: String): Boolean {
+        return state.onboardingSuppressedPackIds.contains(packId)
+    }
 
-    fun markShownThisSession() {
-        shownInCurrentSession = true
+    fun setPackOnboardingSuppressed(packId: String, suppressed: Boolean) {
+        val normalized = packId.trim()
+        if (normalized.isEmpty()) return
+        if (suppressed) {
+            state.onboardingSuppressedPackIds.add(normalized)
+        } else {
+            state.onboardingSuppressedPackIds.remove(normalized)
+        }
+    }
+
+    fun canShowPackSelectorThisSession(): Boolean = !packSelectorShownInCurrentSession
+
+    fun markPackSelectorShownThisSession() {
+        packSelectorShownInCurrentSession = true
+    }
+
+    fun canShowPackOnboardingThisSession(packId: String): Boolean {
+        return !packOnboardingShownInCurrentSession.contains(packId)
+    }
+
+    fun markPackOnboardingShownThisSession(packId: String) {
+        packOnboardingShownInCurrentSession.add(packId)
     }
 
     companion object {

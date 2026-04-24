@@ -5,9 +5,9 @@ import com.mb.training.karate.model.TrainingActivity
 import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingExercise
 import com.mb.training.karate.model.TrainingLevel
+import com.mb.training.karate.model.TrainingProgram
 import com.mb.training.karate.model.TrainingStep
 import com.mb.training.karate.model.TrainingType
-import com.mb.training.karate.training.TrainingCurriculumRepository
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
@@ -18,8 +18,8 @@ class ExerciseUiFlowDeciderIntegrationTest {
 
     @Test
     fun `ui flow shows dependency warning and redirects to first missing dependency`() {
-        val program = TrainingCurriculumRepository.program
-        val exercise2 = program.exercises.first { it.id == "basic-exercise-2" }
+        val program = dependencyProgram()
+        val exercise2 = program.exercises.first { it.id == "exercise-2" }
 
         val gate = ExerciseUiFlowDecider.resolveDependencyGate(
             program = program,
@@ -28,21 +28,21 @@ class ExerciseUiFlowDeciderIntegrationTest {
         )
 
         assertNotNull(gate)
-        assertEquals("basic-exercise-1", gate.firstUnmetDependencyId)
-        assertTrue(gate.warningMessage.contains("bài phụ thuộc", ignoreCase = true))
-        val dependencyTitle = program.exercises.first { it.id == "basic-exercise-1" }.title
+        assertEquals("exercise-1", gate.firstUnmetDependencyId)
+        assertTrue(gate.warningMessage.contains("required prerequisite exercises", ignoreCase = true))
+        val dependencyTitle = program.exercises.first { it.id == "exercise-1" }.title
         assertTrue(gate.warningMessage.contains(dependencyTitle))
     }
 
     @Test
     fun `ui flow does not show dependency warning when prerequisites are completed`() {
-        val program = TrainingCurriculumRepository.program
-        val exercise2 = program.exercises.first { it.id == "basic-exercise-2" }
+        val program = dependencyProgram()
+        val exercise2 = program.exercises.first { it.id == "exercise-2" }
 
         val gate = ExerciseUiFlowDecider.resolveDependencyGate(
             program = program,
             exercise = exercise2,
-            completedExerciseIds = setOf("basic-exercise-1")
+            completedExerciseIds = setOf("exercise-1")
         )
 
         assertNull(gate)
@@ -50,7 +50,7 @@ class ExerciseUiFlowDeciderIntegrationTest {
 
     @Test
     fun `ui flow keeps quiz disabled until all required steps are complete for ALL policy`() {
-        val exercise = TrainingCurriculumRepository.program.exercises.first { it.id == "basic-exercise-1" }
+        val exercise = dependencyProgram().exercises.first { it.id == "exercise-1" }
         val firstStepOnly = setOf("${exercise.id}::${exercise.steps.first().id}")
         val allSteps = exercise.steps.map { "${exercise.id}::${it.id}" }.toSet()
 
@@ -106,5 +106,58 @@ class ExerciseUiFlowDeciderIntegrationTest {
         )
 
         assertTrue(enabled)
+    }
+
+    private fun dependencyProgram(): TrainingProgram {
+        return TrainingProgram(
+            id = "dep-program",
+            title = "Dependency Program",
+            exercises = listOf(
+                TrainingExercise(
+                    id = "exercise-1",
+                    title = "Exercise 1",
+                    level = TrainingLevel.BASIC,
+                    type = TrainingType.EXERCISE,
+                    objective = "complete ex1",
+                    startWhen = listOf(TrainingCondition.Always),
+                    steps = listOf(
+                        TrainingStep(
+                            id = "s1",
+                            title = "Step 1",
+                            guidance = "do s1",
+                            activities = listOf(TrainingActivity.CodeTask("task1")),
+                            doneWhen = listOf(TrainingCondition.Always)
+                        ),
+                        TrainingStep(
+                            id = "s2",
+                            title = "Step 2",
+                            guidance = "do s2",
+                            activities = listOf(TrainingActivity.CodeTask("task2")),
+                            doneWhen = listOf(TrainingCondition.Always)
+                        )
+                    ),
+                    expectedOutcome = "done ex1"
+                ),
+                TrainingExercise(
+                    id = "exercise-2",
+                    title = "Exercise 2",
+                    level = TrainingLevel.BASIC,
+                    type = TrainingType.EXERCISE,
+                    objective = "complete ex2",
+                    startWhen = listOf(TrainingCondition.Always),
+                    preconditionExerciseIds = listOf("exercise-1"),
+                    steps = listOf(
+                        TrainingStep(
+                            id = "s3",
+                            title = "Step 3",
+                            guidance = "do s3",
+                            activities = listOf(TrainingActivity.CodeTask("task3")),
+                            doneWhen = listOf(TrainingCondition.Always)
+                        )
+                    ),
+                    expectedOutcome = "done ex2"
+                )
+            )
+        )
     }
 }

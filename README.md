@@ -1,10 +1,22 @@
-# MB Training for Karate Framework
+# MBTraining Engine Framework
 
-Plugin IntelliJ IDEA hỗ trợ đào tạo Karate Framework theo lộ trình bài tập tương tác (exercise/mission/task/homework), theo dõi tiến độ và hiển thị hướng dẫn trực tiếp trong IDE.
+Open-source IntelliJ plugin framework for interactive training packs.
 
 ## Branch Language Policy
 - `master`: English version (UI content and learner-facing materials).
 - `vn-lang`: Vietnamese version (UI content and learner-facing materials).
+
+## Plugin Split
+- `MBTraining Engine Framework` (root plugin, id: `com.mb.training.engine`)
+- `MBTraining Karate Pack` (submodule plugin, id: `com.mb.training.karate.pack`, depends on engine)
+
+Expected behavior:
+- Install only engine: no training pack active, engine stays idle.
+- Install engine + karate pack: on restart, engine asks user to choose active training pack.
+
+## Build Outputs
+- Engine plugin ZIP: `build/distributions/mbtraining-engine-framework-0.1.0.zip`
+- Karate pack ZIP: `karate-pack/build/distributions/karate-pack-0.1.0.zip`
 
 ## 1) Mục tiêu dự án
 - Cung cấp trải nghiệm học Karate ngay trong IntelliJ.
@@ -29,6 +41,12 @@ Plugin IntelliJ IDEA hỗ trợ đào tạo Karate Framework theo lộ trình b�
 - Chạy IDE sandbox để test plugin:
 ```powershell
 .\gradlew.bat runIde
+```
+`runIde` runs only the Engine Framework plugin.
+
+- Chạy IDE sandbox với cả Engine + Karate Pack:
+```powershell
+.\gradlew.bat runIdeWithKaratePack
 ```
 
 - Chạy IDE sandbox qua task alias `openTestIde` (để collaborator dùng 1 lệnh thống nhất):

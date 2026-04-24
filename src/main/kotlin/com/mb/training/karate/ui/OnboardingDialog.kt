@@ -1,4 +1,4 @@
-﻿package com.mb.training.karate.ui
+package com.mb.training.karate.ui
 
 import com.intellij.ide.impl.OpenProjectTask
 import com.intellij.ide.impl.ProjectUtil
@@ -15,6 +15,7 @@ import com.intellij.util.IconUtil
 import com.intellij.util.ui.JBFont
 import com.intellij.util.ui.JBUI
 import com.mb.training.karate.MbTrainingConstants
+import com.mb.training.karate.packs.TrainingPackDefinition
 import com.mb.training.karate.services.OnboardingSettingsService
 import com.mb.training.karate.services.TrainingFolderType
 import com.mb.training.karate.services.TrainingProjectProgressStore
@@ -43,6 +44,7 @@ import kotlin.io.path.pathString
 
 class OnboardingDialog(
     private val currentProject: Project,
+    private val pack: TrainingPackDefinition,
     private val settingsService: OnboardingSettingsService
 ) {
     companion object {
@@ -52,8 +54,12 @@ class OnboardingDialog(
         private const val CARD_LOGO_SCALE = 1f
     }
 
-    private val doNotShowAgainCheckBox = JBCheckBox("Do not show again").apply {
-        isSelected = settingsService.isDoNotShowAgainEnabled()
+    private val onboarding = requireNotNull(pack.onboarding) {
+        "OnboardingDialog requires pack onboarding content."
+    }
+
+    private val doNotShowAgainCheckBox = JBCheckBox(onboarding.doNotShowAgainLabel).apply {
+        isSelected = settingsService.isPackOnboardingSuppressed(pack.id)
         isOpaque = false
         background = Color(0, 0, 0, 0)
     }
@@ -62,7 +68,7 @@ class OnboardingDialog(
         val owner = resolveOwnerWindow()
         val dialog = JDialog(owner, Dialog.ModalityType.APPLICATION_MODAL).apply {
             isUndecorated = true
-            title = MbTrainingConstants.ONBOARDING_TITLE
+            title = onboarding.dialogTitle
             defaultCloseOperation = JDialog.DISPOSE_ON_CLOSE
             contentPane = createDialogRoot(this)
             pack()
@@ -105,12 +111,12 @@ class OnboardingDialog(
             isOpaque = false
         }
 
-        root.add(createHeader(dialog), BorderLayout.NORTH)
+        root.add(createHeader(), BorderLayout.NORTH)
         root.add(createCenterPanel(dialog), BorderLayout.CENTER)
         return root
     }
 
-    private fun createHeader(dialog: JDialog): JComponent {
+    private fun createHeader(): JComponent {
         val appIcon = IconUtil.scale(
             IconLoader.getIcon("/icons/company-logo.svg", javaClass),
             null,
@@ -124,7 +130,7 @@ class OnboardingDialog(
                     isOpaque = false
                     add(JBLabel(appIcon))
                     add(
-                        JBLabel(MbTrainingConstants.ONBOARDING_TITLE).apply {
+                        JBLabel(onboarding.dialogTitle).apply {
                             font = JBFont.label().deriveFont(JBFont.label().size + 1f)
                             foreground = JBColor(0xE6EDF7, 0xE6EDF7)
                         }
@@ -168,7 +174,7 @@ class OnboardingDialog(
                 BorderLayout.CENTER
             )
             add(
-                JBLabel("<html>MB Training for<br/>Karate Framework</html>").apply {
+                JBLabel("<html>${pack.displayName}</html>").apply {
                     horizontalAlignment = SwingConstants.LEFT
                     border = JBUI.Borders.empty(0, 14, 14, 14)
                     foreground = JBColor(0xF2F6FF, 0xDDE7FF)
@@ -186,12 +192,12 @@ class OnboardingDialog(
             alignmentX = java.awt.Component.LEFT_ALIGNMENT
         }
 
-        val titleLabel = JBLabel("Learn Karate Framework Fast").apply {
+        val titleLabel = JBLabel(onboarding.heading).apply {
             font = JBFont.label().deriveFont(Font.BOLD, JBFont.label().size + 8f)
             alignmentX = java.awt.Component.LEFT_ALIGNMENT
             maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
         }
-        val subtitleLabel = JBLabel("From basic to advanced").apply {
+        val subtitleLabel = JBLabel(onboarding.subtitle).apply {
             font = JBFont.label().deriveFont(JBFont.label().size + 1f)
             foreground = JBColor.GRAY
             alignmentX = java.awt.Component.LEFT_ALIGNMENT
@@ -202,9 +208,9 @@ class OnboardingDialog(
         content.add(Box.createVerticalStrut(JBUI.scale(8)))
         content.add(subtitleLabel)
         content.add(Box.createVerticalStrut(JBUI.scale(16)))
-        content.add(createChipsPanel())
+        content.add(createChipsPanel(onboarding.chips))
         content.add(Box.createVerticalStrut(JBUI.scale(16)))
-        content.add(createMessagePane(MbTrainingConstants.ONBOARDING_MESSAGE))
+        content.add(createMessagePane(onboarding.message))
         content.add(Box.createVerticalGlue())
         content.add(createFooter(dialog))
         return content
@@ -218,7 +224,7 @@ class OnboardingDialog(
         )
     }
 
-    private fun createChipsPanel(): JComponent {
+    private fun createChipsPanel(chips: List<String>): JComponent {
         val panel = JPanel(FlowLayout(FlowLayout.LEFT, JBUI.scale(8), 0)).apply {
             isOpaque = false
             border = JBUI.Borders.emptyBottom(4)
@@ -226,7 +232,7 @@ class OnboardingDialog(
             maximumSize = JBUI.size(Int.MAX_VALUE, preferredSize.height)
         }
 
-        listOf("Guidance", "Explanation", "Exercise", "Project").forEachIndexed { index, label ->
+        chips.forEachIndexed { index, label ->
             val (bgColor, borderColor, fgColor) = when (index) {
                 0 -> Triple(JBColor(0x1D4F44, 0x1D4F44), JBColor(0x27B082, 0x27B082), JBColor(0x8AF7C9, 0x8AF7C9))
                 1 -> Triple(JBColor(0x43355A, 0x43355A), JBColor(0x7E5CE6, 0x7E5CE6), JBColor(0xE3D8FF, 0xE3D8FF))
@@ -251,7 +257,7 @@ class OnboardingDialog(
 
     private fun createFooter(dialog: JDialog): JComponent {
         val startButton = HoverPaintButton(
-            text = MbTrainingConstants.ONBOARDING_START_BUTTON,
+            text = onboarding.startButtonLabel,
             baseBg = JBColor(0x2F8D5A, 0x2F8D5A),
             hoverBg = JBColor(0x39A266, 0x39A266),
             pressedBg = JBColor(0x26764B, 0x26764B),
@@ -268,7 +274,7 @@ class OnboardingDialog(
         }
 
         val closeButton = HoverPaintButton(
-            text = "Close",
+            text = onboarding.closeButtonLabel,
             baseBg = JBColor(0x3A3D45, 0x3A3D45),
             hoverBg = JBColor(0x4E5360, 0x4E5360),
             pressedBg = JBColor(0x31343B, 0x31343B),
@@ -358,19 +364,19 @@ class OnboardingDialog(
     }
 
     private fun persistPreference() {
-        settingsService.setDoNotShowAgain(doNotShowAgainCheckBox.isSelected)
+        settingsService.setPackOnboardingSuppressed(pack.id, doNotShowAgainCheckBox.isSelected)
     }
 
     private fun runFirstOnboardingTask() {
         Messages.showInfoMessage(
             currentProject,
-            MbTrainingConstants.FIRST_TASK_MESSAGE,
-            MbTrainingConstants.FIRST_TASK_TITLE
+            onboarding.firstTaskMessage,
+            onboarding.firstTaskTitle
         )
 
         val descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor().apply {
-            title = MbTrainingConstants.PICK_FOLDER_TITLE
-            description = MbTrainingConstants.PICK_FOLDER_DESCRIPTION
+            title = onboarding.pickFolderTitle
+            description = onboarding.pickFolderDescription
         }
 
         while (true) {
@@ -390,7 +396,7 @@ class OnboardingDialog(
                     Messages.showWarningDialog(
                         currentProject,
                         "This is not an empty folder or a training project.",
-                        MbTrainingConstants.ONBOARDING_TITLE
+                        onboarding.dialogTitle
                     )
                 }
             }
@@ -404,11 +410,10 @@ class OnboardingDialog(
             Messages.showInfoMessage(
                 currentProject,
                 "This project is already open. Continue training in the current window.",
-                MbTrainingConstants.ONBOARDING_TITLE
+                onboarding.dialogTitle
             )
             return
         }
         ProjectUtil.openOrImport(projectPath, OpenProjectTask(forceOpenInNewFrame = true))
     }
 }
-
