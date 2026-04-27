@@ -1,139 +1,105 @@
-package com.mb.training.karate.training.exercises
+﻿package com.mb.training.karate.training.exercises
 
-import com.mb.training.karate.model.CompletionPolicy
-import com.mb.training.karate.model.TrainingActivity
-import com.mb.training.karate.model.TrainingCondition
 import com.mb.training.karate.model.TrainingExercise
-import com.mb.training.karate.model.TrainingExerciseIntro
-import com.mb.training.karate.model.TrainingHint
-import com.mb.training.karate.model.TrainingLevel
-import com.mb.training.karate.model.TrainingMode
-import com.mb.training.karate.model.TrainingQuizOption
-import com.mb.training.karate.model.TrainingQuizQuestion
-import com.mb.training.karate.model.TrainingStep
-import com.mb.training.karate.model.TrainingTheoryQuiz
-import com.mb.training.karate.model.TrainingType
+import com.mb.training.karate.model.*
 
 object BasicExercise3Definition {
     val exercise: TrainingExercise = TrainingExercise(
-        id = "basic-exercise-3",
-        title = "Scenario: Fix Runner Path",
-        level = TrainingLevel.BASIC,
-        type = TrainingType.EXERCISE,
-        mode = TrainingMode.SCENARIO,
-        objective = "Work in a sandbox project, fix the path error in TestRunner, then run tests successfully.",
-        startWhen = listOf(TrainingCondition.Always),
-        completionPolicy = CompletionPolicy.ALL_STEPS_DONE,
-        steps = listOf(
-            TrainingStep(
-                id = "setup-scenario-sandbox",
-                title = "Initialize scenario sandbox",
-                guidance = "Click Run to create a temporary workspace with a preset scenario project.",
-                activities = listOf(
-                    TrainingActivity.SetupScenarioWorkspace(
-                        scenarioId = "scenario-runner-path-fix-1",
-                        actionLabel = "Initialize scenario sandbox"
+            id = "basic-exercise-3",
+            title = "Runner Path Fix (Scenario)",
+            level = TrainingLevel.BASIC,
+            type = TrainingType.EXERCISE,
+            mode = TrainingMode.SCENARIO,
+            objective = "Diagnose and fix a broken runner classpath in a scenario sandbox so tests execute successfully.",
+            preconditionExerciseIds = listOf("basic-exercise-2"),
+            startWhen = listOf(TrainingCondition.ExerciseCompleted("basic-exercise-2")),
+            steps = listOf(
+                TrainingStep(
+                    id = "step-basic-exercise-3-01-setup",
+                    title = "Prepare exercise assets",
+                    guidance = "Open scenario workspace and inspect failing runner setup.",
+                    activities = listOf(
+                        TrainingActivity.CreateFile(relativePath = "src/test/java/com/mb/training/scenario/TestRunner.java", template = "..."),
+                        TrainingActivity.CodeTask("Set up sandbox and locate TestRunner.java.")
+                    ),
+                    hints = listOf(
+                        TrainingHint.LocationHint(targetType = "file", suggestedPath = "src/test/java/com/mb/training/scenario/TestRunner.java"),
+                        TrainingHint.ContentHint(filePath = "src/test/java/com/mb/training/scenario/TestRunner.java", snippet = "classpath:features/")
+                    ),
+                    doneWhen = listOf(
+                        TrainingCondition.FileExists("src/test/java/com/mb/training/scenario/TestRunner.java"),
+                        TrainingCondition.FileContains("src/test/java/com/mb/training/scenario/TestRunner.java", "classpath:features/")
                     )
                 ),
-                doneWhen = listOf(
-                    TrainingCondition.FileExists("pom.xml"),
-                    TrainingCondition.FileExists("src/test/java/com/mb/training/scenario/TestRunner.java"),
-                    TrainingCondition.FileExists("src/test/resources/features/scenario-runner-path-fix.feature")
+                TrainingStep(
+                    id = "step-basic-exercise-3-02-implement",
+                    title = "Implement core behavior",
+                    guidance = "Fix incorrect classpath in runner method.",
+                    activities = listOf(
+                        TrainingActivity.CodeTask("Replace wrong feature path with correct classpath reference."),
+                        TrainingActivity.CodeTask("Refactor repeated logic into common location when applicable")
+                    ),
+                    hints = listOf(
+                        TrainingHint.ContentHint(filePath = "src/test/java/com/mb/training/scenario/TestRunner.java", snippet = "classpath:features/"),
+                        TrainingHint.LocationHint(targetType = "section", suggestedPath = "src/test/java/com/mb/training/scenario/TestRunner.java")
+                    ),
+                    doneWhen = listOf(
+                        TrainingCondition.FileExists("src/test/java/com/mb/training/scenario/TestRunner.java"),
+                        TrainingCondition.FileContains("src/test/java/com/mb/training/scenario/TestRunner.java", "classpath:features/")
+                    )
+                ),
+                TrainingStep(
+                    id = "step-basic-exercise-3-03-verify",
+                    title = "Run and verify",
+                    guidance = "Run targeted test to verify correction.",
+                    activities = listOf(
+                        TrainingActivity.RunTestTask(commandHint = "mvn test -Dtest=TestRunner", commandId = "basic-exercise-3-verify"),
+                        TrainingActivity.CodeTask("Align assertions with deterministic expected behavior")
+                    ),
+                    hints = listOf(
+                        TrainingHint.LocationHint(targetType = "command", suggestedPath = "mvn test -Dtest=TestRunner"),
+                        TrainingHint.ContentHint(filePath = "src/test/java/com/mb/training/scenario/TestRunner.java", snippet = "status / match assertions")
+                    ),
+                    doneWhen = listOf(
+                        TrainingCondition.CommandPassed("basic-exercise-3-verify"),
+                        TrainingCondition.FileExists("src/test/java/com/mb/training/scenario/TestRunner.java")
+                    )
+                ),
+                TrainingStep(
+                    id = "step-basic-exercise-3-04-harden",
+                    title = "Harden for project continuity",
+                    guidance = "Capture fix pattern for future runner troubleshooting.",
+                    activities = listOf(
+                        TrainingActivity.CodeTask("Ensure runner code is clean and explicit."),
+                        TrainingActivity.CodeTask("Document assumptions inline where they affect later exercises")
+                    ),
+                    hints = listOf(
+                        TrainingHint.LocationHint(targetType = "project", suggestedPath = "src/test/resources"),
+                        TrainingHint.ContentHint(filePath = "src/test/java/com/mb/training/scenario/TestRunner.java", snippet = "clear naming + stable assertions")
+                    ),
+                    doneWhen = listOf(
+                        TrainingCondition.StepCompleted("basic-exercise-3", "step-basic-exercise-3-03-verify"),
+                        TrainingCondition.FileExists("src/test/java/com/mb/training/scenario/TestRunner.java")
+                    )
                 )
             ),
-            TrainingStep(
-                id = "fix-runner-path",
-                title = "Fix incorrect feature path in TestRunner",
-                guidance = "Open TestRunner and correct the feature classpath.",
-                activities = listOf(
-                    TrainingActivity.CodeTask(
-                        "Update Karate.run(...) to point to classpath:features/scenario-runner-path-fix.feature"
-                    )
-                ),
-                hints = listOf(
-                    TrainingHint.ContentHint(
-                        filePath = "src/test/java/com/mb/training/scenario/TestRunner.java",
-                        title = "Correct path hint",
-                        snippet = "return Karate.run(\"classpath:features/scenario-runner-path-fix.feature\");",
-                        note = "Current file uses 'feature' (missing trailing 's')."
-                    )
-                ),
-                doneWhen = listOf(
-                    TrainingCondition.FileContains(
-                        relativePath = "src/test/java/com/mb/training/scenario/TestRunner.java",
-                        text = "classpath:features/scenario-runner-path-fix.feature"
-                    )
-                )
+            expectedOutcome = "Scenario runner executes successfully after classpath correction.",
+            completionPolicy = CompletionPolicy.ALL_STEPS_DONE,
+            intro = TrainingExerciseIntro(
+                dialogTitle = "basic-exercise-3: Runner Path Fix (Scenario)",
+                heading = "Runner Path Fix (Scenario)",
+                subtitle = "Project capability: Fix runner classpath in sandbox",
+                chips = listOf("Runner", "Classpath", "Debug", "Scenario"),
+                structureTitle = "Assets touched in this exercise",
+                structureTree = ".\n├─ pom.xml\n└─ src\n   └─ test\n      ├─ src/test/java/com/mb/training/scenario/TestRunner.java\n      ├─ src/test/resources/features/scenario-runner-path-fix.feature",
+                tasksTitle = "Exercise tasks",
+                tasks = "1) Implement the exercise objective in project files.\n2) Verify behavior using deterministic checks and run command.\n3) Keep outputs reusable for subsequent exercises."
             ),
-            TrainingStep(
-                id = "run-scenario-test",
-                title = "Validate with test command",
-                guidance = "Run the Maven command targeting the correct runner.",
-                activities = listOf(
-                    TrainingActivity.RunTestTask(
-                        commandHint = "mvn test -Dtest=TestRunner",
-                        commandId = "scenario3-mvn-test"
-                    )
-                ),
-                doneWhen = listOf(
-                    TrainingCondition.CommandPassed("scenario3-mvn-test")
-                )
-            )
-        ),
-        expectedOutcome = "Scenario project passes through TestRunner after fixing the correct path.",
-        intro = TrainingExerciseIntro(
-            dialogTitle = "Scenario Exercise 3: Fix Runner Path",
-            heading = "Freestyle Scenario: Runner Path",
-            subtitle = "You will work on a sandbox project preconfigured with a realistic defect.",
-            chips = listOf("Scenario", "Debug", "Runner", "Maven"),
-            structureTitle = "Sandbox is pre-configured",
-            structureTree = """
-.
-├─ pom.xml
-└─ src
-   └─ test
-      ├─ java/com/mb/training/scenario/TestRunner.java
-      └─ resources/features/scenario-runner-path-fix.feature
-            """.trimIndent(),
-            tasksTitle = "Exercise goals",
-            tasks = """
-1) Open `TestRunner.java` and find the classpath issue.
-2) Fix the path so the runner calls the correct feature file.
-3) Run `mvn test -Dtest=TestRunner` and reach BUILD SUCCESS.
-            """.trimIndent()
-        ),
-        theoryQuiz = TrainingTheoryQuiz(
-            title = "Theory Check: Exercise 3",
-            questionsToAsk = 2,
-            passThreshold = 1,
-            questionPool = listOf(
-                TrainingQuizQuestion(
-                    id = "ex3-q1",
-                    prompt = "In a Karate runner, what error is commonly caused by incorrect classpath?",
-                    promptRich = "In a Karate runner, what error is commonly caused by incorrect classpath?",
-                    options = listOf(
-                        TrainingQuizOption("A", "Feature file not found"),
-                        TrainingQuizOption("B", "Wrong JDK version"),
-                        TrainingQuizOption("C", "Maven network error"),
-                        TrainingQuizOption("D", "IDE cannot open project")
-                    ),
-                    correctOptionId = "A",
-                    hint = "Runner resolves feature files directly from classpath."
-                ),
-                TrainingQuizQuestion(
-                    id = "ex3-q2",
-                    prompt = "Which command is required to validate this scenario exercise?",
-                    promptRich = "Which command is required to validate this scenario exercise?",
-                    options = listOf(
-                        TrainingQuizOption("A", "mvn -q test"),
-                        TrainingQuizOption("B", "mvn test -Dtest=TestRunner"),
-                        TrainingQuizOption("C", "gradle test"),
-                        TrainingQuizOption("D", "mvn clean install")
-                    ),
-                    correctOptionId = "B",
-                    hint = "This exercise requires targeting the specific runner class."
-                )
+            theoryQuiz = TrainingTheoryQuiz(
+                title = "Theory Check: Runner Path Fix (Scenario)",
+                questionsToAsk = 5,
+                passThreshold = 3,
+                questionPool = defaultTheoryQuestions(exerciseId = "basic-exercise-3", primaryAsset = "src/test/java/com/mb/training/scenario/TestRunner.java", prerequisiteId = "basic-exercise-2")
             )
         )
-    )
 }

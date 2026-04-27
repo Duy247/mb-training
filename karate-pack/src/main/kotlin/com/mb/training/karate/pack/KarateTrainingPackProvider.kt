@@ -1,27 +1,21 @@
-package com.mb.training.karate.pack
+﻿package com.mb.training.karate.pack
 
 import com.mb.training.karate.model.TrainingProgram
 import com.mb.training.karate.packs.TrainingPackDefinition
 import com.mb.training.karate.packs.TrainingPackOnboardingContent
 import com.mb.training.karate.packs.TrainingPackProvider
-import com.mb.training.karate.training.exercises.BasicExercise1Definition
-import com.mb.training.karate.training.exercises.BasicExercise2Definition
-import com.mb.training.karate.training.exercises.BasicExercise3Definition
+import com.mb.training.karate.training.exercises.KarateExerciseCatalog
 
 class KarateTrainingPackProvider : TrainingPackProvider {
     override fun buildPack(): TrainingPackDefinition {
         return TrainingPackDefinition(
             id = PACK_ID,
             displayName = "MBTraining Karate Pack",
-            description = "Karate Framework roadmap from basics to scenario-based debugging.",
+            description = "POC pack with AI-generated Karate exercises. Content may be counter-intuitive or unrunnable. For the framework to build your own exercise packs, contact duy5a247@gmail.com.",
             program = TrainingProgram(
                 id = "mb-karate-core-program",
                 title = "MB Training for Karate Framework",
-                exercises = listOf(
-                    BasicExercise1Definition.exercise,
-                    BasicExercise2Definition.exercise,
-                    BasicExercise3Definition.exercise
-                )
+                exercises = KarateExerciseCatalog.exercises
             ),
             onboarding = TrainingPackOnboardingContent(
                 dialogTitle = "Welcome to MBTraining Karate Pack",
