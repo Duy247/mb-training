@@ -65,8 +65,8 @@ class TrainingPackRegistry {
         val activePack = getActivePack()
         val available = activePack != null
         ProjectManager.getInstance().openProjects.forEach { project ->
-            val toolWindow = ToolWindowManager.getInstance(project).getToolWindow(MbTrainingConstants.TOOL_WINDOW_ID)
-            toolWindow?.isAvailable = available
+            val manager = ToolWindowManager.getInstance(project)
+            manager.getToolWindow(MbTrainingConstants.TOOL_WINDOW_ID)?.isAvailable = available
         }
     }
 

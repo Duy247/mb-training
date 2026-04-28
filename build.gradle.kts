@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb.training"
-version = "0.1.0"
+version = "0.2.0"
 
 repositories {
     mavenCentral()
@@ -23,11 +23,17 @@ dependencies {
         create("IC", "2025.1.4.1")
         bundledPlugin("com.intellij.java")
         bundledPlugin("org.jetbrains.idea.maven")
+        bundledPlugin("org.jetbrains.plugins.terminal")
     }
 }
 
 intellijPlatform {
     pluginConfiguration {
+        changeNotes = """
+            <ul>
+              <li>Rework command interface.</li>
+            </ul>
+        """.trimIndent()
         ideaVersion {
             sinceBuild = "251"
         }

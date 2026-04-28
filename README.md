@@ -15,8 +15,8 @@ Expected behavior:
 - Install engine + karate pack: on restart, engine asks user to choose active training pack.
 
 ## Build Outputs
-- Engine plugin ZIP: `build/distributions/mbtraining-engine-framework-0.1.0.zip`
-- Karate pack ZIP: `karate-pack/build/distributions/karate-pack-0.1.0.zip`
+- Engine plugin ZIP: `build/distributions/mbtraining-engine-framework-0.2.0.zip`
+- Karate pack ZIP: `karate-pack/build/distributions/karate-pack-0.2.0.zip`
 
 ## 1) Mục tiêu dự án
 - Cung cấp trải nghiệm học Karate ngay trong IntelliJ.

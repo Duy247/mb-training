@@ -19,9 +19,5 @@
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
-    <depends>com.mb.training.engine</depends>
-
-    <extensions defaultExtensionNs="com.mb.training.engine">
-        <trainingPackProvider implementation="com.mb.training.karate.pack.KarateTrainingPackProvider"/>
-    </extensions>
+    <depends optional="true" config-file="mbtraining-engine-integration.xml">com.mb.training.engine</depends>
 </idea-plugin>

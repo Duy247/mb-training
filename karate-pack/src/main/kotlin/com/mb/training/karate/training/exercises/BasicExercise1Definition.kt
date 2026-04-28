@@ -58,7 +58,7 @@ object BasicExercise1Definition {
                     ),
                     hints = listOf(
                         TrainingHint.LocationHint(targetType = "command", suggestedPath = "mvn test"),
-                        TrainingHint.ContentHint(filePath = "pom.xml", snippet = "status / match assertions")
+                        TrainingHint.ContentHint(filePath = "pom.xml", snippet = "<artifactId>maven-surefire-plugin</artifactId>")
                     ),
                     doneWhen = listOf(
                         TrainingCondition.CommandPassed("basic-exercise-1-verify"),
@@ -99,7 +99,105 @@ object BasicExercise1Definition {
                 title = "Theory Check: Project Bootstrap",
                 questionsToAsk = 5,
                 passThreshold = 3,
-                questionPool = defaultTheoryQuestions(exerciseId = "basic-exercise-1", primaryAsset = "pom.xml", prerequisiteId = "none")
+                questionPool = projectBootstrapTheoryQuestions()
             )
         )
+
+    private fun projectBootstrapTheoryQuestions(): List<TrainingQuizQuestion> {
+        return listOf(
+            quizQuestion(
+                id = "basic-exercise-1-q1",
+                prompt = "What is the main objective of Project Bootstrap?",
+                options = listOf(
+                    quizOption("A", "Create a runnable Maven + Karate test baseline"),
+                    quizOption("B", "Implement full business API coverage"),
+                    quizOption("C", "Build mock server contracts only"),
+                    quizOption("D", "Tune CI/CD pipeline performance")
+                ),
+                correct = "A",
+                hint = "This exercise is about foundation, not full feature coverage."
+            ),
+            quizQuestion(
+                id = "basic-exercise-1-q2",
+                prompt = "Which dependency must be present in pom.xml for this exercise?",
+                options = listOf(
+                    quizOption("A", "io.karatelabs:karate-core"),
+                    quizOption("B", "com.intuit.karate:karate-junit5"),
+                    quizOption("C", "org.testng:testng"),
+                    quizOption("D", "junit:junit")
+                ),
+                correct = "B",
+                hint = "The step hint points directly to this artifactId."
+            ),
+            quizQuestion(
+                id = "basic-exercise-1-q3",
+                prompt = "Why is maven-surefire-plugin configured in bootstrap?",
+                options = listOf(
+                    quizOption("A", "To execute test classes during mvn test"),
+                    quizOption("B", "To generate OpenAPI specs"),
+                    quizOption("C", "To start Karate mock server"),
+                    quizOption("D", "To run database migrations")
+                ),
+                correct = "A",
+                hint = "Surefire is Maven's standard test runner plugin."
+            ),
+            quizQuestion(
+                id = "basic-exercise-1-q4",
+                prompt = "Which command is used in the Run and verify step?",
+                options = listOf(
+                    quizOption("A", "mvn install"),
+                    quizOption("B", "mvn clean package"),
+                    quizOption("C", "mvn test"),
+                    quizOption("D", "mvn dependency:tree")
+                ),
+                correct = "C",
+                hint = "Use the exact command shown in the step action."
+            ),
+            quizQuestion(
+                id = "basic-exercise-1-q5",
+                prompt = "What should be true before moving to exercise 2?",
+                options = listOf(
+                    quizOption("A", "Only README.md exists"),
+                    quizOption("B", "pom.xml contains required Karate + test-runner setup"),
+                    quizOption("C", "All advanced mocks are implemented"),
+                    quizOption("D", "Security test suite is complete")
+                ),
+                correct = "B",
+                hint = "Exercise 1 is a prerequisite baseline."
+            ),
+            quizQuestion(
+                id = "basic-exercise-1-q6",
+                prompt = "What type of exercise flow does this roadmap follow?",
+                options = listOf(
+                    quizOption("A", "Independent exercises with no dependency"),
+                    quizOption("B", "Project-based sequential build-up"),
+                    quizOption("C", "Randomized challenge mode"),
+                    quizOption("D", "Single-file scripting only")
+                ),
+                correct = "B",
+                hint = "Each next exercise builds on previous output."
+            )
+        )
+    }
+
+    private fun quizQuestion(
+        id: String,
+        prompt: String,
+        options: List<TrainingQuizOption>,
+        correct: String,
+        hint: String
+    ): TrainingQuizQuestion {
+        return TrainingQuizQuestion(
+            id = id,
+            prompt = prompt,
+            promptRich = prompt,
+            options = options,
+            correctOptionId = correct,
+            hint = hint
+        )
+    }
+
+    private fun quizOption(id: String, text: String): TrainingQuizOption {
+        return TrainingQuizOption(id = id, text = text)
+    }
 }

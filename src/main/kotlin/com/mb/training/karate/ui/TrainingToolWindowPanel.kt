@@ -1,12 +1,8 @@
 ﻿package com.mb.training.karate.ui
 
-import com.intellij.execution.RunContentExecutor
-import com.intellij.execution.configurations.GeneralCommandLine
-import com.intellij.execution.process.KillableColoredProcessHandler
-import com.intellij.execution.process.ProcessEvent
-import com.intellij.execution.process.ProcessListener
 import com.intellij.ide.impl.OpenProjectTask
 import com.intellij.ide.impl.ProjectUtil
+import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.fileEditor.OpenFileDescriptor
@@ -15,11 +11,12 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.ProjectManager
 import com.intellij.openapi.project.ex.ProjectManagerEx
 import com.intellij.openapi.ui.Messages
+import com.intellij.openapi.util.Disposer
 import com.intellij.openapi.vfs.LocalFileSystem
 import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.openapi.vfs.newvfs.BulkFileListener
 import com.intellij.openapi.vfs.newvfs.events.VFileEvent
-import com.intellij.openapi.util.Key
+import com.intellij.terminal.ui.TerminalWidget
 import com.intellij.ui.JBColor
 import com.intellij.ui.JBSplitter
 import com.intellij.ui.components.JBLabel
@@ -37,6 +34,7 @@ import com.mb.training.karate.services.TrainingProgressSnapshot
 import com.mb.training.karate.services.TrainingProjectProgressStore
 import com.mb.training.karate.training.TrainingCurriculumRepository
 import com.mb.training.karate.training.TrainingProgressEngine
+import org.jetbrains.plugins.terminal.TerminalToolWindowManager
 import org.jetbrains.idea.maven.project.MavenProject
 import org.jetbrains.idea.maven.project.MavenProjectsManager
 import java.awt.BorderLayout
@@ -92,6 +90,14 @@ class TrainingToolWindowPanel(
     private val progressLabel = JBLabel()
     private val validateButton = JButton("Refresh Progress")
     private val resetButton = JButton("Reset")
+    private val pendingCommandExpectationsById = linkedMapOf<String, PendingCommandExpectation>()
+    private val commandHintById = collectCommandHintsById()
+    private val terminalEventLogFile = projectRoot?.resolve(".idea")?.resolve("mbtraining-terminal-events.log")
+    private val terminalHookDir = projectRoot?.resolve(".idea")?.resolve("mbtraining-terminal")
+    private var terminalProcessedEventLines = 0
+    private var terminalBootstrapFailedNotified = false
+    private val bootstrappedTerminalSessionKeys = mutableSetOf<Int>()
+    private var terminalSetupDisposable: Disposable? = null
     private val fallbackCurrentId = TrainingCurriculumRepository.items.firstOrNull()?.id.orEmpty()
     private var snapshot = runEngine(loadInitialSnapshot())
     private var introPopupEnabled = false
@@ -136,6 +142,7 @@ class TrainingToolWindowPanel(
         bindAutoDetection()
         bindAutoRefreshPolling()
         bindMavenSyncDetection()
+        bindTerminalObserverAutoBootstrap()
         applyCurrentSelectionFromSnapshot()
         refreshProgress()
         refreshDetailsFromSelection()
@@ -373,6 +380,7 @@ class TrainingToolWindowPanel(
 
     private fun refreshProgressFromEngine() {
         val beforeSync = snapshot
+        autoDetectPendingCommandCompletions()
         val updated = runEngine(snapshot)
         if (updated != snapshot) {
             snapshot = updated
@@ -605,8 +613,7 @@ class TrainingToolWindowPanel(
                             exerciseId = exerciseId,
                             stepId = step.id,
                             commandId = runnableAction.commandId,
-                            command = runnableAction.commandHint,
-                            button = this
+                            command = runnableAction.commandHint
                         )
                         is RunnableStepAction.MavenSync -> runMavenSync(
                             exerciseId = exerciseId,
@@ -892,6 +899,8 @@ class TrainingToolWindowPanel(
         autoRefreshTimer.stop()
         refreshDebounceTimer.stop()
         snapshotSaveDebounceTimer.stop()
+        terminalSetupDisposable?.let(Disposer::dispose)
+        terminalSetupDisposable = null
         flushSnapshotSave()
         super.removeNotify()
     }
@@ -1019,85 +1028,69 @@ class TrainingToolWindowPanel(
         exerciseId: String,
         stepId: String,
         commandId: String,
-        command: String,
-        button: JButton
+        command: String
     ) {
-        val root = projectRoot ?: run {
-            Messages.showErrorDialog(project, "Project root not found for command execution.", "MB Training")
-            return
-        }
-        val originalText = button.text
-        button.isEnabled = false
-        button.text = "Running..."
-
-        try {
-            val effectiveCommand = toInteractiveCommand(command)
-            val commandLine = buildCommandLine(root, effectiveCommand)
-            val processHandler = KillableColoredProcessHandler(commandLine)
-            val outputBuffer = StringBuilder()
-
-            processHandler.addProcessListener(object : ProcessListener {
-                override fun onTextAvailable(event: ProcessEvent, outputType: Key<*>) {
-                    outputBuffer.append(event.text)
-                }
-
-                override fun processTerminated(event: ProcessEvent) {
-                    val fullOutput = outputBuffer.toString()
-                    ApplicationManager.getApplication().executeOnPooledThread {
-                        val evaluation = evaluateCommandResult(
-                            commandId = commandId,
-                            command = effectiveCommand,
-                            exitCode = event.exitCode,
-                            output = fullOutput,
-                            root = root
-                        )
-                        val result = CommandRunResult(event.exitCode, summarizeOutput(fullOutput), evaluation.passed)
-                        ApplicationManager.getApplication().invokeLater(
-                            {
-                                if (project.isDisposed) return@invokeLater
-                                button.isEnabled = true
-                                button.text = originalText
-
-                                if (result.passed) {
-                                    snapshot = snapshot.copy(passedCommandIds = snapshot.passedCommandIds + commandId)
-                                    persistSnapshot()
-                                    list.repaint()
-                                    updateStepStatus(exerciseId, stepId)
-                                    suppressProgressDialogs = true
-                                    try {
-                                        showRunSuccessDialog(effectiveCommand)
-                                    } finally {
-                                        suppressProgressDialogs = false
-                                    }
-                                    refreshProgressFromEngine()
-                                } else {
-                                    Messages.showErrorDialog(
-                                        project,
-                                        evaluation.message ?: (
-                                            "The command finished but did not meet pass conditions.\n" +
-                                                "Required: exit code = 0 and BUILD SUCCESS/BUILD PASSED in logs.\n\n${result.summary}"
-                                            ),
-                                        "Run did not pass"
-                                    )
-                                }
-                            },
-                            ModalityState.defaultModalityState()
-                        )
-                    }
-                }
-            })
-
-            RunContentExecutor(project, processHandler)
-                .withTitle("MB Training: $effectiveCommand")
-                .run()
-        } catch (e: Exception) {
-            button.isEnabled = true
-            button.text = originalText
-            Messages.showErrorDialog(project, "Unable to start command.\n${e.message}", "MB Training")
-        }
+        val effectiveCommand = normalizeSuggestedCommand(command)
+        pendingCommandExpectationsById[commandId] = PendingCommandExpectation(
+            exerciseId = exerciseId,
+            stepId = stepId,
+            commandId = commandId,
+            expectedCommand = effectiveCommand,
+            registeredAtEpochSeconds = currentEpochSeconds()
+        )
+        openTerminalSidecarInfo(command = effectiveCommand)
     }
 
-    private fun toInteractiveCommand(command: String): String {
+    private fun openTerminalSidecarInfo(command: String) {
+        val manager = TerminalToolWindowManager.getInstance(project)
+        val root = project.basePath?.takeIf { it.isNotBlank() }
+        var observerAttached = false
+        runCatching {
+            fun currentTerminalWidgets(): List<TerminalWidget> {
+                return manager.terminalWidgets.toList()
+            }
+
+            var terminalWidgets = currentTerminalWidgets()
+            if (terminalWidgets.isEmpty()) {
+                manager.createShellWidget(root, "MBTraining", true, true)
+                terminalWidgets = currentTerminalWidgets()
+            }
+            manager.toolWindow?.show()
+            terminalWidgets.forEach { widget ->
+                if (ensureTerminalObserverBootstrapped(widget)) {
+                    observerAttached = true
+                }
+            }
+        }.onFailure {
+            Messages.showErrorDialog(
+                project,
+                "Unable to open Terminal tool window.\n${it.message}",
+                "MB Training"
+            )
+            return
+        }
+        Messages.showInfoMessage(
+            project,
+            buildString {
+                append("Run this command in Terminal:\n\n")
+                append(command)
+                if (observerAttached) {
+                    append("\n\nCommand observer has been attached for this terminal session.")
+                } else {
+                    append("\n\nUnable to attach command observer automatically.")
+                    val manualBootstrap = buildManualObserverBootstrapHint()
+                    if (manualBootstrap != null) {
+                        append("\nRun this once in terminal first:\n")
+                        append(manualBootstrap)
+                    }
+                }
+                append("\n\nThen click Refresh Progress.")
+            },
+            "MBTraining Command"
+        )
+    }
+
+    private fun normalizeSuggestedCommand(command: String): String {
         val normalized = command.trim()
         return if (Regex("""\bmvn(\.cmd)?\s+-q\s+test\b""", RegexOption.IGNORE_CASE).containsMatchIn(normalized)) {
             normalized.replace(Regex("""\s+-q\b""", RegexOption.IGNORE_CASE), "")
@@ -1106,37 +1099,404 @@ class TrainingToolWindowPanel(
         }
     }
 
-    private fun buildCommandLine(root: Path, command: String): GeneralCommandLine {
-        val os = System.getProperty("os.name").lowercase()
-        val parts = if (os.contains("win")) {
-            listOf("cmd.exe", "/c", command)
-        } else {
-            listOf("sh", "-lc", command)
+    private fun bindTerminalObserverAutoBootstrap() {
+        val manager = TerminalToolWindowManager.getInstance(project)
+        val disposable = Disposer.newDisposable("mbtraining-terminal-bootstrap")
+        terminalSetupDisposable = disposable
+        manager.addNewTerminalSetupHandler(
+            { widget -> bootstrapTerminalWidget(widget) },
+            disposable
+        )
+        manager.terminalWidgets.forEach { widget ->
+            ensureTerminalObserverBootstrapped(widget)
         }
-        return GeneralCommandLine(parts).withWorkDirectory(root.toFile())
     }
 
-    private fun evaluateCommandResult(
+    private fun autoDetectPendingCommandCompletions() {
+        val root = projectRoot ?: return
+        if (pendingCommandExpectationsById.isEmpty()) return
+        val completionEvents = loadNewTerminalCompletionEvents()
+        if (completionEvents.isEmpty()) return
+
+        val passedCommandIds = linkedSetOf<String>()
+        val successMessages = mutableListOf<String>()
+
+        completionEvents.forEach { event ->
+            pendingCommandExpectationsById.values.forEach { expectation ->
+                if (expectation.registeredAtEpochSeconds > event.epochSeconds) return@forEach
+                if (!commandsEquivalent(event.command, expectation.expectedCommand)) return@forEach
+                if (event.exitCode != 0) return@forEach
+
+                val evaluation = evaluateObservedCommandResult(
+                    commandId = expectation.commandId,
+                    command = expectation.expectedCommand,
+                    exitCode = event.exitCode,
+                    root = root
+                )
+                if (evaluation.passed) {
+                    if (passedCommandIds.add(expectation.commandId)) {
+                        successMessages += expectation.expectedCommand
+                    }
+                }
+            }
+        }
+
+        if (passedCommandIds.isEmpty()) return
+
+        snapshot = snapshot.copy(
+            passedCommandIds = snapshot.passedCommandIds + passedCommandIds
+        )
+        passedCommandIds.forEach { pendingCommandExpectationsById.remove(it) }
+        persistSnapshot()
+        refreshProgressFromEngine()
+        list.repaint()
+        refreshStepStatusesOnly()
+        if (successMessages.isNotEmpty()) {
+            Messages.showInfoMessage(
+                project,
+                "Detected successful command run:\n\n${successMessages.joinToString("\n")}",
+                "MBTraining"
+            )
+        }
+    }
+
+    private fun loadNewTerminalCompletionEvents(): List<TerminalCommandEvent> {
+        val file = terminalEventLogFile ?: return emptyList()
+        if (!Files.exists(file)) return emptyList()
+        return runCatching {
+            val lines = Files.readAllLines(file)
+            if (lines.size < terminalProcessedEventLines) {
+                terminalProcessedEventLines = 0
+            }
+            val events = mutableListOf<TerminalCommandEvent>()
+            for (index in terminalProcessedEventLines until lines.size) {
+                parseTerminalCommandEvent(lines[index])?.let(events::add)
+            }
+            terminalProcessedEventLines = lines.size
+            events
+        }.getOrElse { emptyList() }
+    }
+
+    private fun parseTerminalCommandEvent(line: String): TerminalCommandEvent? {
+        if (!line.startsWith("MBTRAINING_EVT|v1|")) return null
+        val parts = line.split('|')
+        if (parts.size < 8) return null
+        if (!parts[2].equals("complete", ignoreCase = true)) return null
+        val epoch = parts[4].toLongOrNull() ?: return null
+        val exitCode = parts[5].toIntOrNull() ?: return null
+        val cwd = decodeHookText(parts[6])
+        val command = decodeHookText(parts[7])
+        return TerminalCommandEvent(
+            shell = parts[3],
+            epochSeconds = epoch,
+            exitCode = exitCode,
+            workingDirectory = cwd,
+            command = command
+        )
+    }
+
+    private fun decodeHookText(text: String): String {
+        return text
+            .replace("%0D", "\r")
+            .replace("%0A", "\n")
+            .replace("%7C", "|")
+            .replace("%25", "%")
+    }
+
+    private fun commandsEquivalent(actual: String, expected: String): Boolean {
+        return normalizeCommandForComparison(actual) == normalizeCommandForComparison(expected)
+    }
+
+    private fun normalizeCommandForComparison(command: String): String {
+        return command
+            .trim()
+            .replace(Regex("""\s+"""), " ")
+            .replace(Regex("""\bmvn(\.cmd)?\s+-q\s+test\b""", RegexOption.IGNORE_CASE), "mvn test")
+            .replace(Regex("""\bmvn(\.cmd)?\s+test\s+-q\b""", RegexOption.IGNORE_CASE), "mvn test")
+            .lowercase()
+    }
+
+    private fun buildObserverBootstrapCommand(widget: TerminalWidget): String? {
+        val hookDir = terminalHookDir ?: return null
+        val eventFile = terminalEventLogFile ?: return null
+        ensureObserverHookFiles(hookDir)
+
+        val shellType = detectShellType(widget)
+        val eventPath = eventFile.toAbsolutePath().normalize().toString()
+        val powershellHook = hookDir.resolve("hook-powershell.ps1").toAbsolutePath().normalize().toString()
+        val bashHook = hookDir.resolve("hook-bash.sh").toAbsolutePath().normalize().toString()
+        val zshHook = hookDir.resolve("hook-zsh.zsh").toAbsolutePath().normalize().toString()
+        if (!Files.exists(Path.of(powershellHook)) || !Files.exists(Path.of(bashHook)) || !Files.exists(Path.of(zshHook))) {
+            return null
+        }
+
+        return when (shellType) {
+            ShellType.POWERSHELL -> {
+                "\$env:MBTRAINING_TERMINAL_EVENT_FILE='${escapeSingleQuotedForPowerShell(eventPath)}'; . '${escapeSingleQuotedForPowerShell(powershellHook)}'"
+            }
+            ShellType.ZSH -> {
+                "export MBTRAINING_TERMINAL_EVENT_FILE='${escapeSingleQuotedForPosix(eventPath)}'; source '${escapeSingleQuotedForPosix(zshHook)}'"
+            }
+            ShellType.BASH -> {
+                "export MBTRAINING_TERMINAL_EVENT_FILE='${escapeSingleQuotedForPosix(eventPath)}'; source '${escapeSingleQuotedForPosix(bashHook)}'"
+            }
+        }
+    }
+
+    private fun buildManualObserverBootstrapHint(): String? {
+        val hookDir = terminalHookDir ?: return null
+        ensureObserverHookFiles(hookDir)
+        val eventPath = terminalEventLogFile?.toAbsolutePath()?.normalize()?.toString() ?: return null
+        val os = System.getProperty("os.name").lowercase()
+        return if (os.contains("win")) {
+            val powershellHook = hookDir.resolve("hook-powershell.ps1").toAbsolutePath().normalize().toString()
+            "\$env:MBTRAINING_TERMINAL_EVENT_FILE='${escapeSingleQuotedForPowerShell(eventPath)}'; . '${escapeSingleQuotedForPowerShell(powershellHook)}'"
+        } else {
+            val bashHook = hookDir.resolve("hook-bash.sh").toAbsolutePath().normalize().toString()
+            "export MBTRAINING_TERMINAL_EVENT_FILE='${escapeSingleQuotedForPosix(eventPath)}'; source '${escapeSingleQuotedForPosix(bashHook)}'"
+        }
+    }
+
+    private fun detectShellType(widget: TerminalWidget): ShellType {
+        val shellTokens = widget.shellCommand.orEmpty().map { it.lowercase() }
+        if (shellTokens.any { it.contains("powershell") || it.contains("pwsh") }) return ShellType.POWERSHELL
+        if (shellTokens.any { it.contains("zsh") }) return ShellType.ZSH
+        if (shellTokens.any { it.contains("bash") || it.contains("sh") }) return ShellType.BASH
+        val os = System.getProperty("os.name").lowercase()
+        return if (os.contains("win")) ShellType.POWERSHELL else ShellType.BASH
+    }
+
+    private fun bootstrapTerminalWidget(widget: TerminalWidget) {
+        ensureTerminalObserverBootstrapped(widget)
+    }
+
+    private fun ensureTerminalObserverBootstrapped(widget: TerminalWidget): Boolean {
+        val sessionKey = terminalSessionKey(widget)
+        if (bootstrappedTerminalSessionKeys.contains(sessionKey)) return true
+        val bootstrapped = bootstrapShellWidget(widget)
+        if (bootstrapped) {
+            bootstrappedTerminalSessionKeys.add(sessionKey)
+        }
+        return bootstrapped
+    }
+
+    private fun terminalSessionKey(widget: TerminalWidget): Int {
+        val connector = runCatching { widget.ttyConnector }.getOrNull()
+        return connector?.let { System.identityHashCode(it) } ?: System.identityHashCode(widget)
+    }
+
+    private fun bootstrapShellWidget(widget: TerminalWidget): Boolean {
+        val command = buildObserverBootstrapCommand(widget) ?: return false
+        runCatching {
+            widget.sendCommandToExecute(command)
+            return true
+        }.onFailure {
+            // Keep silent here; user can still bootstrap manually from Run action message.
+        }
+        return false
+    }
+
+    private fun ensureObserverHookFiles(hookDir: Path) {
+        runCatching {
+            Files.createDirectories(hookDir)
+            val powershellHook = hookDir.resolve("hook-powershell.ps1")
+            val bashHook = hookDir.resolve("hook-bash.sh")
+            val zshHook = hookDir.resolve("hook-zsh.zsh")
+            writeIfChanged(powershellHook, powershellHookTemplate())
+            writeIfChanged(bashHook, bashHookTemplate())
+            writeIfChanged(zshHook, zshHookTemplate())
+            terminalBootstrapFailedNotified = false
+        }.onFailure {
+            if (!terminalBootstrapFailedNotified) {
+                terminalBootstrapFailedNotified = true
+                Messages.showWarningDialog(
+                    project,
+                    "Unable to prepare terminal observer files.\n${it.message}",
+                    "MB Training"
+                )
+            }
+        }
+    }
+
+    private fun writeIfChanged(path: Path, content: String) {
+        val existing = if (Files.exists(path)) runCatching { Files.readString(path) }.getOrNull() else null
+        if (existing == content) return
+        Files.writeString(path, content)
+    }
+
+    private fun escapeSingleQuotedForPowerShell(text: String): String = text.replace("'", "''")
+
+    private fun escapeSingleQuotedForPosix(text: String): String = text.replace("'", "'\"'\"'")
+
+    private fun currentEpochSeconds(): Long = System.currentTimeMillis() / 1000L
+
+    private fun powershellHookTemplate(): String {
+        return """
+            if (§env:MBTRAINING_HOOK_ACTIVE -eq '1') { return }
+            §env:MBTRAINING_HOOK_ACTIVE = '1'
+            §script:mbtEventFile = §env:MBTRAINING_TERMINAL_EVENT_FILE
+            if ([string]::IsNullOrWhiteSpace(§script:mbtEventFile)) { return }
+            
+            function global:MBT_Escape([string]§text) {
+              if (§null -eq §text) { return "" }
+              return §text.Replace('%','%25').Replace('|','%7C').Replace("`r","%0D").Replace("`n","%0A")
+            }
+            
+            §script:mbtLastCommand = §null
+            
+            try {
+              if (Get-Command Set-PSReadLineOption -ErrorAction SilentlyContinue) {
+                Set-PSReadLineOption -AddToHistoryHandler {
+                  param([string]§line)
+                  §script:mbtLastCommand = §line
+                  return §true
+                } | Out-Null
+              }
+            } catch {}
+            
+            if (-not §script:mbtOriginalPrompt) {
+              §script:mbtOriginalPrompt = (Get-Item Function:\prompt).ScriptBlock
+            }
+            
+            function global:prompt {
+              §rc = 0
+              if (-not §?) {
+                if (§null -ne §LASTEXITCODE) { §rc = [int]§LASTEXITCODE } else { §rc = 1 }
+              }
+              if (-not [string]::IsNullOrWhiteSpace(§script:mbtLastCommand)) {
+                try {
+                  §epoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+                  §cmdEsc = MBT_Escape §script:mbtLastCommand
+                  §cwdEsc = MBT_Escape ((Get-Location).Path)
+                  §line = "MBTRAINING_EVT|v1|complete|powershell|§epoch|§rc|§cwdEsc|§cmdEsc"
+                  Add-Content -LiteralPath §script:mbtEventFile -Value §line -Encoding UTF8
+                } catch {}
+                §script:mbtLastCommand = §null
+              }
+              if (§script:mbtOriginalPrompt) {
+                return & §script:mbtOriginalPrompt
+              }
+              return "PS §(§executionContext.SessionState.Path.CurrentLocation)§('>' * (§nestedPromptLevel + 1)) "
+            }
+        """.trimIndent().replace('§', '$')
+    }
+
+    private fun bashHookTemplate(): String {
+        return """
+            if [[ "${'$'}{MBTRAINING_HOOK_ACTIVE:-}" == "1" ]]; then
+              return 0
+            fi
+            export MBTRAINING_HOOK_ACTIVE=1
+            __mbt_event_file="${'$'}{MBTRAINING_TERMINAL_EVENT_FILE:-}"
+            if [[ -z "${'$'}__mbt_event_file" ]]; then
+              return 0
+            fi
+            
+            __mbt_escape() {
+              local s="${'$'}1"
+              s="${'$'}{s//%/%25}"
+              s="${'$'}{s//|/%7C}"
+              s="${'$'}{s//$'\r'/%0D}"
+              s="${'$'}{s//$'\n'/%0A}"
+              printf '%s' "${'$'}s"
+            }
+            
+            __mbt_last_cmd=""
+            __mbt_precmd() {
+              local rc="${'$'}?"
+              local hist_line
+              hist_line="$(history 1 2>/dev/null || true)"
+              hist_line="${'$'}(printf '%s' "${'$'}hist_line" | sed -E 's/^[[:space:]]*[0-9]+[[:space:]]+//')"
+              local cmd="${'$'}hist_line"
+              if [[ -z "${'$'}cmd" ]]; then
+                cmd="${'$'}__mbt_last_cmd"
+              fi
+              if [[ -z "${'$'}cmd" ]]; then
+                return
+              fi
+              local epoch
+              epoch="$(date +%s 2>/dev/null || printf '0')"
+              printf 'MBTRAINING_EVT|v1|complete|bash|%s|%s|%s|%s\n' \
+                "${'$'}epoch" "${'$'}rc" "$(__mbt_escape "${'$'}PWD")" "$(__mbt_escape "${'$'}cmd")" >> "${'$'}__mbt_event_file"
+              __mbt_last_cmd=""
+            }
+            
+            trap '__mbt_last_cmd="${'$'}BASH_COMMAND"' DEBUG
+            if [[ "${'$'}PROMPT_COMMAND" == *"__mbt_precmd"* ]]; then
+              :
+            elif [[ -z "${'$'}PROMPT_COMMAND" ]]; then
+              PROMPT_COMMAND="__mbt_precmd"
+            else
+              PROMPT_COMMAND="__mbt_precmd;${'$'}PROMPT_COMMAND"
+            fi
+        """.trimIndent()
+    }
+
+    private fun zshHookTemplate(): String {
+        return """
+            if [[ "${'$'}{MBTRAINING_HOOK_ACTIVE:-}" == "1" ]]; then
+              return 0
+            fi
+            export MBTRAINING_HOOK_ACTIVE=1
+            __mbt_event_file="${'$'}{MBTRAINING_TERMINAL_EVENT_FILE:-}"
+            if [[ -z "${'$'}__mbt_event_file" ]]; then
+              return 0
+            fi
+            
+            __mbt_escape() {
+              local s="${'$'}1"
+              s="${'$'}{s//\%/%25}"
+              s="${'$'}{s//|/%7C}"
+              s="${'$'}{s//$'\r'/%0D}"
+              s="${'$'}{s//$'\n'/%0A}"
+              print -rn -- "${'$'}s"
+            }
+            
+            __mbt_last_cmd=""
+            __mbt_preexec() {
+              __mbt_last_cmd="${'$'}1"
+            }
+            
+            __mbt_precmd() {
+              local rc="${'$'}?"
+              local cmd="${'$'}__mbt_last_cmd"
+              if [[ -z "${'$'}cmd" ]]; then
+                return
+              fi
+              local epoch
+              epoch="$(date +%s 2>/dev/null || print -rn -- 0)"
+              print -r -- "MBTRAINING_EVT|v1|complete|zsh|${'$'}epoch|${'$'}rc|$(__mbt_escape "${'$'}PWD")|$(__mbt_escape "${'$'}cmd")" >> "${'$'}__mbt_event_file"
+              __mbt_last_cmd=""
+            }
+            
+            autoload -Uz add-zsh-hook
+            add-zsh-hook preexec __mbt_preexec
+            add-zsh-hook precmd __mbt_precmd
+        """.trimIndent()
+    }
+
+    private fun evaluateObservedCommandResult(
         commandId: String,
         command: String,
         exitCode: Int,
-        output: String,
         root: Path
     ): CommandEvaluation {
+        if (commandId == "basic-exercise-1-verify") {
+            if (exitCode != 0) return CommandEvaluation(false, null)
+            val pom = root.resolve("pom.xml")
+            if (!Files.exists(pom)) return CommandEvaluation(false, null)
+            val pomContent = runCatching { Files.readString(pom) }.getOrDefault("")
+            val hasKarateJunit5 = pomContent.contains("<artifactId>karate-junit5</artifactId>")
+            val hasSurefire = pomContent.contains("<artifactId>maven-surefire-plugin</artifactId>")
+            return CommandEvaluation(hasKarateJunit5 && hasSurefire, null)
+        }
+
         if (commandId == "basic-exercise-1-maven-repo-check") {
-            if (exitCode != 0) {
-                return CommandEvaluation(
-                    passed = false,
-                    message = "Unable to verify repository source (exit code != 0). " +
-                        "Please check Maven and run this step again.\n\n${summarizeOutput(output)}"
-                )
-            }
             val effectiveSettings = root.resolve("target").resolve("effective-settings.xml")
             if (!Files.exists(effectiveSettings)) {
                 return CommandEvaluation(
                     passed = false,
-                    message = "File target/effective-settings.xml was not found. " +
-                        "Please run the check step again."
+                    message = "File target/effective-settings.xml was not found."
                 )
             }
             val content = Files.readString(effectiveSettings)
@@ -1146,28 +1506,34 @@ class TrainingToolWindowPanel(
             if (usesMavenCentral) {
                 return CommandEvaluation(
                     passed = false,
-                    message = "Detected Maven is pulling from Maven Central.\n\n" +
-                        "Please update ~/.m2/settings.xml to use your internal Nexus, then rerun this step."
+                    message = "Detected Maven is pulling from Maven Central."
                 )
             }
+            return CommandEvaluation(passed = true, message = null)
+        }
+
+        val normalized = command.lowercase()
+        if (normalized.contains("mvn") && normalized.contains("compile")) {
             return CommandEvaluation(
-                passed = true,
+                passed = Files.isDirectory(root.resolve("target").resolve("classes")),
                 message = null
             )
         }
+        if (normalized.contains("mvn") && (normalized.contains("test") || normalized.contains("verify"))) {
+            val reports = root.resolve("target").resolve("surefire-reports")
+            if (!Files.isDirectory(reports)) return CommandEvaluation(false, null)
+            val hasReports = Files.newDirectoryStream(reports).use { stream -> stream.iterator().hasNext() }
+            return CommandEvaluation(hasReports, null)
+        }
 
-        if (exitCode != 0) return CommandEvaluation(false, null)
-        if (!command.contains("mvn", ignoreCase = true)) return CommandEvaluation(true, null)
-        val normalized = output.uppercase()
-        if (normalized.contains("BUILD SUCCESS") || normalized.contains("BUILD PASSED")) {
-            return CommandEvaluation(true, null)
+        val fallbackHint = commandHintById[commandId]?.lowercase().orEmpty()
+        if (fallbackHint.contains("test") || fallbackHint.contains("verify")) {
+            val reports = root.resolve("target").resolve("surefire-reports")
+            if (!Files.isDirectory(reports)) return CommandEvaluation(false, null)
+            val hasReports = Files.newDirectoryStream(reports).use { stream -> stream.iterator().hasNext() }
+            return CommandEvaluation(hasReports, null)
         }
-        val surefireReports = root.resolve("target").resolve("surefire-reports")
-        if (!Files.isDirectory(surefireReports)) {
-            return CommandEvaluation(false, null)
-        }
-        val hasReports = Files.list(surefireReports).use { stream -> stream.findAny().isPresent }
-        return CommandEvaluation(hasReports, null)
+        return CommandEvaluation(exitCode == 0, null)
     }
 
     private fun openEffectiveMavenSettings() {
@@ -1339,27 +1705,25 @@ class TrainingToolWindowPanel(
             .toSet()
     }
 
+    private fun collectCommandHintsById(): Map<String, String> {
+        return TrainingCurriculumRepository.program.exercises
+            .flatMap { it.steps }
+            .flatMap { step ->
+                step.activities.mapNotNull { activity ->
+                    when (activity) {
+                        is TrainingActivity.RunCommandTask -> activity.commandId to activity.commandHint
+                        is TrainingActivity.RunTestTask -> activity.commandId to activity.commandHint
+                        is TrainingActivity.CompileTask -> activity.commandId to activity.commandHint
+                        else -> null
+                    }
+                }
+            }
+            .toMap()
+    }
+
     private fun isMavenSyncHealthy(projects: List<MavenProject>): Boolean {
         if (projects.isEmpty()) return false
         return projects.none { it.hasReadingErrors() || it.hasUnresolvedArtifacts() || it.hasUnresolvedPlugins() }
-    }
-
-    private fun summarizeOutput(raw: String): String {
-        val lines = raw.lines().filter { it.isNotBlank() }
-        if (lines.isEmpty()) return "No output."
-        return lines.takeLast(12).joinToString("\n")
-    }
-
-    private fun showRunSuccessDialog(command: String) {
-        val body = """
-            <html>
-            <b>Test run step completed</b><br/><br/>
-            Command <code>$command</code> completed successfully.<br/>
-            Exercise conditions have been updated.<br/><br/>
-            <font color='#7a7a7a'>View detailed logs in the Run tab.</font>
-            </html>
-        """.trimIndent()
-        Messages.showInfoMessage(project, body, "Run Successful")
     }
 
     private fun updateStepStatus(exerciseId: String, stepId: String) {
@@ -1382,16 +1746,32 @@ class TrainingToolWindowPanel(
         Messages.showInfoMessage(project, "You passed the theory quiz.", "MB Training")
     }
 
-    private data class CommandRunResult(
-        val exitCode: Int,
-        val summary: String,
-        val passed: Boolean
-    )
-
     private data class CommandEvaluation(
         val passed: Boolean,
         val message: String?
     )
+
+    private data class PendingCommandExpectation(
+        val exerciseId: String,
+        val stepId: String,
+        val commandId: String,
+        val expectedCommand: String,
+        val registeredAtEpochSeconds: Long
+    )
+
+    private data class TerminalCommandEvent(
+        val shell: String,
+        val epochSeconds: Long,
+        val exitCode: Int,
+        val workingDirectory: String,
+        val command: String
+    )
+
+    private enum class ShellType {
+        POWERSHELL,
+        BASH,
+        ZSH
+    }
 
     private sealed interface RunnableStepAction {
         data class Command(

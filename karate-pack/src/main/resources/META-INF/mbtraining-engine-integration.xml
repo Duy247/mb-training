@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.mb.training.engine">
+        <trainingPackProvider implementation="com.mb.training.karate.pack.KarateTrainingPackProvider"/>
+    </extensions>
+</idea-plugin>
