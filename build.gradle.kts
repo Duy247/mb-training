@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.mb.training"
-version = "0.2.0"
+version = "0.2.1"
 
 repositories {
     mavenCentral()
@@ -31,7 +31,7 @@ intellijPlatform {
     pluginConfiguration {
         changeNotes = """
             <ul>
-              <li>Rework command interface.</li>
+              <li>Remove createShellWidget API usage due to deprecation in 2026.1+</li>
             </ul>
         """.trimIndent()
         ideaVersion {

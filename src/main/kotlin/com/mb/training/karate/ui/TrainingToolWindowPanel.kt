@@ -1043,19 +1043,18 @@ class TrainingToolWindowPanel(
 
     private fun openTerminalSidecarInfo(command: String) {
         val manager = TerminalToolWindowManager.getInstance(project)
-        val root = project.basePath?.takeIf { it.isNotBlank() }
         var observerAttached = false
+        var hasTerminalSession = false
         runCatching {
             fun currentTerminalWidgets(): List<TerminalWidget> {
                 return manager.terminalWidgets.toList()
             }
 
-            var terminalWidgets = currentTerminalWidgets()
-            if (terminalWidgets.isEmpty()) {
-                manager.createShellWidget(root, "MBTraining", true, true)
-                terminalWidgets = currentTerminalWidgets()
+            val terminalWidgets = currentTerminalWidgets()
+            hasTerminalSession = terminalWidgets.isNotEmpty()
+            if (hasTerminalSession) {
+                manager.toolWindow?.show()
             }
-            manager.toolWindow?.show()
             terminalWidgets.forEach { widget ->
                 if (ensureTerminalObserverBootstrapped(widget)) {
                     observerAttached = true
@@ -1074,6 +1073,10 @@ class TrainingToolWindowPanel(
             buildString {
                 append("Run this command in Terminal:\n\n")
                 append(command)
+                if (!hasTerminalSession) {
+                    append("\n\nNo active terminal session found.")
+                    append("\nOpen the Terminal tool window and create a tab first, then run this command.")
+                }
                 if (observerAttached) {
                     append("\n\nCommand observer has been attached for this terminal session.")
                 } else {
